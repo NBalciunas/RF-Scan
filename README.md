@@ -1,9 +1,16 @@
 # RF-Scan
 
-## TODO
+## Programs included:
 
-- [x] WAV to IQ + XML
-- [ ] IQ + XML to WAV
-- [ ] IQ + XML to IMG
-- [ ] YOLO training
-- [ ] SDR# Plugin
+### terminal-ml.py
+
+### terminal-no-ml.py
+
+### ml-precomp.py
+
+### ml-train.py
+
+## TODO:
+
+- [ ] ML TRAINING
+- [ ] Documenation
