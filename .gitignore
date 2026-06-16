@@ -3,3 +3,6 @@ __pycache__/
 output/
 psd_cache/
 training_data/
+detector_quick.meta.json
+detector_quick.pt
+detector_quick.pt.ckpt

@@ -45,11 +45,11 @@ CACHE_DIR    = "./psd_cache"
 OUTPUT_MODEL = "./detector_quick.pt"
 FFT_BINS     = 1024
 BATCH_SIZE   = 256
-EPOCHS       = 10
+EPOCHS       = 50
 LR           = 1e-3
 VAL_SPLIT    = 0.15
 SEED         = 42
-MAX_WINDOWS  = 100_000   # per class; None = use all
+MAX_WINDOWS  = 300_000   # per class; None = use all
 
 random.seed(SEED)
 np.random.seed(SEED)
