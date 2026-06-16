@@ -41,12 +41,11 @@ HOP_DWELL_MS    = 50
 HOP_SETTLE_MS   = 50
 HOP_OVERLAP_PCT = 30
 
-OUTPUT_DIR      = "./output"
 DRONE_NAME      = "Drone"
 SERIAL_NUM      = "00001"
 REFERENCE_SNR   = 40
 
-WIDEBAND_RECORD_ENABLED = True
+WIDEBAND_RECORD_ENABLED = False
 WIDEBAND_SECS           = 2.0
 WIDEBAND_MAX_FILES      = 50
 
@@ -63,7 +62,7 @@ WF_SCALE_MAX_DBFS  = 10.0
 _SCRIPT_DIR        = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_MODEL_PATH = os.path.join(_SCRIPT_DIR, "detector_quick.pt")
 
-INFER_SWEEP_HISTORY = 1
+INFER_SWEEP_HISTORY = 3
 
 # ── Stylesheet applied to every input widget so text is always white on dark ──
 _INPUT_SS = (
@@ -419,11 +418,11 @@ class SweepWorker(QtCore.QThread):
                 self.sweep_ready.emit(composite, sweep_hop_bufs)
 
     def _save_wideband_file(self, data):
-        out_dir = self.cfg.get("output_dir", OUTPUT_DIR)
-        wb_dir  = os.path.join(out_dir, "wideband")
+        record_class = self.cfg.get("record_class", "noise")
+        wb_dir = os.path.join("./training_data", record_class)
         os.makedirs(wb_dir, exist_ok=True)
         ts    = int(time.time() * 1000)
-        fname = f"wideband_{self.cfg['center_freq'] // 1_000_000}MHz_{ts}.iq"
+        fname = f"capture_{self.cfg['center_freq'] // 1_000_000}MHz_{ts}.iq"
         fpath = os.path.join(wb_dir, fname)
         data.astype(np.complex64).tofile(fpath)
         f_min = self.cfg["center_freq"] - self.cfg["total_span"] // 2
@@ -471,7 +470,6 @@ class PlutoApp(QtWidgets.QMainWindow):
             "dwell_ms"               : HOP_DWELL_MS,
             "settle_ms"              : HOP_SETTLE_MS,
             "overlap_pct"            : HOP_OVERLAP_PCT,
-            "output_dir"             : OUTPUT_DIR,
             "hop_freqs"              : [],
             "wideband_record_enabled": WIDEBAND_RECORD_ENABLED,
             "wideband_secs"          : WIDEBAND_SECS,
@@ -480,14 +478,14 @@ class PlutoApp(QtWidgets.QMainWindow):
             "wf_jpg_interval"        : WATERFALL_JPG_INTERVAL,
             "wf_jpg_dir"             : WATERFALL_JPG_DIR,
             "wf_jpg_quality"         : WATERFALL_JPG_QUALITY,
+            "record_class"            : "noise",
+            "wideband_record_enabled" : False,
         }
         self._recompute_hops()
 
         self._engine      = None
         self._last_result = None
-        self._infer_iq    = None
-        self._infer_cf    = CENTER_FREQ
-        self._infer_span  = TOTAL_SPAN_HZ
+        self._prob_history = collections.deque(maxlen=INFER_SWEEP_HISTORY)
 
         self._build_ui()
 
@@ -509,6 +507,7 @@ class PlutoApp(QtWidgets.QMainWindow):
             return
 
         self.wf_data = self._make_waterfall_buf()
+        self.img.setImage(self.wf_data, autoLevels=False)
         self._last_wf_jpg_t = time.time()
         self._start_worker()
 
@@ -692,13 +691,32 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.w_wf_min.valueChanged.connect(self._apply_wf_scale)
         self.w_wf_max.valueChanged.connect(self._apply_wf_scale)
 
-        self.w_outdir = labeled("Output dir:", QtWidgets.QLineEdit(OUTPUT_DIR))
 
         section("Wideband Recording  ★")
-        self.w_wb_enabled = QtWidgets.QCheckBox("Enable wideband IQ saving")
-        self.w_wb_enabled.setChecked(WIDEBAND_RECORD_ENABLED)
-        self.w_wb_enabled.stateChanged.connect(self._on_wb_toggle)
-        vbox.addWidget(self.w_wb_enabled)
+
+        cls_row = QtWidgets.QHBoxLayout()
+        cls_lbl = QtWidgets.QLabel("Record class:")
+        cls_lbl.setStyleSheet("color: #cccccc; font-size: 11px;")
+        self.w_record_class = QtWidgets.QComboBox()
+        self.w_record_class.addItems(["noise", "drone"])
+        self.w_record_class.setStyleSheet(
+            "QComboBox { color: #ffffff; background-color: #2a2a2a;"
+            " border: 1px solid #555555; border-radius: 3px; padding: 1px 3px; }"
+            "QComboBox QAbstractItemView { color: #ffffff; background-color: #2a2a2a; }"
+        )
+        self.w_record_class.currentTextChanged.connect(self._on_record_class_changed)
+        cls_row.addWidget(cls_lbl)
+        cls_row.addWidget(self.w_record_class)
+        vbox.addLayout(cls_row)
+
+        self.w_wb_btn = QtWidgets.QPushButton("▶  Start Recording")
+        self.w_wb_btn.setFixedHeight(30)
+        self.w_wb_btn.setCheckable(True)
+        self.w_wb_btn.setChecked(False)
+        self.w_wb_btn.clicked.connect(self._on_wb_btn)
+        vbox.addWidget(self.w_wb_btn)
+        self._update_wb_btn_style(False)
+
         self._wb_widgets = []
 
         def wb_labeled(label_text, widget):
@@ -715,7 +733,6 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.w_wb_maxf = wb_labeled("Max wideband files:", QtWidgets.QSpinBox())
         self.w_wb_maxf.setRange(1, 5000)
         self.w_wb_maxf.setValue(WIDEBAND_MAX_FILES)
-        self._set_wb_widgets_enabled(WIDEBAND_RECORD_ENABLED)
 
         vbox.addSpacing(8)
         apply_btn = QtWidgets.QPushButton("⟳  Apply Settings")
@@ -837,6 +854,7 @@ class PlutoApp(QtWidgets.QMainWindow):
         try:
             engine = InferenceEngine(path)
             self._engine = engine
+            self._prob_history.clear()
             self._rebuild_conf_bars(engine.classes)
             self.det_badge.setText("MODEL LOADED — WAITING")
             self._set_badge_style("none")
@@ -858,11 +876,20 @@ class PlutoApp(QtWidgets.QMainWindow):
         if self._engine is None or not hop_bufs:
             return
 
-        t0  = time.perf_counter()
-        mid = len(self.cfg["hop_freqs"]) // 2
-        iq  = hop_bufs.get(mid)
-        if iq is None:
-            iq = next(iter(hop_bufs.values()))
+        t0 = time.perf_counter()
+
+        # Stitch all hops into a single wideband IQ — this matches what
+        # terminal-no-ml records and what the model was trained on.
+        iq = None
+        if hasattr(self, "worker") and self.worker._wb_stitcher is not None:
+            iq = self.worker._wb_stitcher.stitch(hop_bufs)
+
+        # Fallback: single middle-hop IQ (narrowband; suboptimal but won't crash)
+        if iq is None or len(iq) < 1024:
+            mid = len(self.cfg["hop_freqs"]) // 2
+            iq  = hop_bufs.get(mid)
+            if iq is None:
+                iq = next(iter(hop_bufs.values()))
 
         cf   = float(self.cfg["center_freq"])
         span = float(self.cfg["total_span"])
@@ -873,7 +900,17 @@ class PlutoApp(QtWidgets.QMainWindow):
             self.infer_stat_lbl.setText(f"Inference error: {e}")
             return
 
-        ms    = (time.perf_counter() - t0) * 1000
+        ms = (time.perf_counter() - t0) * 1000
+
+        # Average probabilities over the last INFER_SWEEP_HISTORY sweeps
+        self._prob_history.append(result["probs"])
+        avg_probs = {
+            cls: sum(h.get(cls, 0.0) for h in self._prob_history) / len(self._prob_history)
+            for cls in result["probs"]
+        }
+        best_cls  = max(avg_probs, key=avg_probs.get)
+        result    = {"label": best_cls, "confidence": avg_probs[best_cls], "probs": avg_probs}
+
         self._last_result = result
         label = result["label"]
         conf  = result["confidence"]
@@ -936,15 +973,29 @@ class PlutoApp(QtWidgets.QMainWindow):
 
     # ── toggle helpers ────────────────────────────────────────────────────────
 
-    def _on_wb_toggle(self, state):
-        enabled = (state == QtCore.Qt.Checked)
-        if self.cfg.get("wideband_record_enabled") != enabled:
-            self.cfg["wideband_record_enabled"] = enabled
-        self._set_wb_widgets_enabled(enabled)
+    def _on_record_class_changed(self, text: str):
+        self.cfg["record_class"] = text
+        if self.cfg.get("wideband_record_enabled"):
+            self._update_wb_btn_style(True)
 
-    def _set_wb_widgets_enabled(self, enabled):
-        for w in self._wb_widgets:
-            w.setEnabled(enabled)
+    def _on_wb_btn(self, checked: bool):
+        self.cfg["wideband_record_enabled"] = checked
+        self._update_wb_btn_style(checked)
+        if hasattr(self, "worker"):
+            self.worker.cfg["wideband_record_enabled"] = checked
+
+    def _update_wb_btn_style(self, recording: bool):
+        if recording:
+            self.w_wb_btn.setText(
+                f"■  Stop Recording  [{self.cfg.get('record_class','noise')}]")
+            self.w_wb_btn.setStyleSheet(
+                "QPushButton { color: #ffffff; background-color: #882200;"
+                " border: 1px solid #cc4422; border-radius: 3px; padding: 3px 6px; }"
+                "QPushButton:hover { background-color: #aa2200; }"
+            )
+        else:
+            self.w_wb_btn.setText("▶  Start Recording")
+            self.w_wb_btn.setStyleSheet("")  # inherit panel default
 
     # ── settings apply ────────────────────────────────────────────────────────
 
@@ -962,13 +1013,12 @@ class PlutoApp(QtWidgets.QMainWindow):
             self.cfg["dwell_ms"]           = self.w_dwell.value()
             self.cfg["settle_ms"]          = self.w_settle.value()
             self.cfg["overlap_pct"]        = self.w_olap_pct.value()
-            self.cfg["output_dir"]         = self.w_outdir.text().strip() or OUTPUT_DIR
             self.cfg["wideband_secs"]      = self.w_wb_secs.value()
             self.cfg["wideband_max_files"] = self.w_wb_maxf.value()
-            os.makedirs(self.cfg["output_dir"], exist_ok=True)
             self._recompute_hops()
             self._push_sdr_settings()
             self.wf_data = self._make_waterfall_buf()
+            self.img.setImage(self.wf_data, autoLevels=False)
             self._update_waterfall_rect()
             self._rebuild_hop_lines()
             self._update_hop_info_label()
@@ -1029,7 +1079,6 @@ class PlutoApp(QtWidgets.QMainWindow):
 # ENTRY POINT
 # ==========================================
 if __name__ == "__main__":
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
     app = QtWidgets.QApplication(sys.argv)
     app.setStyle("Fusion")
     palette = QtGui.QPalette()

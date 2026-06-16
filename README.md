@@ -4,8 +4,6 @@
 
 ### terminal-ml.py
 
-### terminal-no-ml.py
-
 ### ml-precomp.py
 
 ### ml-train.py
