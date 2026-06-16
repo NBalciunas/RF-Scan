@@ -106,22 +106,32 @@ def load_xml_meta(iq_path: Path) -> dict:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# IQ → PSD
+# IQ → PSD  (batched)
 # ══════════════════════════════════════════════════════════════════════════════
 
-def iq_to_psd(iq_chunk: np.ndarray, scale: float = 1.0) -> np.ndarray:
+def compute_psd_batch(raw: np.ndarray, scale: float = 1.0) -> np.ndarray:
     """
-    Convert one 1024-sample IQ chunk to a Blackman-windowed, FFT-shifted PSD
-    in dBFS.  Works identically whether the IQ is narrowband or wideband-
-    stitched; the only difference is what frequency axis the bins represent.
+    Convert all overlapping FFT_BINS-sample windows of `raw` to
+    Blackman-windowed, FFT-shifted PSDs in dBFS — in one batched FFT call.
+
+    Uses as_strided for a zero-copy window view so only the windowed copy
+    is allocated, not the raw data replicated N times.
+
+    Returns float32 array of shape (N_windows, FFT_BINS).
     """
-    chunk = iq_chunk[:FFT_BINS].astype(np.complex64) * np.float32(scale)
-    if len(chunk) < FFT_BINS:
-        chunk = np.pad(chunk, (0, FFT_BINS - len(chunk)))
-    psd = 20.0 * np.log10(
-        np.abs(np.fft.fftshift(np.fft.fft(chunk * _BLACKMAN))) / FFT_BINS + 1e-10
+    n = (len(raw) - FFT_BINS) // WINDOW_HOP + 1
+    if n <= 0:
+        return np.empty((0, FFT_BINS), dtype=np.float32)
+
+    strides = (raw.strides[0] * WINDOW_HOP, raw.strides[0])
+    chunks  = np.lib.stride_tricks.as_strided(raw, shape=(n, FFT_BINS), strides=strides)
+
+    windowed = chunks * np.float32(scale) * _BLACKMAN   # (n, FFT_BINS) complex64 copy
+
+    psds = 20.0 * np.log10(
+        np.abs(np.fft.fftshift(np.fft.fft(windowed, axis=1), axes=1)) / FFT_BINS + 1e-10
     )
-    return psd.astype(np.float32)
+    return psds.astype(np.float32)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -141,9 +151,9 @@ def precompute(args):
     print(f"Classes: {classes}")
 
     # Accumulators for normalisation stats
-    all_psds_for_stats = []
-    all_freqs          = []   # center_freq of each file
-    all_spans          = []   # freq_span of each file (0 for narrowband)
+    all_psds_for_stats: list[np.ndarray] = []   # list of (k, FFT_BINS) slices
+    all_freqs: list[float] = []
+    all_spans: list[float] = []
     stats_sample_limit = 300_000
 
     total_files   = sum(len(list(d.glob("*.iq"))) for d in class_dirs)
@@ -189,19 +199,14 @@ def precompute(args):
                 files_done += 1
                 continue
 
-            offsets = list(range(0, len(raw) - FFT_BINS + 1, WINDOW_HOP))
-            if not offsets:
+            # ── compute PSD windows (batched) ─────────────────────────────────
+            windows = compute_psd_batch(raw, meta["scale_factor"])
+            del raw
+
+            if len(windows) == 0:
                 print(f"  skip (too short)  {fpath.name}")
                 files_done += 1
                 continue
-
-            # ── compute PSD windows ───────────────────────────────────────────
-            windows = np.stack([
-                iq_to_psd(raw[s:s + FFT_BINS], meta["scale_factor"])
-                for s in offsets
-            ])   # shape (N_windows, FFT_BINS)
-
-            del raw
 
             # ── derive freq_span for wideband files ───────────────────────────
             freq_span = 0
@@ -223,9 +228,10 @@ def precompute(args):
                 }, f)
 
             # ── accumulate stats sample ───────────────────────────────────────
-            if len(all_psds_for_stats) < stats_sample_limit:
-                take = min(len(windows), stats_sample_limit - len(all_psds_for_stats))
-                all_psds_for_stats.extend(windows[:take])
+            already = sum(len(a) for a in all_psds_for_stats)
+            if already < stats_sample_limit:
+                take = min(len(windows), stats_sample_limit - already)
+                all_psds_for_stats.append(windows[:take])
 
             all_freqs.append(meta["center_freq"])
             all_spans.append(freq_span)
@@ -239,8 +245,10 @@ def precompute(args):
                   f"  [{files_done}/{total_files}  ETA {eta/60:.1f} min]")
 
     # ── normalisation stats ───────────────────────────────────────────────────
-    print(f"\nComputing normalisation stats from {len(all_psds_for_stats):,} windows…")
-    psd_arr  = np.stack(all_psds_for_stats)
+    print(f"\nComputing normalisation stats from {sum(len(a) for a in all_psds_for_stats):,} windows…")
+    if not all_psds_for_stats:
+        raise RuntimeError("No PSD windows were produced. Check that .iq files are valid and non-empty.")
+    psd_arr  = np.concatenate(all_psds_for_stats, axis=0)
     freq_arr = np.array(all_freqs, dtype=np.float64)
     span_arr = np.array(all_spans, dtype=np.float64)
 

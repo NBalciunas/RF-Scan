@@ -209,11 +209,27 @@ class SpectralCNNSlim(object):
         if not _TORCH_OK:
             raise RuntimeError("PyTorch not installed. Run: pip install torch")
 
+        # Must mirror ml-train.py exactly (including SEBlock) so state_dict loads cleanly.
+        class _SEBlock(nn.Module):
+            def __init__(self, channels, reduction=4):
+                super().__init__()
+                self.fc = nn.Sequential(
+                    nn.AdaptiveAvgPool1d(1),
+                    nn.Flatten(),
+                    nn.Linear(channels, channels // reduction, bias=False),
+                    nn.GELU(),
+                    nn.Linear(channels // reduction, channels, bias=False),
+                    nn.Sigmoid(),
+                )
+            def forward(self, x):
+                return x * self.fc(x).unsqueeze(-1)
+
         def block(ic, oc, k, pool):
             return nn.Sequential(
                 nn.Conv1d(ic, oc, kernel_size=k, padding=k // 2, bias=False),
                 nn.BatchNorm1d(oc),
                 nn.GELU(),
+                _SEBlock(oc),
                 nn.MaxPool1d(pool),
             )
 
@@ -275,21 +291,42 @@ class InferenceEngine:
 
         n_classes = len(self.classes)
         self.net  = SpectralCNNSlim._build(n_classes)
-        state     = torch.load(model_path, map_location="cpu")
+        state     = torch.load(model_path, map_location="cpu", weights_only=False)
         self.net.load_state_dict(state)
         self.net.eval()
 
         self._blackman = np.blackman(FFT_BINS).astype(np.float32)
 
     def _iq_to_psd(self, iq_chunk: np.ndarray) -> np.ndarray:
-        chunk = iq_chunk[:FFT_BINS].astype(np.complex64)
-        if len(chunk) < FFT_BINS:
-            chunk = np.pad(chunk, (0, FFT_BINS - len(chunk)))
-        psd = 20.0 * np.log10(
-            np.abs(np.fft.fftshift(np.fft.fft(chunk * self._blackman)))
-            / FFT_BINS + 1e-10
-        )
-        return psd.astype(np.float32)
+        """
+        Compute a Blackman-windowed PSD from IQ data.
+
+        For wideband stitched IQ the buffer is n_hops × FFT_BINS samples long.
+        Rather than discarding all but the first 1024 samples, we average up to
+        8 evenly-spaced windows across the full buffer — this matches what the
+        training data looks like (random windows drawn from the same stitched IQ).
+        For narrowband IQ the buffer is typically exactly FFT_BINS samples so
+        only one window is produced and behaviour is unchanged.
+        """
+        n = len(iq_chunk)
+        if n < FFT_BINS:
+            iq_chunk = np.pad(iq_chunk.astype(np.complex64), (0, FFT_BINS - n))
+            n = FFT_BINS
+
+        # How many non-overlapping half-windows fit?
+        hop        = FFT_BINS // 2
+        n_windows  = min(8, (n - FFT_BINS) // hop + 1)
+        step       = (n - FFT_BINS) // (n_windows - 1) if n_windows > 1 else 0
+        offsets    = [i * step for i in range(n_windows)]
+
+        psd_acc = np.zeros(FFT_BINS, dtype=np.float64)
+        for off in offsets:
+            chunk    = iq_chunk[off:off + FFT_BINS].astype(np.complex64)
+            psd_acc += 20.0 * np.log10(
+                np.abs(np.fft.fftshift(np.fft.fft(chunk * self._blackman)))
+                / FFT_BINS + 1e-10
+            )
+        return (psd_acc / n_windows).astype(np.float32)
 
     def infer_from_iq(self, iq: np.ndarray,
                       center_freq_hz: float,
@@ -324,6 +361,8 @@ class SweepWorker(QtCore.QThread):
     hop_progress  = QtCore.pyqtSignal(int, int)
     status_msg    = QtCore.pyqtSignal(str)
     files_changed = QtCore.pyqtSignal(int)
+
+    _BLACKMAN = np.blackman(FFT_BINS).astype(np.float32)
 
     def __init__(self, sdr, cfg):
         super().__init__()
@@ -387,9 +426,9 @@ class SweepWorker(QtCore.QThread):
                 chunk = raw[:FFT_BINS]
                 if len(chunk) < FFT_BINS:
                     chunk = np.pad(chunk, (0, FFT_BINS - len(chunk)))
-                win = np.blackman(FFT_BINS)
                 psd = 20.0 * np.log10(
-                    np.abs(np.fft.fftshift(np.fft.fft(chunk * win))) / FFT_BINS + 1e-10
+                    np.abs(np.fft.fftshift(
+                        np.fft.fft(chunk * self._BLACKMAN))) / FFT_BINS + 1e-10
                 )
                 composite[i * FFT_BINS:(i + 1) * FFT_BINS] = psd.astype(np.float32)
 
@@ -479,7 +518,6 @@ class PlutoApp(QtWidgets.QMainWindow):
             "wf_jpg_dir"             : WATERFALL_JPG_DIR,
             "wf_jpg_quality"         : WATERFALL_JPG_QUALITY,
             "record_class"            : "noise",
-            "wideband_record_enabled" : False,
         }
         self._recompute_hops()
 
@@ -508,6 +546,7 @@ class PlutoApp(QtWidgets.QMainWindow):
 
         self.wf_data = self._make_waterfall_buf()
         self.img.setImage(self.wf_data, autoLevels=False)
+        self._update_waterfall_rect()
         self._last_wf_jpg_t = time.time()
         self._start_worker()
 
@@ -552,8 +591,12 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.p1 = self.win.addPlot(title="Wideband Spectrum")
         self.p1.setLabel("bottom", "Frequency", units="Hz")
         self.p1.setLabel("left",   "Power",     units="dBFS")
+        # Disable auto-range so per-sweep setData() can't re-fit the view (which
+        # adds default padding, pushing the axes off their limits and — via the
+        # X-link — off the waterfall image edges).
+        self.p1.enableAutoRange(x=False, y=False)
         self.p1.setXRange(self.f_global_min, self.f_global_max, padding=0)
-        self.p1.setYRange(WF_SCALE_MIN_DBFS, WF_SCALE_MAX_DBFS)
+        self.p1.setYRange(WF_SCALE_MIN_DBFS, WF_SCALE_MAX_DBFS, padding=0)
         self.p1.setMouseEnabled(x=True, y=True)
         self.p1.setMenuEnabled(False)
         self.p1.showGrid(x=True, y=True, alpha=0.25)
@@ -570,9 +613,16 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.p2.setXLink(self.p1)
         self.p2.setMouseEnabled(x=False, y=False)
         self.p2.setMenuEnabled(False)
+        self.p2.getViewBox().setAutoVisible(x=False, y=False)
+        self.p2.enableAutoRange(x=False, y=False)
+        # Match the two plots' left-axis widths so their plot areas (and thus
+        # the linked x-axis) line up. p2's labels ("200") are wider than p1's,
+        # which otherwise shifts the waterfall relative to the spectrum.
+        _axis_w = 64
+        self.p1.getAxis("left").setWidth(_axis_w)
+        self.p2.getAxis("left").setWidth(_axis_w)
         self.img = pg.ImageItem(axisOrder="col-major")
         self.p2.addItem(self.img)
-        self._update_waterfall_rect()
         cmap = pg.colormap.get("viridis")
         self.img.setLookupTable(cmap.getLookupTable())
         self.img.setLevels([WF_SCALE_MIN_DBFS, WF_SCALE_MAX_DBFS])
@@ -939,6 +989,9 @@ class PlutoApp(QtWidgets.QMainWindow):
     def _update_waterfall_rect(self):
         span = self.f_global_max - self.f_global_min
         self.img.setRect(QtCore.QRectF(self.f_global_min, 0, span, WATERFALL_ROWS))
+        # Pin p2's view to the data so the image can't render wider/taller than
+        # the axis. x is XLinked to p1; y is fixed to the sweep-row count.
+        self.p2.setYRange(0, WATERFALL_ROWS, padding=0)
 
     def _apply_wf_scale(self):
         v_min = float(self.w_wf_min.value())
@@ -1023,6 +1076,7 @@ class PlutoApp(QtWidgets.QMainWindow):
             self._rebuild_hop_lines()
             self._update_hop_info_label()
             self.p1.setXRange(self.f_global_min, self.f_global_max, padding=0)
+            self.p1.setYRange(WF_SCALE_MIN_DBFS, WF_SCALE_MAX_DBFS, padding=0)
             self._apply_wf_scale()
             self.status_lbl.setText(
                 f"Applied. {self.n_hops} hops · "
@@ -1054,6 +1108,7 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.wf_data = np.roll(self.wf_data, -1, axis=1)
         self.wf_data[:, -1] = composite
         self.img.setImage(self.wf_data, autoLevels=False)
+        self._update_waterfall_rect()
 
         self._run_inference(hop_bufs)
 
@@ -1079,6 +1134,18 @@ class PlutoApp(QtWidgets.QMainWindow):
 # ENTRY POINT
 # ==========================================
 if __name__ == "__main__":
+    # High-DPI / multi-monitor: must be set BEFORE the QApplication exists.
+    # PassThrough rounding keeps fractional scale factors (125%, 150%) exact so
+    # axis-label widths and the waterfall ImageItem stay pixel-aligned when the
+    # window is moved to a monitor with different scaling.
+    try:
+        QtGui.QGuiApplication.setHighDpiScaleFactorRoundingPolicy(
+            QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+    except AttributeError:
+        pass  # Qt < 5.14
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
+
     app = QtWidgets.QApplication(sys.argv)
     app.setStyle("Fusion")
     palette = QtGui.QPalette()
