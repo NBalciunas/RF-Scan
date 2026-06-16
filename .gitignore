@@ -6,3 +6,5 @@ training_data/
 detector_quick.meta.json
 detector_quick.pt
 detector_quick.pt.ckpt
+diag_burst_score.png
+diag_mean_psd.png

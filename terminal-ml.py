@@ -205,7 +205,7 @@ class WidebandStitcher:
 class SpectralCNNSlim(object):
 
     @staticmethod
-    def _build(n_classes, n_bins=FFT_BINS):
+    def _build(n_classes, n_bins=FFT_BINS, base_channels=16):
         if not _TORCH_OK:
             raise RuntimeError("PyTorch not installed. Run: pip install torch")
 
@@ -233,16 +233,19 @@ class SpectralCNNSlim(object):
                 nn.MaxPool1d(pool),
             )
 
+        c1, c2, c3, c4 = (base_channels, base_channels * 2,
+                          base_channels * 4, base_channels * 8)
+
         class _Net(nn.Module):
             def __init__(self):
                 super().__init__()
                 self.cnn = nn.Sequential(
-                    block(1, 16, 15, 4),
-                    block(16, 32, 7, 4),
-                    block(32, 64, 5, 4),
-                    block(64, 128, 3, 2),
+                    block(1,  c1, 15, 4),
+                    block(c1, c2, 7,  4),
+                    block(c2, c3, 5,  4),
+                    block(c3, c4, 3,  2),
                 )
-                cnn_flat = 128 * (n_bins // (4 * 4 * 4 * 2))
+                cnn_flat = c4 * (n_bins // (4 * 4 * 4 * 2))
                 self.freq_branch = nn.Sequential(
                     nn.Linear(2, 16), nn.GELU(), nn.Linear(16, 16),
                 )
@@ -280,6 +283,14 @@ class InferenceEngine:
             self.freq_std  = float(meta.get("freq_std",  1.0))
             self.span_mean = float(meta.get("span_mean", 0.0))
             self.span_std  = float(meta.get("span_std",  1.0))
+            # Per-bin normalisation + floor clip must match training (see
+            # ml-precomp.py / ml-train.py).  None ⇒ old scalar-only model.
+            bm = meta.get("psd_bin_mean")
+            bs = meta.get("psd_bin_std")
+            self.psd_bin_mean = None if bm is None else np.asarray(bm, dtype=np.float32)
+            self.psd_bin_std  = None if bs is None else np.asarray(bs, dtype=np.float32)
+            self.floor_db     = meta.get("floor_db")
+            self.base_channels = int(meta.get("base_channels", 16))
         else:
             self.classes   = ["noise", "drone"]
             self.psd_mean  = 0.0
@@ -288,60 +299,90 @@ class InferenceEngine:
             self.freq_std  = 1.0
             self.span_mean = 0.0
             self.span_std  = 1.0
+            self.psd_bin_mean = None
+            self.psd_bin_std  = None
+            self.floor_db     = None
+            self.base_channels = 16
 
         n_classes = len(self.classes)
-        self.net  = SpectralCNNSlim._build(n_classes)
+        self.net  = SpectralCNNSlim._build(n_classes, base_channels=self.base_channels)
         state     = torch.load(model_path, map_location="cpu", weights_only=False)
         self.net.load_state_dict(state)
         self.net.eval()
 
         self._blackman = np.blackman(FFT_BINS).astype(np.float32)
 
-    def _iq_to_psd(self, iq_chunk: np.ndarray) -> np.ndarray:
+    def _iq_to_psd_windows(self, iq_chunk: np.ndarray) -> np.ndarray:
         """
-        Compute a Blackman-windowed PSD from IQ data.
+        Compute Blackman-windowed PSDs for every FFT_BINS-sample window in the
+        buffer — (n_windows, FFT_BINS), in dBFS.
 
-        For wideband stitched IQ the buffer is n_hops × FFT_BINS samples long.
-        Rather than discarding all but the first 1024 samples, we average up to
-        8 evenly-spaced windows across the full buffer — this matches what the
-        training data looks like (random windows drawn from the same stitched IQ).
-        For narrowband IQ the buffer is typically exactly FFT_BINS samples so
-        only one window is produced and behaviour is unchanged.
+        The drone emission is bursty, so most windows in a buffer are silent
+        gaps that look like noise.  Averaging them together (the old behaviour)
+        diluted any burst straight back into the noise floor — the same label
+        noise that burst-gating removes at training time.  We therefore keep the
+        windows separate and let the caller pick the most burst-like one, which
+        mirrors how train_drone.py gates the training set.
+
+        For wideband stitched IQ the buffer is n_hops × FFT_BINS samples long, so
+        many windows are produced; for narrowband IQ (≈FFT_BINS samples) a single
+        window comes back and behaviour is unchanged.
         """
         n = len(iq_chunk)
         if n < FFT_BINS:
             iq_chunk = np.pad(iq_chunk.astype(np.complex64), (0, FFT_BINS - n))
             n = FFT_BINS
 
-        # How many non-overlapping half-windows fit?
-        hop        = FFT_BINS // 2
-        n_windows  = min(8, (n - FFT_BINS) // hop + 1)
-        step       = (n - FFT_BINS) // (n_windows - 1) if n_windows > 1 else 0
-        offsets    = [i * step for i in range(n_windows)]
+        # Overlapping half-windows across the whole buffer (cap so a very long
+        # stitched buffer can't blow up the per-sweep forward pass).
+        hop       = FFT_BINS // 2
+        n_windows = min(32, (n - FFT_BINS) // hop + 1)
+        step      = (n - FFT_BINS) // (n_windows - 1) if n_windows > 1 else 0
+        offsets   = [i * step for i in range(n_windows)]
 
-        psd_acc = np.zeros(FFT_BINS, dtype=np.float64)
-        for off in offsets:
-            chunk    = iq_chunk[off:off + FFT_BINS].astype(np.complex64)
-            psd_acc += 20.0 * np.log10(
+        psds = np.empty((n_windows, FFT_BINS), dtype=np.float32)
+        for i, off in enumerate(offsets):
+            chunk = iq_chunk[off:off + FFT_BINS].astype(np.complex64)
+            psds[i] = 20.0 * np.log10(
                 np.abs(np.fft.fftshift(np.fft.fft(chunk * self._blackman)))
                 / FFT_BINS + 1e-10
             )
-        return (psd_acc / n_windows).astype(np.float32)
+        if self.floor_db is not None:          # match training floor clip
+            np.maximum(psds, np.float32(self.floor_db), out=psds)
+        return psds
 
     def infer_from_iq(self, iq: np.ndarray,
                       center_freq_hz: float,
                       freq_span_hz: float = 0.0) -> dict:
-        psd = self._iq_to_psd(iq)
-        x   = (psd - self.psd_mean) / self.psd_std
-        spec_t = torch.tensor(x, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
+        psds = self._iq_to_psd_windows(iq)     # (n_windows, FFT_BINS) raw dBFS
+
+        if self.psd_bin_mean is not None:      # per-bin normalisation (preferred)
+            x = (psds - self.psd_bin_mean) / self.psd_bin_std
+        else:
+            x = (psds - self.psd_mean) / self.psd_std
+
+        spec_t = torch.tensor(x, dtype=torch.float32).unsqueeze(1)   # (N, 1, BINS)
 
         freq_n = (center_freq_hz - self.freq_mean) / self.freq_std
         span_n = (freq_span_hz   - self.span_mean) / self.span_std
-        meta_t = torch.tensor([[freq_n, span_n]], dtype=torch.float32)
+        meta_t = torch.tensor([[freq_n, span_n]], dtype=torch.float32).repeat(
+            len(psds), 1)                                            # (N, 2)
 
         with torch.no_grad():
-            logits = self.net(spec_t, meta_t)
-            probs  = torch.softmax(logits, dim=1)[0].numpy()
+            logits   = self.net(spec_t, meta_t)
+            all_probs = torch.softmax(logits, dim=1).numpy()         # (N, n_classes)
+
+        # "Drone present if ANY window is a burst": report the single window most
+        # confident about drone, instead of averaging windows into the floor.
+        # Falls back to the most confident window overall when there is no
+        # explicit drone class.
+        drone_idx = next((i for i, c in enumerate(self.classes)
+                          if "drone" in c.lower()), None)
+        if drone_idx is not None:
+            win = int(all_probs[:, drone_idx].argmax())
+        else:
+            win = int(all_probs.max(axis=1).argmax())
+        probs = all_probs[win]
 
         idx   = int(probs.argmax())
         label = self.classes[idx] if idx < len(self.classes) else str(idx)
@@ -952,14 +993,20 @@ class PlutoApp(QtWidgets.QMainWindow):
 
         ms = (time.perf_counter() - t0) * 1000
 
-        # Average probabilities over the last INFER_SWEEP_HISTORY sweeps
+        # Peak-hold over the last INFER_SWEEP_HISTORY sweeps.  A bursty drone is
+        # only visible in occasional sweeps, so averaging probabilities across
+        # sweeps washes the detection out (same dilution problem as averaging
+        # windows).  Instead, report the recent sweep that was most confident
+        # about drone — a short hold so a single burst still raises the alarm,
+        # and it self-clears once the burst leaves the history window.
         self._prob_history.append(result["probs"])
-        avg_probs = {
-            cls: sum(h.get(cls, 0.0) for h in self._prob_history) / len(self._prob_history)
-            for cls in result["probs"]
-        }
-        best_cls  = max(avg_probs, key=avg_probs.get)
-        result    = {"label": best_cls, "confidence": avg_probs[best_cls], "probs": avg_probs}
+        drone_key = next((c for c in result["probs"] if "drone" in c.lower()), None)
+        if drone_key is not None:
+            probs = max(self._prob_history, key=lambda h: h.get(drone_key, 0.0))
+        else:
+            probs = max(self._prob_history, key=lambda h: max(h.values()))
+        best_cls = max(probs, key=probs.get)
+        result   = {"label": best_cls, "confidence": probs[best_cls], "probs": probs}
 
         self._last_result = result
         label = result["label"]
