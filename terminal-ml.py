@@ -36,18 +36,18 @@ RX_BW_HZ        = 4_000_000
 GAIN            = 10
 
 CENTER_FREQ     = 2_400_000_000
-TOTAL_SPAN_HZ   = 10_000_000
+TOTAL_SPAN_HZ   = 20_000_000
 HOP_DWELL_MS    = 50
 HOP_SETTLE_MS   = 50
 HOP_OVERLAP_PCT = 30
 
-DRONE_NAME      = "Noise"
+DRONE_NAME      = "Drone"
 SERIAL_NUM      = "00001"
 REFERENCE_SNR   = 40
 
 WIDEBAND_RECORD_ENABLED = False
 WIDEBAND_SECS           = 2.0
-WIDEBAND_MAX_FILES      = 50
+WIDEBAND_MAX_FILES      = 500
 
 WATERFALL_JPG_ENABLED   = False
 WATERFALL_JPG_INTERVAL  = 5.0
@@ -63,6 +63,18 @@ _SCRIPT_DIR        = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_MODEL_PATH = os.path.join(_SCRIPT_DIR, "detector_quick.pt")
 
 INFER_SWEEP_HISTORY = 3
+
+# ── Detection decision rule (tuned against the false-alarm failure mode) ──────
+# The old rule alarmed if ANY one of ~32 windows × 3 sweeps crossed P(drone)>0.5
+# — a ~96-way OR that turns even a small per-window false-positive rate into a
+# near-constant alarm.  Instead a window only counts as a burst above
+# DRONE_WIN_THRESH, a sweep needs DRONE_MIN_WINDOWS such windows, and the badge
+# only raises if DRONE_MIN_SWEEPS of the recent INFER_SWEEP_HISTORY sweeps agree.
+# Raise the thresholds if you still get false alarms; lower them if real drones
+# are missed.
+DRONE_WIN_THRESH  = 0.90   # min P(drone) for a window to count as a burst
+DRONE_MIN_WINDOWS = 3      # min burst windows in a sweep to call it a drone sweep
+DRONE_MIN_SWEEPS  = 2      # min drone sweeps (of INFER_SWEEP_HISTORY) to alarm
 
 # ── Stylesheet applied to every input widget so text is always white on dark ──
 _INPUT_SS = (
@@ -290,6 +302,9 @@ class InferenceEngine:
             self.psd_bin_mean = None if bm is None else np.asarray(bm, dtype=np.float32)
             self.psd_bin_std  = None if bs is None else np.asarray(bs, dtype=np.float32)
             self.floor_db     = meta.get("floor_db")
+            # Per-window median centering (train_drone.instance_norm).  Must match
+            # training or the per-bin stats land in the wrong space.
+            self.instance_norm = bool(meta.get("instance_norm", False))
             self.base_channels = int(meta.get("base_channels", 16))
         else:
             self.classes   = ["noise", "drone"]
@@ -302,6 +317,7 @@ class InferenceEngine:
             self.psd_bin_mean = None
             self.psd_bin_std  = None
             self.floor_db     = None
+            self.instance_norm = False
             self.base_channels = 16
 
         n_classes = len(self.classes)
@@ -356,6 +372,9 @@ class InferenceEngine:
                       freq_span_hz: float = 0.0) -> dict:
         psds = self._iq_to_psd_windows(iq)     # (n_windows, FFT_BINS) raw dBFS
 
+        if self.instance_norm:                 # strip per-window level (gain/session)
+            psds = psds - np.median(psds, axis=1, keepdims=True)
+
         if self.psd_bin_mean is not None:      # per-bin normalisation (preferred)
             x = (psds - self.psd_bin_mean) / self.psd_bin_std
         else:
@@ -372,19 +391,29 @@ class InferenceEngine:
             logits   = self.net(spec_t, meta_t)
             all_probs = torch.softmax(logits, dim=1).numpy()         # (N, n_classes)
 
-        # "Drone present if ANY window is a burst": report the single window most
-        # confident about drone, instead of averaging windows into the floor.
-        # Falls back to the most confident window overall when there is no
-        # explicit drone class.
+        # K-of-N burst rule.  A single hot window is not a drone: take the
+        # DRONE_MIN_WINDOWS-th most drone-confident window as the sweep's score,
+        # so at least that many windows must agree before it can cross the
+        # threshold.  Only then (>= DRONE_WIN_THRESH) is the verdict "drone";
+        # otherwise report the best non-drone class.  Falls back to the single
+        # most-confident window when there is no explicit drone class.
         drone_idx = next((i for i, c in enumerate(self.classes)
                           if "drone" in c.lower()), None)
         if drone_idx is not None:
-            win = int(all_probs[:, drone_idx].argmax())
+            p_drone = all_probs[:, drone_idx]
+            kth     = min(DRONE_MIN_WINDOWS, len(p_drone))
+            win     = int(np.argsort(p_drone)[-kth])     # K-th most drone-like window
+            probs   = all_probs[win]
+            if probs[drone_idx] >= DRONE_WIN_THRESH:
+                idx = drone_idx
+            else:
+                masked = probs.copy(); masked[drone_idx] = -1.0
+                idx = int(masked.argmax())               # best non-drone class
         else:
-            win = int(all_probs.max(axis=1).argmax())
-        probs = all_probs[win]
+            win   = int(all_probs.max(axis=1).argmax())
+            probs = all_probs[win]
+            idx   = int(probs.argmax())
 
-        idx   = int(probs.argmax())
         label = self.classes[idx] if idx < len(self.classes) else str(idx)
         return {
             "label"     : label,
@@ -993,20 +1022,25 @@ class PlutoApp(QtWidgets.QMainWindow):
 
         ms = (time.perf_counter() - t0) * 1000
 
-        # Peak-hold over the last INFER_SWEEP_HISTORY sweeps.  A bursty drone is
-        # only visible in occasional sweeps, so averaging probabilities across
-        # sweeps washes the detection out (same dilution problem as averaging
-        # windows).  Instead, report the recent sweep that was most confident
-        # about drone — a short hold so a single burst still raises the alarm,
-        # and it self-clears once the burst leaves the history window.
-        self._prob_history.append(result["probs"])
-        drone_key = next((c for c in result["probs"] if "drone" in c.lower()), None)
-        if drone_key is not None:
-            probs = max(self._prob_history, key=lambda h: h.get(drone_key, 0.0))
+        # Persistence hold over the last INFER_SWEEP_HISTORY sweeps.  The old rule
+        # took the single most-drone sweep (an OR over history), so one spurious
+        # sweep latched the badge.  Instead require DRONE_MIN_SWEEPS of the recent
+        # sweeps to have *independently* decided drone before raising it; the
+        # alarm self-clears once agreement drops below that as old sweeps age out.
+        self._prob_history.append(result)
+        drone_key    = next((c for c in result["probs"] if "drone" in c.lower()), None)
+        drone_sweeps = [r for r in self._prob_history
+                        if "drone" in r["label"].lower()]
+        if drone_key is not None and len(drone_sweeps) >= DRONE_MIN_SWEEPS:
+            probs    = max(drone_sweeps,
+                           key=lambda r: r["probs"].get(drone_key, 0.0))["probs"]
+            best_cls = drone_key
         else:
-            probs = max(self._prob_history, key=lambda h: max(h.values()))
-        best_cls = max(probs, key=probs.get)
-        result   = {"label": best_cls, "confidence": probs[best_cls], "probs": probs}
+            # agreement not met → never show drone; pick the best non-drone class
+            probs    = result["probs"]
+            best_cls = max((c for c in probs if c != drone_key), key=probs.get) \
+                       if drone_key else max(probs, key=probs.get)
+        result = {"label": best_cls, "confidence": probs[best_cls], "probs": probs}
 
         self._last_result = result
         label = result["label"]

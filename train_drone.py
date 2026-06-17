@@ -67,15 +67,15 @@ WINDOW_HOP    = 512        # samples between successive PSD windows
 FLOOR_DB      = -120.0     # clamp dead-bin outliers so they don't dominate stats
 
 BATCH_SIZE    = 256
-EPOCHS        = 50
+EPOCHS        = 20
 LR            = 1e-3
-VAL_SPLIT     = 0.15
+VAL_SPLIT     = 0.20
 SEED          = 42
 
-MIN_BURST_DB  = 30.0       # drone windows below this peak-above-floor are dropped
-BASE_CHANNELS = 16         # conv widths scale 1->C->2C->4C->8C; lower to regularise
-DROPOUT       = 0.3
-WEIGHT_DECAY  = 1e-4
+MIN_BURST_DB  = 0.0       # drone windows below this peak-above-floor are dropped
+BASE_CHANNELS = 8         # conv widths scale 1->C->2C->4C->8C; lower to regularise
+DROPOUT       = 0.5
+WEIGHT_DECAY  = 1e-3
 
 _BLACKMAN = np.blackman(FFT_BINS).astype(np.float32)
 
@@ -137,6 +137,21 @@ def compute_psd_windows(raw: np.ndarray, scale: float) -> np.ndarray:
 def burst_score(windows: np.ndarray) -> np.ndarray:
     """Peak-above-floor (dB) per window: high = burst, low = silent gap."""
     return windows.max(axis=1) - np.median(windows, axis=1)
+
+
+def instance_norm(w: np.ndarray) -> np.ndarray:
+    """Per-window dB centering: subtract each window's own median.
+
+    A gain change or session-to-session level drift is purely *additive* in the
+    dB domain, so subtracting the per-window median removes it completely and
+    leaves only spectral shape.  This stops the model from separating the classes
+    by absolute power level — a confound when drone and noise are recorded in
+    different sessions, which otherwise lets the net learn "which recording" (it
+    won't transfer; it surfaces as field false-alarms) instead of "is a drone
+    present".  Median (not mean) so a real burst peak doesn't pull the centre up.
+    Inference (terminal-ml.py) applies the identical step — keep them in sync.
+    """
+    return w - np.median(w, axis=-1, keepdims=True)
 
 
 def load_dataset(data_dir: Path, classes: list, min_burst_db: float):
@@ -211,7 +226,8 @@ class WindowDataset(Dataset):
         return len(self.X)
 
     def __getitem__(self, idx):
-        x = (self.X[idx] - self.bin_mean) / self.bin_std   # per-bin standardise
+        x = instance_norm(self.X[idx])                     # strip per-window level
+        x = (x - self.bin_mean) / self.bin_std             # per-bin standardise
 
         if self.augment:
             x = x.copy()
@@ -307,6 +323,43 @@ def file_level_split(y, file_id, val_split, rng):
     return train_idx, val_idx
 
 
+def evaluate_confusion(model, loader, n_classes, device):
+    """Confusion matrix on `loader` (rows = true class, cols = predicted)."""
+    model.eval()
+    cm = np.zeros((n_classes, n_classes), dtype=np.int64)
+    with torch.no_grad():
+        for xb, mb, yb in loader:
+            pred = model(xb.to(device), mb.to(device)).argmax(1).cpu().numpy()
+            for t, p in zip(yb.numpy(), pred):
+                cm[int(t), int(p)] += 1
+    return cm
+
+
+def print_class_report(cm, classes):
+    """Confusion matrix + per-class precision/recall/F1.
+
+    Accuracy alone hides the field failure mode: on an imbalanced or confounded
+    val set the net can score well while still calling 'drone' on noise.  Drone
+    precision = how often a 'drone' verdict is correct, i.e. the inverse of the
+    false-alarm rate; noise recall = how much real noise is (correctly) left
+    alone.  Watch those two numbers, not the headline accuracy.
+    """
+    print("\nConfusion matrix (val — rows = true, cols = pred):")
+    print(" " * 11 + "".join(f"{c:>12}" for c in classes))
+    for i, c in enumerate(classes):
+        print(f"{c:>10} " + "".join(f"{cm[i, j]:>12,}" for j in range(len(classes))))
+    print("\nPer-class (val):")
+    for i, c in enumerate(classes):
+        tp   = int(cm[i, i])
+        col  = int(cm[:, i].sum())
+        row  = int(cm[i, :].sum())
+        prec = tp / col if col else 0.0
+        rec  = tp / row if row else 0.0
+        f1   = 2 * prec * rec / (prec + rec) if (prec + rec) else 0.0
+        print(f"  {c:>8}: precision {prec:6.1%}   recall {rec:6.1%}   f1 {f1:6.1%}")
+    print("  (low drone precision = false alarms; low noise recall = same thing)")
+
+
 def train(args):
     rng = np.random.RandomState(args.seed)
     torch.manual_seed(args.seed)
@@ -331,7 +384,9 @@ def train(args):
           f"(file-level split)")
 
     # All normalisation stats from TRAIN windows only (no val leakage).
-    Xtr = X[train_idx]
+    # instance_norm first so the per-bin stats live in the same (level-stripped)
+    # space the model actually sees at train and inference time.
+    Xtr = instance_norm(X[train_idx])
     bin_mean = Xtr.mean(0)
     bin_std  = Xtr.std(0)
     bin_std[bin_std < 1e-6] = 1.0
@@ -416,8 +471,12 @@ def train(args):
             best_val_acc = vl_acc
             best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
 
-    # ── save best model + metadata ─────────────────────────────────────────────
+    # ── honest val metrics from the best model (not just accuracy) ──────────────
     model.load_state_dict(best_state)
+    cm = evaluate_confusion(model, val_loader, len(classes), device)
+    print_class_report(cm, classes)
+
+    # ── save best model + metadata ─────────────────────────────────────────────
     torch.save(model.state_dict(), args.output)
     meta = {
         "classes"      : classes,
@@ -426,6 +485,7 @@ def train(args):
         "window_hop"   : WINDOW_HOP,
         "floor_db"     : FLOOR_DB,
         "min_burst_db" : args.min_burst_db,
+        "instance_norm": True,
         "psd_bin_mean" : bin_mean.tolist(),
         "psd_bin_std"  : bin_std.tolist(),
         "freq_mean"    : freq_mean,
