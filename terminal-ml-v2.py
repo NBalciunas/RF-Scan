@@ -430,6 +430,27 @@ class SweepWorker(QtCore.QThread):
             return None, -999.0
         return f_min + (idx / total) * span, float(composite[idx]) - med
 
+    def _detect_peak_excluding(self, composite, exclude_freq):
+        """Strongest peak, masking a guard band around `exclude_freq` (or None).
+        Used by Locking mode to step off the just-skipped signal — no memory list."""
+        if exclude_freq is None:
+            return self._detect_peak(composite)
+        f_min, f_max = self._band_edges()
+        span  = f_max - f_min
+        total = len(composite)
+        med   = float(np.median(composite))
+        masked = composite.copy()
+        guard = float(self.cfg.get("fp_memory_guard_hz", FP_MEMORY_GUARD_HZ))
+        s = int(round((exclude_freq - guard - f_min) / span * total))
+        e = int(round((exclude_freq + guard - f_min) / span * total))
+        s = max(0, min(total, s)); e = max(0, min(total, e))
+        if e > s:
+            masked[s:e] = -1e9
+        idx = int(np.argmax(masked))
+        if masked[idx] <= -1e8:
+            return None, -999.0
+        return f_min + (idx / total) * span, float(composite[idx]) - med
+
     def _remember(self, freq):
         """Add a caught frequency to memory (drop near-duplicates first)."""
         guard = float(self.cfg.get("fp_memory_guard_hz", FP_MEMORY_GUARD_HZ))
@@ -473,6 +494,8 @@ class SweepWorker(QtCore.QThread):
             self._run_wideband()
         elif op == "focus":
             self._run_focus()
+        elif op == "locking":
+            self._run_locking()
         else:
             self._run_normal()
 
@@ -578,6 +601,75 @@ class SweepWorker(QtCore.QThread):
                     self.mode_changed.emit("SCAN", 0.0)
                     self.status_msg.emit(f"{reason} — memorised, resuming scan")
 
+    def _run_locking(self):
+        """Like Mixed, but locks on the first catch and HOLDS until the user hits
+        Skip — then steps to the next signal. No memory list; only the last skipped
+        frequency is excluded so it doesn't immediately re-lock the same one."""
+        mode = "SCAN"
+        skip_freq = None
+        self.cfg["skip_lock"] = False
+        self.mode_changed.emit("SCAN", 0.0)
+        while not self._stop:
+            if mode == "SCAN":
+                t0 = time.perf_counter()
+                composite, hop_bufs = self._sweep_once()
+                if composite is None:
+                    return
+                self._last_composite = composite
+                self._last_scan_t = time.time()
+                self.sweep_ready.emit(composite, hop_bufs)
+                self.status_msg.emit(
+                    f"Scan: {(time.perf_counter()-t0)*1000:.0f} ms  |  "
+                    f"{len(self.cfg['hop_freqs'])} hops")
+                f, peak_db = self._detect_peak_excluding(composite, skip_freq)
+                if f is not None and peak_db >= float(
+                        self.cfg.get("fp_peak_thresh_db", FP_PEAK_THRESH_DB)):
+                    self._held_freq, mode = f, "LOCK"
+                    self.mode_changed.emit("LOCK", f)
+                    self.status_msg.emit(
+                        f"Locked +{peak_db:.0f} dB @ {f/1e6:.3f} MHz — Skip to advance")
+            else:  # LOCK — hold until the user skips
+                if self._stop:
+                    break
+                if self.cfg.get("skip_lock"):
+                    self.cfg["skip_lock"] = False
+                    skip_freq = self._held_freq
+                    mode, self._held_freq = "SCAN", None
+                    self.mode_changed.emit("SCAN", 0.0)
+                    self.status_msg.emit("Skipped — scanning for the next signal")
+                    continue
+                # No periodic full-band rescan here: it would hop the whole band
+                # (~1 s) and stall the locked view. Locking stays glued to the
+                # signal; the held band stays live via the wideband overlay below.
+                try:
+                    self.sdr.rx_lo = int(self._held_freq)
+                except Exception as e:
+                    self.status_msg.emit(f"Lock tune error: {e}")
+                    mode = "SCAN"; self.mode_changed.emit("SCAN", 0.0); continue
+                time.sleep(self.cfg.get("fp_hold_settle_ms", FP_HOLD_SETTLE_MS) / 1000.0)
+                try:
+                    iq = np.array(self.sdr.rx(), dtype=np.complex64)
+                except Exception as e:
+                    self.status_msg.emit(f"Lock RX error: {e}"); continue
+                if iq is None or len(iq) == 0:
+                    continue
+                freqs, psd = self._narrowband_psd(iq, self._held_freq)
+                self.zoom_ready.emit(freqs, psd, float(self._held_freq))
+                comp = self._composite_with_hold(self._held_freq, psd)
+                if comp is not None:
+                    self.sweep_ready.emit(comp, {})
+                if self.engine is not None:
+                    try:
+                        self.fingerprint_ready.emit(self.engine.classify_iq(iq))
+                    except Exception as e:
+                        self.status_msg.emit(f"Inference error: {e}")
+                off  = self._center_offset_hz(iq)
+                dead = float(self.cfg.get("fp_nudge_deadzone_hz", FP_NUDGE_DEADZONE_HZ))
+                if abs(off) > dead:
+                    step = float(self.cfg.get("fp_nudge_step_hz", FP_NUDGE_STEP_HZ))
+                    self._held_freq += max(-step, min(step, off))
+                    self.mode_changed.emit("LOCK", float(self._held_freq))
+
     def _run_wideband(self):
         """Continuous full-band scan, no focus/hold — just the wideband view.
         If 'record' is on, save each hop's raw IQ as the noise class."""
@@ -672,8 +764,9 @@ class PlutoApp(QtWidgets.QMainWindow):
             "wf_jpg_dir"      : WATERFALL_JPG_DIR,
             "wf_jpg_quality"  : WATERFALL_JPG_QUALITY,
             # ── v2 fingerprinting ──
-            "op_mode"             : "normal",     # normal | wideband | focus
+            "op_mode"             : "normal",     # normal | wideband | focus | locking
             "record"              : False,        # save data appropriate to the mode
+            "skip_lock"           : False,        # Locking mode: advance to next signal
             "record_device"       : "deviceA",
             "record_session"      : "1",
             "focus_freq"          : CENTER_FREQ,
@@ -779,7 +872,7 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.curve = self.p1.plot(pen=pg.mkPen("y", width=1))
 
         # ── wideband waterfall  (row 1, col 0) ──────────────────────────────────
-        self.p2 = self.win.addPlot(row=1, col=0, title="Waterfall  (newest → top)")
+        self.p2 = self.win.addPlot(row=1, col=0, title="Wideband Waterfall")
         self.p2.setLabel("bottom", "Frequency", units="Hz")
         self.p2.setLabel("left",   "Time",      units="sweeps")
         self.p2.setXLink(self.p1)
@@ -795,7 +888,7 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.img.setLevels([WF_SCALE_MIN_DBFS, WF_SCALE_MAX_DBFS])
 
         # ── zoom spectrum  (row 0, col 1) — the currently-held signal ───────────
-        self.p_zoom = self.win.addPlot(row=0, col=1, title="Zoom — held signal")
+        self.p_zoom = self.win.addPlot(row=0, col=1, title="Narrowband Spectrum")
         self.p_zoom.setLabel("bottom", "Frequency", units="Hz")
         self.p_zoom.setLabel("left",   "Power",     units="dBFS")
         self.p_zoom.setMouseEnabled(x=True, y=True)   # pan/zoom the held view
@@ -806,7 +899,7 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.zoom_curve = self.p_zoom.plot(pen=pg.mkPen("c", width=1))
 
         # ── zoom waterfall  (row 1, col 1) ──────────────────────────────────────
-        self.p_zoom_wf = self.win.addPlot(row=1, col=1, title="Zoom Waterfall")
+        self.p_zoom_wf = self.win.addPlot(row=1, col=1, title="Narrowband Waterfall")
         self.p_zoom_wf.setLabel("bottom", "Frequency", units="Hz")
         self.p_zoom_wf.setLabel("left",   "Time",      units="holds")
         self.p_zoom_wf.setXLink(self.p_zoom)
@@ -904,14 +997,15 @@ class PlutoApp(QtWidgets.QMainWindow):
         vbox.addWidget(self.model_info_lbl)
 
         # ══════════════════════════════════════════════════════
-        # MODE SECTION  (Normal / Wideband / Focus)
+        # MODE SECTION  (Mixed / Wideband / Narrowband / Locking)
         # ══════════════════════════════════════════════════════
         section("Mode")
         mode_row = QtWidgets.QHBoxLayout()
         self._mode_btns  = {}
         self._mode_group = QtWidgets.QButtonGroup(self)
         self._mode_group.setExclusive(True)
-        for key, label in (("normal", "Normal"), ("wideband", "Wideband"), ("focus", "Focus")):
+        for key, label in (("normal", "Mixed"), ("locking", "Locking"),
+                           ("wideband", "Wideband"), ("focus", "Narrowband")):
             b = QtWidgets.QPushButton(label)
             b.setCheckable(True)
             b.setFixedHeight(26)
@@ -921,6 +1015,15 @@ class PlutoApp(QtWidgets.QMainWindow):
             mode_row.addWidget(b)
         self._mode_btns["normal"].setChecked(True)
         vbox.addLayout(mode_row)
+
+        # Second row: advance past the current lock (Locking mode only).
+        skip_row = QtWidgets.QHBoxLayout()
+        self.w_skip_btn = QtWidgets.QPushButton("Skip lock")
+        self.w_skip_btn.setFixedHeight(26)
+        self.w_skip_btn.setEnabled(False)        # only active in Locking mode
+        self.w_skip_btn.clicked.connect(self._on_skip_lock)
+        skip_row.addWidget(self.w_skip_btn)
+        vbox.addLayout(skip_row)
 
         # ══════════════════════════════════════════════════════
         # SDR SECTION
@@ -1024,8 +1127,9 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.w_rec_btn.setFixedHeight(28)
         self.w_rec_btn.setCheckable(True)
         self.w_rec_btn.clicked.connect(self._on_record_toggle)
-        grab_btn = QtWidgets.QPushButton("Grab lock")
+        grab_btn = QtWidgets.QPushButton("Lock freq")
         grab_btn.setFixedWidth(80)
+        grab_btn.setFixedHeight(28)
         grab_btn.clicked.connect(self._on_grab_lock)
         rec_btn_row.addWidget(self.w_rec_btn)
         rec_btn_row.addWidget(grab_btn)
@@ -1222,7 +1326,7 @@ class PlutoApp(QtWidgets.QMainWindow):
             self.p_zoom.setXRange(held_freq - sr / 2, held_freq + sr / 2, padding=0)
             self._zoom_center = held_freq
             self.zoom_wf_data[:] = -200.0      # wipe stale history on a NEW lock
-        self.p_zoom.setTitle(f"Zoom — {held_freq / 1e6:.3f} MHz")
+        self.p_zoom.setTitle(f"Narrowband Spectrum ({held_freq / 1e6:.3f} MHz)")
         # scroll the held-signal spectrum into the zoom waterfall
         self.zoom_wf_data = np.roll(self.zoom_wf_data, -1, axis=1)
         self.zoom_wf_data[:, -1] = psd
@@ -1298,9 +1402,13 @@ class PlutoApp(QtWidgets.QMainWindow):
         if self.cfg.get("op_mode") == key:
             return
         self.cfg["op_mode"] = key
+        self.w_skip_btn.setEnabled(key == "locking")
         self._sync_record_cfg()
         self.worker.stop()
         self._start_worker()
+
+    def _on_skip_lock(self):
+        self.cfg["skip_lock"] = True        # Locking mode reads this live
 
     def _on_record_toggle(self, checked: bool):
         self._sync_record_cfg()
@@ -1372,6 +1480,7 @@ class PlutoApp(QtWidgets.QMainWindow):
 
     def _start_worker(self):
         self._zoom_center = None        # let the zoom view recenter on the next hold
+        self.cfg["skip_lock"] = False
         self.worker = SweepWorker(self.sdr, self.cfg, engine=self._engine)
         self.worker.sweep_ready.connect(self._on_sweep_ready)
         self.worker.zoom_ready.connect(self._on_zoom_ready)
