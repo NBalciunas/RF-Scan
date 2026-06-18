@@ -8,3 +8,13 @@ detector_quick.pt
 detector_quick.pt.ckpt
 diag_burst_score.png
 diag_mean_psd.png
+
+# fingerprinting (v2) — raw IQ data + trained models
+fingerprint_data/
+fingerprint_spec_model.pt
+fingerprint_spec_model.meta.json
+fingerprint_model.pt
+fingerprint_model.meta.json
+
+# editor / tooling
+.claude/settings.local.json
