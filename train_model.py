@@ -1,5 +1,5 @@
 """
-train_fingerprint_spec.py — spectrogram fingerprint trainer (RFUAV-style).
+train_model.py — spectrogram fingerprint trainer (RFUAV-style).
 
 Folder-driven: every top-level folder under --data_dir is one class, and session_*
 subfolders drive a session-held-out split (train on early sessions, validate on a
@@ -9,13 +9,13 @@ session never seen in training; the only honest number). Representation and mode
   * model: SpecCNN, a compact from-scratch 2-D CNN — the right-sized stand-in for
     the paper's ViT-L-16, which needs ImageNet pretraining + huge data.
 
-Reads the raw-IQ captures recorded by terminal-ml-v2.py (Focus / Wideband + Record),
+Reads the raw-IQ captures recorded by terminal_v2.py (Device / Noise recordings),
 so nothing needs re-recording. The GUI loads the resulting model via the SAME module.
 
-    python train_fingerprint_spec.py
-    python train_fingerprint_spec.py --quick                      # fast sanity check
-    python train_fingerprint_spec.py --max_segs_per_class 4000    # cap RAM / balance noise
-    python train_fingerprint_spec.py --seg_len 8192 --epochs 40
+    python train_model.py
+    python train_model.py --quick                      # fast sanity check
+    python train_model.py --max_segs_per_class 4000    # cap RAM / balance noise
+    python train_model.py --seg_len 8192 --epochs 40
 
 Memory/time is bounded by the --max_* caps and --store_dtype (float16 by default);
 --quick is the "is this going the right way?" preset.
@@ -37,7 +37,7 @@ from fp_spectrogram import (iq_to_spectrogram, SpecCNN,
                             N_FFT, STFT_HOP, SEG_LEN, SEG_HOP)
 
 DATA_DIR   = "./fingerprint_data"
-OUTPUT     = "./fingerprint_spec_model.pt"
+OUTPUT     = "./trained_model.pt"
 BATCH_SIZE = 128
 EPOCHS     = 30
 LR         = 1e-3

@@ -1,15 +1,13 @@
 """
-terminal-ml-v2.py  –  PlutoSDR Monitor + RF-Fingerprint detection (cascade).
+terminal_v2.py  –  PlutoSDR monitor + RF-fingerprint detection.
 
 v2 reworks the v1 drone/noise monitor into a fingerprinting tool:
-  * the drone/noise CNN is gone; ML is now the spectrogram FingerprintModel
-    (fp_spectrogram.py), loaded the same way but used differently;
-  * the worker runs a SCAN -> HOLD state machine: hop+scan as before, and when a
-    peak crosses FP_PEAK_THRESH_DB, park the LO, zoom in, and classify the held
-    signal; nudge the LO to recentre, and resume scanning if the fingerprint is
-    lost or unknown;
-  * recording is raw fixed-LO IQ: stationary per-device fingerprints, or a
-    band-swept "noise" class, both written to fingerprint_data/<device>/session_*/;
+  * ML is the spectrogram FingerprintModel (fp_spectrogram.py);
+  * the worker runs a SCAN -> HOLD state machine: hop+scan, and when a peak crosses
+    FP_PEAK_THRESH_DB park the LO on a fixed frequency, zoom in, and classify the
+    held signal until the user Skips or the signal stops;
+  * recording (raw fixed-LO IQ) has three kinds — a device fingerprint, band-swept
+    noise, or narrowband noise at one frequency — all under fingerprint_data/;
   * a third "zoom" plot shows the currently-held narrowband signal.
 """
 
@@ -20,7 +18,6 @@ import json
 import math
 import re
 import collections
-import xml.etree.ElementTree as ET
 
 import numpy as np
 import adi
@@ -54,26 +51,13 @@ HOP_DWELL_MS    = 50
 HOP_SETTLE_MS   = 50
 HOP_OVERLAP_PCT = 30
 
-DRONE_NAME      = "Drone"
-SERIAL_NUM      = "00001"
-REFERENCE_SNR   = 40
-
-WIDEBAND_RECORD_ENABLED = False
-WIDEBAND_SECS           = 2.0
-WIDEBAND_MAX_FILES      = 500
-
-WATERFALL_JPG_ENABLED   = False
-WATERFALL_JPG_INTERVAL  = 5.0
-WATERFALL_JPG_DIR       = "./output/waterfall_snaps"
-WATERFALL_JPG_QUALITY   = 90
-
 FFT_BINS           = 1024
 WATERFALL_ROWS     = 200
 WF_SCALE_MIN_DBFS  = -10.0
 WF_SCALE_MAX_DBFS  = 10.0
 
 _SCRIPT_DIR        = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_MODEL_PATH = os.path.join(_SCRIPT_DIR, "fingerprint_spec_model.pt")
+DEFAULT_MODEL_PATH = os.path.join(_SCRIPT_DIR, "trained_model.pt")
 
 # ── Fingerprint Locking state-machine params (tune against live signals) ──────
 FP_PEAK_THRESH_DB    = 10.0      # peak-above-floor (dB) for a signal to count / trigger a lock
@@ -159,95 +143,10 @@ def compute_hop_freqs(center_freq, total_span, hop_bw, overlap_pct=0):
     return [int(start + hop_bw // 2 + i * step) for i in range(n_hops)]
 
 
-def _xml_path(iq_path: str) -> str:
-    base, _ = os.path.splitext(iq_path)
-    return base + ".xml"
-
-
-def write_xml(xml_path, iq_filename, sample_count, center_freq, sample_rate,
-              extra_tags=None):
-    root = ET.Element("SignalHoundIQFile")
-    ET.SubElement(root, "DeviceType").text        = "PlutoSDR"
-    ET.SubElement(root, "Drone").text             = DRONE_NAME
-    ET.SubElement(root, "SerialNumber").text      = SERIAL_NUM
-    ET.SubElement(root, "DataType").text          = "Complex Float"
-    ET.SubElement(root, "ReferenceSNRLevel").text = str(REFERENCE_SNR)
-    ET.SubElement(root, "CenterFrequency").text   = str(center_freq)
-    ET.SubElement(root, "SampleRate").text        = str(sample_rate)
-    ET.SubElement(root, "IFBandwidth").text       = str(sample_rate)
-    ET.SubElement(root, "ScaleFactor").text       = "1.0"
-    ET.SubElement(root, "IQFileName").text        = iq_filename
-    ET.SubElement(root, "SampleCount").text       = str(sample_count)
-    if extra_tags:
-        for k, v in extra_tags.items():
-            ET.SubElement(root, k).text = str(v)
-    ET.ElementTree(root).write(xml_path)
-
-
-# ==========================================
-# WIDEBAND STITCHER
-# ==========================================
-
-class WidebandStitcher:
-    def __init__(self, hop_freqs, hop_bw, total_span, center_freq,
-                 fft_bins=FFT_BINS):
-        self.hop_freqs      = hop_freqs
-        self.hop_bw         = hop_bw
-        self.total_span     = total_span
-        self.center_freq    = center_freq
-        self.fft_bins       = fft_bins
-        self.n_hops         = len(hop_freqs)
-        self.composite_bins = self.n_hops * fft_bins
-        self.synthetic_rate = self.n_hops * hop_bw
-        self.window         = np.hanning(fft_bins).astype(np.complex64)
-
-        f_min  = center_freq - total_span / 2
-        bin_hz = hop_bw / fft_bins
-        self._hop_slices = []
-        for freq in hop_freqs:
-            hop_f_min = freq - hop_bw / 2
-            start_bin = int(round((hop_f_min - f_min) / bin_hz))
-            end_bin   = start_bin + fft_bins
-            self._hop_slices.append((
-                max(start_bin, 0),
-                min(end_bin, self.composite_bins)
-            ))
-
-    def stitch(self, hop_iq_buffers):
-        composite_spectrum = np.zeros(self.composite_bins, dtype=np.complex128)
-        weight_map         = np.zeros(self.composite_bins, dtype=np.float64)
-
-        for i in range(self.n_hops):
-            buf = hop_iq_buffers.get(i)
-            if buf is None or len(buf) < self.fft_bins:
-                continue
-            chunk    = buf[-self.fft_bins:].astype(np.complex128)
-            spectrum = np.fft.fftshift(np.fft.fft(chunk * self.window))
-            s_start, s_end = self._hop_slices[i]
-            bins_to_place  = s_end - s_start
-            if bins_to_place <= 0:
-                continue
-            edge_taper = np.ones(bins_to_place, dtype=np.float64)
-            taper_len  = min(self.fft_bins // 8, bins_to_place // 2)
-            if taper_len > 0:
-                ramp = np.hanning(taper_len * 2)[:taper_len]
-                edge_taper[:taper_len]  = ramp
-                edge_taper[-taper_len:] = ramp[::-1]
-            composite_spectrum[s_start:s_end] += spectrum[:bins_to_place] * edge_taper
-            weight_map[s_start:s_end]         += edge_taper
-
-        nonzero = weight_map > 0
-        composite_spectrum[nonzero] /= weight_map[nonzero]
-        if not np.any(nonzero):
-            return None
-        return np.fft.ifft(np.fft.ifftshift(composite_spectrum)).astype(np.complex64)
-
-
 # ==========================================
 # ML  (fingerprinting)
 # ==========================================
-# The v1 drone/noise CNN (SpectralCNNSlim + InferenceEngine) is removed.  v2 loads
-# the spectrogram FingerprintModel from fp_spectrogram.py — imported lazily in
+# The spectrogram FingerprintModel lives in fp_spectrogram.py — imported lazily in
 # PlutoApp._load_model so the GUI still starts if torch is missing.
 
 
@@ -627,10 +526,6 @@ class PlutoApp(QtWidgets.QMainWindow):
             "settle_ms"       : HOP_SETTLE_MS,
             "overlap_pct"     : HOP_OVERLAP_PCT,
             "hop_freqs"       : [],
-            "wf_jpg_enabled"  : WATERFALL_JPG_ENABLED,
-            "wf_jpg_interval" : WATERFALL_JPG_INTERVAL,
-            "wf_jpg_dir"      : WATERFALL_JPG_DIR,
-            "wf_jpg_quality"  : WATERFALL_JPG_QUALITY,
             # ── v2 fingerprinting ──
             "op_mode"             : "locking",    # locking | wideband | focus
             "record"              : False,        # save data appropriate to the mode
@@ -673,7 +568,6 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.wf_data = self._make_waterfall_buf()
         self.img.setImage(self.wf_data, autoLevels=False)
         self._update_waterfall_rect()
-        self._last_wf_jpg_t = time.time()
         self._start_worker()
 
     # ── SDR / hop helpers ─────────────────────────────────────────────────────
@@ -841,7 +735,7 @@ class PlutoApp(QtWidgets.QMainWindow):
         vbox.addSpacing(4)
         model_row = QtWidgets.QHBoxLayout()
         self.w_model_path = QtWidgets.QLineEdit()
-        self.w_model_path.setPlaceholderText("fingerprint_spec_model.pt")
+        self.w_model_path.setPlaceholderText("trained_model.pt")
         self.w_model_path.setReadOnly(True)
         browse_btn = QtWidgets.QPushButton("Browse…")
         browse_btn.setFixedWidth(70)
@@ -861,7 +755,7 @@ class PlutoApp(QtWidgets.QMainWindow):
         vbox.addWidget(self.model_info_lbl)
 
         # ══════════════════════════════════════════════════════
-        # MODE SECTION  (Mixed / Wideband / Narrowband / Locking)
+        # MODE SECTION  (Locking / Wideband / Narrowband)
         # ══════════════════════════════════════════════════════
         section("Mode")
         mode_row = QtWidgets.QHBoxLayout()
@@ -1055,8 +949,6 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.status_lbl.setStyleSheet(_ss)
         self.file_lbl = QtWidgets.QLabel("Files on disk: 0")
         self.file_lbl.setStyleSheet(_ss)
-        self.wf_jpg_lbl = QtWidgets.QLabel("")
-        self.wf_jpg_lbl.setStyleSheet(_ss)
         self.prog_bar = QtWidgets.QProgressBar()
         self.prog_bar.setRange(0, 100)
         self.prog_bar.setValue(0)
@@ -1064,7 +956,6 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.prog_bar.setFixedHeight(8)
         vbox.addWidget(self.status_lbl)
         vbox.addWidget(self.file_lbl)
-        vbox.addWidget(self.wf_jpg_lbl)
         vbox.addWidget(self.prog_bar)
         vbox.addStretch()
 

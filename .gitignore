@@ -4,8 +4,8 @@ output/
 
 # fingerprinting - raw IQ data + trained models
 fingerprint_data/
-fingerprint_spec_model.pt
-fingerprint_spec_model.meta.json
+trained_model.pt
+trained_model.meta.json
 
 # editor / tooling
 .claude/settings.local.json

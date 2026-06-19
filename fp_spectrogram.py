@@ -1,9 +1,9 @@
 """
 fp_spectrogram.py — shared spectrogram front-end + model for v2 fingerprinting.
 
-Both train_fingerprint_spec.py (training) and terminal-ml-v2.py (live inference)
-import from here, so preprocessing can never drift between the two — the same
-lesson the original pipeline learned with instance_norm.
+Both train_model.py (training) and terminal_v2.py (live inference) import from here,
+so preprocessing can never drift between the two — the same lesson the original
+pipeline learned with instance_norm.
 
 Representation follows the RFUAV paper (arXiv:2503.09033): a 256-point STFT
 spectrogram of the captured IQ.  Two deliberate adaptations for our scale:
