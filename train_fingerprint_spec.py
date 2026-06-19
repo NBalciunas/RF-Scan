@@ -45,28 +45,57 @@ BASE_CH    = 16
 UNKNOWN_THRESH = 0.8
 SEED       = 42
 
+# ── resource / time budget — edit here, or override on the CLI ────────────────
+QUICK               = True       # True = fast sanity run (few epochs + small caps)
+MAX_FILES_PER_CLASS = 0          # 0 = all; cap .iq files per class per session
+MAX_SEGS_PER_FILE   = 0          # 0 = all; cap spectrogram segments per file
+MAX_SEGS_PER_CLASS  = 0          # 0 = all; cap segments per class per split (reins in noise)
+STORE_DTYPE         = "float16"  # in-RAM cache: "float16" (half the RAM) or "float32"
+FORCE_CPU           = False      # True = force CPU even if CUDA is available
 
-def file_to_specs(path: Path, seg_len: int, seg_hop: int,
-                  max_segs: int = 0, store_dtype=np.float32) -> np.ndarray:
-    """One .iq file -> (k, 1, N_FFT, frames) spectrograms (None if too short).
+# ── energy gate: drop silent (noise-level) segments from non-noise classes ────
+GATE_DEVICE_SEGS = True          # True = keep only device segments above the noise floor
+GATE_MARGIN_DB   = 3.0           # a device segment must beat the noise 95th-pct by this
+NOISE_CLASS      = "noise"       # class treated as the noise floor / kept un-gated
+
+
+def _seg_powers_db(raw, seg_len, seg_hop):
+    """Per-segment mean power (dB) across one IQ buffer."""
+    k = (len(raw) - seg_len) // seg_hop + 1
+    if k <= 0:
+        return np.empty(0, np.float64)
+    p = np.array([np.mean(np.abs(raw[i * seg_hop:i * seg_hop + seg_len]) ** 2)
+                  for i in range(k)], dtype=np.float64)
+    return 10.0 * np.log10(p + 1e-12)
+
+
+def file_to_specs(path: Path, seg_len: int, seg_hop: int, max_segs: int = 0,
+                  store_dtype=np.float32, min_power_db=None) -> np.ndarray:
+    """One .iq file -> (k, 1, N_FFT, frames) spectrograms (None if nothing kept).
 
     max_segs > 0 evenly subsamples to at most that many segments per file (less RAM
-    and time, while keeping the temporal spread); store_dtype=float16 halves the
-    in-RAM size of the spectrogram cache."""
+    and time, keeps the temporal spread); store_dtype=float16 halves the cache;
+    min_power_db drops segments quieter than that — the energy gate that removes the
+    silent gaps between bursts in a parked device capture (those are really noise)."""
     raw = np.fromfile(str(path), dtype=np.complex64)
     if len(raw) < seg_len:
         return None
     k = (len(raw) - seg_len) // seg_hop + 1
-    sel = range(k)
-    if max_segs and k > max_segs:
-        sel = np.unique(np.linspace(0, k - 1, max_segs).round().astype(int))
+    sel = np.arange(k)
+    if min_power_db is not None:
+        sel = sel[_seg_powers_db(raw, seg_len, seg_hop) >= min_power_db]
+        if len(sel) == 0:
+            return None
+    if max_segs and len(sel) > max_segs:
+        sel = sel[np.unique(np.linspace(0, len(sel) - 1, max_segs).round().astype(int))]
     return np.stack([iq_to_spectrogram(raw[i * seg_hop:i * seg_hop + seg_len])
                      for i in sel]).astype(store_dtype, copy=False)
 
 
 def load_split(data_dir: Path, seg_len: int, seg_hop: int, rng, *,
-               max_files: int = 0, max_segs_file: int = 0,
-               max_segs_class: int = 0, store_dtype=np.float32):
+               max_files: int = 0, max_segs_file: int = 0, max_segs_class: int = 0,
+               store_dtype=np.float32, gate: bool = False, gate_margin_db: float = 3.0,
+               noise_class: str = "noise"):
     """Build train/val spectrogram tensors. Class = folder; split by session.
 
     Works for any class folder, `noise` included. Optional caps bound memory/time:
@@ -74,10 +103,32 @@ def load_split(data_dir: Path, seg_len: int, seg_hop: int, rng, *,
       * max_segs_file  — segments per file
       * max_segs_class — segments per class per split (also reins in a huge `noise`
                          class so it can't dominate RAM or the loss)
-    store_dtype=float16 halves the cache footprint."""
+    store_dtype=float16 halves the cache footprint.
+
+    gate=True drops, from every NON-noise class, segments quieter than the noise
+    floor (`noise` 95th-pct power + gate_margin_db). A parked device capture is mostly
+    noise between bursts; without this those silent segments are mislabelled as the
+    device and the classifier collapses."""
     classes = sorted(d.name for d in data_dir.iterdir() if d.is_dir())
     if not classes:
         raise RuntimeError(f"No class folders found under {data_dir}.")
+
+    gate_thr = None
+    if gate and noise_class in classes:
+        npw = []
+        for f in sorted((data_dir / noise_class).rglob("*.iq"))[:80]:
+            raw = np.fromfile(str(f), dtype=np.complex64)
+            if len(raw) >= seg_len:
+                npw.append(_seg_powers_db(raw, seg_len, seg_hop))
+        if npw:
+            ceiling = float(np.percentile(np.concatenate(npw), 95))
+            gate_thr = ceiling + gate_margin_db
+            print(f"  [gate] noise floor 95th-pct {ceiling:.1f} dB -> keep non-noise "
+                  f"segments >= {gate_thr:.1f} dB  (margin +{gate_margin_db:.0f} dB)")
+        else:
+            print("  [gate] noise class has no usable files — gate disabled")
+    elif gate:
+        print(f"  [gate] no '{noise_class}' class found — energy gate disabled")
 
     Xtr, ytr, Xva, yva = [], [], [], []
     for lab, cls in enumerate(classes):
@@ -96,11 +147,12 @@ def load_split(data_dir: Path, seg_len: int, seg_hop: int, rng, *,
             print(f"  [warn] class '{cls}' has a single session ({sessions[0]}); "
                   f"using a RANDOM split — that val accuracy is optimistic.")
 
+        min_pdb = None if (gate_thr is None or cls == noise_class) else gate_thr
         tr_parts, va_parts = [], []
         for sess, files in files_by_sess.items():
             if max_files and len(files) > max_files:        # random subset of files
                 files = [files[i] for i in rng.permutation(len(files))[:max_files]]
-            specs = [file_to_specs(f, seg_len, seg_hop, max_segs_file, store_dtype)
+            specs = [file_to_specs(f, seg_len, seg_hop, max_segs_file, store_dtype, min_pdb)
                      for f in files]
             specs = [s for s in specs if s is not None]
             if not specs:
@@ -187,7 +239,9 @@ def train(args):
     classes, Xtr, ytr, Xva, yva = load_split(
         Path(args.data_dir), args.seg_len, args.seg_hop, rng,
         max_files=args.max_files_per_class, max_segs_file=args.max_segs_per_file,
-        max_segs_class=args.max_segs_per_class, store_dtype=store_dtype)
+        max_segs_class=args.max_segs_per_class, store_dtype=store_dtype,
+        gate=GATE_DEVICE_SEGS, gate_margin_db=args.gate_margin_db,
+        noise_class=NOISE_CLASS)
     mem = (Xtr.nbytes + Xva.nbytes) / 1e6
     print(f"\nClasses  : {classes}")
     print(f"Train/Val: {len(Xtr):,} / {len(Xva):,} spectrograms  shape {Xtr.shape[1:]}"
@@ -284,18 +338,21 @@ def parse_args():
     p.add_argument("--base_ch",        type=int,   default=BASE_CH)
     p.add_argument("--unknown_thresh", type=float, default=UNKNOWN_THRESH)
     p.add_argument("--seed",           type=int,   default=SEED)
-    # ── resource / time budget ────────────────────────────────────────────────
-    p.add_argument("--max_files_per_class", type=int, default=0,
+    # ── resource / time budget (defaults come from the constants above) ────────
+    p.add_argument("--max_files_per_class", type=int, default=MAX_FILES_PER_CLASS,
                    help="cap .iq files loaded per class per session (0 = all)")
-    p.add_argument("--max_segs_per_file",   type=int, default=0,
+    p.add_argument("--max_segs_per_file",   type=int, default=MAX_SEGS_PER_FILE,
                    help="cap spectrogram segments per file (0 = all)")
-    p.add_argument("--max_segs_per_class",  type=int, default=0,
+    p.add_argument("--max_segs_per_class",  type=int, default=MAX_SEGS_PER_CLASS,
                    help="cap segments per class per split (0 = all; reins in noise)")
-    p.add_argument("--store_dtype", choices=["float16", "float32"], default="float16",
+    p.add_argument("--store_dtype", choices=["float16", "float32"], default=STORE_DTYPE,
                    help="in-RAM spectrogram cache dtype (float16 halves memory)")
-    p.add_argument("--quick", action="store_true",
+    p.add_argument("--gate_margin_db", type=float, default=GATE_MARGIN_DB,
+                   help="dB a device segment must beat the noise floor by to be kept "
+                        "(energy gate; toggle with GATE_DEVICE_SEGS in code)")
+    p.add_argument("--quick", action="store_true", default=QUICK,
                    help="fast sanity run: few epochs + small caps")
-    p.add_argument("--cpu", action="store_true",
+    p.add_argument("--cpu", action="store_true", default=FORCE_CPU,
                    help="force CPU even if CUDA is available")
     return p.parse_args()
 
