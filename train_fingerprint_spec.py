@@ -13,7 +13,12 @@ Reads the raw-IQ captures recorded by terminal-ml-v2.py (Focus / Wideband + Reco
 so nothing needs re-recording. The GUI loads the resulting model via the SAME module.
 
     python train_fingerprint_spec.py
+    python train_fingerprint_spec.py --quick                      # fast sanity check
+    python train_fingerprint_spec.py --max_segs_per_class 4000    # cap RAM / balance noise
     python train_fingerprint_spec.py --seg_len 8192 --epochs 40
+
+Memory/time is bounded by the --max_* caps and --store_dtype (float16 by default);
+--quick is the "is this going the right way?" preset.
 """
 
 import json
@@ -41,18 +46,35 @@ UNKNOWN_THRESH = 0.8
 SEED       = 42
 
 
-def file_to_specs(path: Path, seg_len: int, seg_hop: int) -> np.ndarray:
-    """One .iq file -> (k, 1, N_FFT, frames) spectrograms (None if too short)."""
+def file_to_specs(path: Path, seg_len: int, seg_hop: int,
+                  max_segs: int = 0, store_dtype=np.float32) -> np.ndarray:
+    """One .iq file -> (k, 1, N_FFT, frames) spectrograms (None if too short).
+
+    max_segs > 0 evenly subsamples to at most that many segments per file (less RAM
+    and time, while keeping the temporal spread); store_dtype=float16 halves the
+    in-RAM size of the spectrogram cache."""
     raw = np.fromfile(str(path), dtype=np.complex64)
     if len(raw) < seg_len:
         return None
     k = (len(raw) - seg_len) // seg_hop + 1
+    sel = range(k)
+    if max_segs and k > max_segs:
+        sel = np.unique(np.linspace(0, k - 1, max_segs).round().astype(int))
     return np.stack([iq_to_spectrogram(raw[i * seg_hop:i * seg_hop + seg_len])
-                     for i in range(k)])
+                     for i in sel]).astype(store_dtype, copy=False)
 
 
-def load_split(data_dir: Path, seg_len: int, seg_hop: int, rng):
-    """Build train/val spectrogram tensors. Class = folder; split by session."""
+def load_split(data_dir: Path, seg_len: int, seg_hop: int, rng, *,
+               max_files: int = 0, max_segs_file: int = 0,
+               max_segs_class: int = 0, store_dtype=np.float32):
+    """Build train/val spectrogram tensors. Class = folder; split by session.
+
+    Works for any class folder, `noise` included. Optional caps bound memory/time:
+      * max_files      — .iq files kept per class per session
+      * max_segs_file  — segments per file
+      * max_segs_class — segments per class per split (also reins in a huge `noise`
+                         class so it can't dominate RAM or the loss)
+    store_dtype=float16 halves the cache footprint."""
     classes = sorted(d.name for d in data_dir.iterdir() if d.is_dir())
     if not classes:
         raise RuntimeError(f"No class folders found under {data_dir}.")
@@ -74,9 +96,12 @@ def load_split(data_dir: Path, seg_len: int, seg_hop: int, rng):
             print(f"  [warn] class '{cls}' has a single session ({sessions[0]}); "
                   f"using a RANDOM split — that val accuracy is optimistic.")
 
-        cls_tr = cls_va = 0
+        tr_parts, va_parts = [], []
         for sess, files in files_by_sess.items():
-            specs = [file_to_specs(f, seg_len, seg_hop) for f in files]
+            if max_files and len(files) > max_files:        # random subset of files
+                files = [files[i] for i in rng.permutation(len(files))[:max_files]]
+            specs = [file_to_specs(f, seg_len, seg_hop, max_segs_file, store_dtype)
+                     for f in files]
             specs = [s for s in specs if s is not None]
             if not specs:
                 continue
@@ -85,19 +110,28 @@ def load_split(data_dir: Path, seg_len: int, seg_hop: int, rng):
             if random_val:
                 perm = rng.permutation(len(specs))
                 n_va = max(1, int(0.2 * len(specs)))
-                va, tr = specs[perm[:n_va]], specs[perm[n_va:]]
+                va_parts.append(specs[perm[:n_va]]); tr_parts.append(specs[perm[n_va:]])
             elif sess in val_sessions:
-                va, tr = specs, specs[:0]
+                va_parts.append(specs)
             else:
-                va, tr = specs[:0], specs
+                tr_parts.append(specs)
 
-            if len(tr):
-                Xtr.append(tr); ytr.append(np.full(len(tr), lab, np.int64)); cls_tr += len(tr)
-            if len(va):
-                Xva.append(va); yva.append(np.full(len(va), lab, np.int64)); cls_va += len(va)
+        tr = np.concatenate(tr_parts) if tr_parts else None
+        va = np.concatenate(va_parts) if va_parts else None
+        if max_segs_class and tr is not None and len(tr) > max_segs_class:
+            tr = tr[rng.permutation(len(tr))[:max_segs_class]]
+        if max_segs_class and va is not None and len(va) > max_segs_class:
+            va = va[rng.permutation(len(va))[:max_segs_class]]
+
+        n_tr = 0 if tr is None else len(tr)
+        n_va = 0 if va is None else len(va)
+        if n_tr:
+            Xtr.append(tr); ytr.append(np.full(n_tr, lab, np.int64))
+        if n_va:
+            Xva.append(va); yva.append(np.full(n_va, lab, np.int64))
 
         held = "random" if random_val else f"session {sorted(val_sessions)[0]}"
-        print(f"  {cls:<10}: {cls_tr:,} train / {cls_va:,} val  (val = {held})")
+        print(f"  {cls:<10}: {n_tr:,} train / {n_va:,} val  (val = {held})")
 
     if not Xtr or not Xva:
         raise RuntimeError("Not enough data to form both a train and a val split.")
@@ -112,7 +146,7 @@ def print_confusion(model, loader, classes, device):
     cm = np.zeros((n, n), dtype=np.int64)
     with torch.no_grad():
         for xb, yb in loader:
-            pred = model(xb.to(device)).argmax(1).cpu().numpy()
+            pred = model(xb.to(device).float()).argmax(1).cpu().numpy()
             for t, p in zip(yb.numpy(), pred):
                 cm[int(t), int(p)] += 1
     print("\nConfusion matrix (val — rows = true, cols = pred):")
@@ -131,15 +165,33 @@ def print_confusion(model, loader, classes, device):
 def train(args):
     rng = np.random.RandomState(args.seed)
     torch.manual_seed(args.seed)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu" if (args.cpu or not torch.cuda.is_available())
+                          else "cuda")
+    store_dtype = np.float16 if args.store_dtype == "float16" else np.float32
 
-    print(f"\nDevice : {device}")
+    if args.quick:                       # fast "is this going the right way?" run
+        args.epochs = min(args.epochs, 5)
+        if not args.max_files_per_class: args.max_files_per_class = 15
+        if not args.max_segs_per_file:   args.max_segs_per_file   = 40
+        print("\n*** QUICK MODE — small caps + few epochs. Sanity check only; "
+              "the val number here is NOT final. ***")
+
+    print(f"\nDevice : {device}   |   cache dtype {store_dtype.__name__}")
     print(f"STFT   : {N_FFT}-pt, hop {STFT_HOP}   |   segment {args.seg_len}/{args.seg_hop}")
+    caps = []
+    if args.max_files_per_class: caps.append(f"<={args.max_files_per_class} files/class/session")
+    if args.max_segs_per_file:   caps.append(f"<={args.max_segs_per_file} segs/file")
+    if args.max_segs_per_class:  caps.append(f"<={args.max_segs_per_class} segs/class/split")
+    print(f"Caps   : {', '.join(caps) if caps else 'none (full dataset)'}")
     print("\nLoading captures…")
     classes, Xtr, ytr, Xva, yva = load_split(
-        Path(args.data_dir), args.seg_len, args.seg_hop, rng)
+        Path(args.data_dir), args.seg_len, args.seg_hop, rng,
+        max_files=args.max_files_per_class, max_segs_file=args.max_segs_per_file,
+        max_segs_class=args.max_segs_per_class, store_dtype=store_dtype)
+    mem = (Xtr.nbytes + Xva.nbytes) / 1e6
     print(f"\nClasses  : {classes}")
-    print(f"Train/Val: {len(Xtr):,} / {len(Xva):,} spectrograms  shape {Xtr.shape[1:]}")
+    print(f"Train/Val: {len(Xtr):,} / {len(Xva):,} spectrograms  shape {Xtr.shape[1:]}"
+          f"   (~{mem:.0f} MB cached)")
 
     tr_ds = TensorDataset(torch.from_numpy(Xtr), torch.from_numpy(ytr))
     va_ds = TensorDataset(torch.from_numpy(Xva), torch.from_numpy(yva))
@@ -167,7 +219,7 @@ def train(args):
         model.train()
         tl = tc = tn = 0
         for xb, yb in tr_loader:
-            xb, yb = xb.to(device), yb.to(device)
+            xb, yb = xb.to(device).float(), yb.to(device)
             opt.zero_grad()
             logits = model(xb)
             loss = crit(logits, yb)
@@ -182,7 +234,7 @@ def train(args):
         vc = vn = 0
         with torch.no_grad():
             for xb, yb in va_loader:
-                xb, yb = xb.to(device), yb.to(device)
+                xb, yb = xb.to(device).float(), yb.to(device)
                 vc += (model(xb).argmax(1) == yb).sum().item()
                 vn += len(yb)
 
@@ -232,6 +284,19 @@ def parse_args():
     p.add_argument("--base_ch",        type=int,   default=BASE_CH)
     p.add_argument("--unknown_thresh", type=float, default=UNKNOWN_THRESH)
     p.add_argument("--seed",           type=int,   default=SEED)
+    # ── resource / time budget ────────────────────────────────────────────────
+    p.add_argument("--max_files_per_class", type=int, default=0,
+                   help="cap .iq files loaded per class per session (0 = all)")
+    p.add_argument("--max_segs_per_file",   type=int, default=0,
+                   help="cap spectrogram segments per file (0 = all)")
+    p.add_argument("--max_segs_per_class",  type=int, default=0,
+                   help="cap segments per class per split (0 = all; reins in noise)")
+    p.add_argument("--store_dtype", choices=["float16", "float32"], default="float16",
+                   help="in-RAM spectrogram cache dtype (float16 halves memory)")
+    p.add_argument("--quick", action="store_true",
+                   help="fast sanity run: few epochs + small caps")
+    p.add_argument("--cpu", action="store_true",
+                   help="force CPU even if CUDA is available")
     return p.parse_args()
 
 
