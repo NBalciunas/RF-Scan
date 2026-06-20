@@ -39,14 +39,14 @@ from fp_spectrogram import (iq_to_spectrogram, SpecCNN,
 DATA_DIR   = "./fingerprint_data"
 OUTPUT     = "./trained_model.pt"
 BATCH_SIZE = 128
-EPOCHS     = 30
+EPOCHS     = 5
 LR         = 1e-3
 BASE_CH    = 16
 UNKNOWN_THRESH = 0.8
 SEED       = 42
 
 # ── resource / time budget — edit here, or override on the CLI ────────────────
-QUICK               = True       # True = fast sanity run (few epochs + small caps)
+QUICK               = False      # True = fast sanity run (few epochs + small caps)
 MAX_FILES_PER_CLASS = 0          # 0 = all; cap .iq files per class per session
 MAX_SEGS_PER_FILE   = 0          # 0 = all; cap spectrogram segments per file
 MAX_SEGS_PER_CLASS  = 0          # 0 = all; cap segments per class per split (reins in noise)

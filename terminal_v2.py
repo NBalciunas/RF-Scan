@@ -65,6 +65,15 @@ FP_HOLD_SETTLE_MS    = 20        # LO settle before grabbing a held capture
 FP_GONE_S            = 2.5       # Locking: drop the lock if the signal's been gone this long
 FP_MEMORY_TTL_S      = 30.0      # remembered catches are skipped for this long, then revisitable
 FP_MEMORY_GUARD_HZ   = 3_000_000 # peaks within this of a remembered freq count as the same signal
+ML_INTERVAL_S        = 0.75      # min seconds between classifier runs (throttle; a signal's
+                                 # identity doesn't change 20x/s, so per-loop inference is wasted)
+
+# ── Narrowband signal markers (live middle/edge overlay on the zoom plot) ─────
+# Measured straight off the displayed PSD — no center freq, no bandwidth param —
+# so the red lines track the true signal and drift with it.
+MARK_MIN_SNR_DB     = 6.0   # peak must beat the noise floor by this before any line is drawn
+MARK_EDGE_MARGIN_DB = 3.0   # an edge is where the signal crosses floor + this (occupied BW)
+MARK_SMOOTH_BINS    = 5     # light smoothing so one noisy bin can't make the edges jump
 
 # ── Stylesheet applied to every input widget so text is always white on dark ──
 _INPUT_SS = (
@@ -143,6 +152,49 @@ def compute_hop_freqs(center_freq, total_span, hop_bw, overlap_pct=0):
     return [int(start + hop_bw // 2 + i * step) for i in range(n_hops)]
 
 
+def signal_extent(freqs, psd, min_snr_db=MARK_MIN_SNR_DB,
+                  edge_margin_db=MARK_EDGE_MARGIN_DB, smooth_bins=MARK_SMOOTH_BINS):
+    """True (LO-independent) middle and edges of the dominant signal in a spectrum.
+
+    Read straight off the live PSD — no center frequency, no bandwidth assumption —
+    so the result tracks the real signal and moves with it. Returns
+    (f_left, f_center, f_right) in the same units as `freqs`, or None when nothing
+    clears the noise floor.
+
+      * edges  : walk out from the peak while the (smoothed) PSD stays above
+                 floor + edge_margin_db — the band the signal actually occupies.
+      * middle : power-weighted centroid across that band — the energy centre of
+                 mass, which is steadier and truer than just the single peak bin.
+    """
+    n = len(psd)
+    if n == 0 or len(freqs) != n:
+        return None
+    sm = np.asarray(psd, dtype=np.float64)
+    if smooth_bins > 1 and n >= smooth_bins:
+        L   = int(smooth_bins)
+        k   = np.ones(L) / float(L)
+        pad = L // 2
+        # Edge-pad (NOT zero-pad): dBFS sits near -80, so a zero-padded convolution
+        # would pull the end bins up toward 0 and fake a peak at the window edges.
+        sm  = np.convolve(np.pad(sm, pad, mode="edge"), k, mode="valid")[:n]
+    floor = float(np.median(sm))
+    pk    = int(np.argmax(sm))
+    if sm[pk] - floor < min_snr_db:            # no signal worth marking
+        return None
+    thr = floor + edge_margin_db
+    l = pk
+    while l > 0 and sm[l - 1] >= thr:
+        l -= 1
+    r = pk
+    while r < n - 1 and sm[r + 1] >= thr:
+        r += 1
+    lin   = np.power(10.0, np.asarray(psd[l:r + 1], dtype=np.float64) / 10.0)  # dB power -> linear
+    fseg  = np.asarray(freqs[l:r + 1], dtype=np.float64)
+    denom = float(lin.sum())
+    f_center = float((fseg * lin).sum() / denom) if denom > 0 else float(freqs[pk])
+    return float(freqs[l]), f_center, float(freqs[r])
+
+
 # ==========================================
 # ML  (fingerprinting)
 # ==========================================
@@ -194,6 +246,7 @@ class SweepWorker(QtCore.QThread):
         self._held_freq = None
         self._last_composite = None        # last full sweep, kept alive during a lock
         self._last_present_t = 0.0         # Locking: last time the locked signal was present
+        self._last_infer_t   = 0.0         # throttle: last time the classifier ran
         self._caught         = []          # [(freq_hz, t_caught)] — memory of catches
 
     def stop(self):
@@ -340,6 +393,21 @@ class SweepWorker(QtCore.QThread):
                         self.status_msg.emit(f"Warning: could not remove {p}: {e}")
         self.files_changed.emit(len(self._fq))
 
+    def _maybe_classify(self, iq):
+        """Run the classifier, but at most once every ml_interval_s. Gated by the
+        live ML on/off flag. Throttling keeps the per-frame CNN forward off the
+        hot loop so the PSD/waterfall/markers stay responsive."""
+        if self.engine is None or not self.cfg.get("ml_enabled", True):
+            return
+        now = time.time()
+        if now - self._last_infer_t < float(self.cfg.get("ml_interval_s", ML_INTERVAL_S)):
+            return
+        self._last_infer_t = now
+        try:
+            self.fingerprint_ready.emit(self.engine.classify_iq(iq))
+        except Exception as e:
+            self.status_msg.emit(f"Inference error: {e}")
+
     # ── top-level dispatch ────────────────────────────────────────────────────
 
     def run(self):
@@ -366,6 +434,7 @@ class SweepWorker(QtCore.QThread):
                 self.cfg["jump_to"] = None
                 self._held_freq, mode = int(jt), "LOCK"
                 self._last_present_t = time.time()
+                self._last_infer_t = 0.0        # classify the new lock immediately
                 self.mode_changed.emit("LOCK", float(jt))
                 self.status_msg.emit(f"Jumped to {jt/1e6:.3f} MHz — Skip to advance")
             if mode == "SCAN":
@@ -384,6 +453,7 @@ class SweepWorker(QtCore.QThread):
                         self.cfg.get("fp_peak_thresh_db", FP_PEAK_THRESH_DB)):
                     self._held_freq, mode = f, "LOCK"
                     self._last_present_t = time.time()
+                    self._last_infer_t = 0.0    # classify the new lock immediately
                     self.mode_changed.emit("LOCK", f)
                     self.status_msg.emit(
                         f"Locked +{peak_db:.0f} dB @ {f/1e6:.3f} MHz — Skip to advance")
@@ -414,11 +484,7 @@ class SweepWorker(QtCore.QThread):
                 comp = self._composite_with_hold(self._held_freq, psd)
                 if comp is not None:
                     self.sweep_ready.emit(comp, {})
-                if self.engine is not None:
-                    try:
-                        self.fingerprint_ready.emit(self.engine.classify_iq(iq))
-                    except Exception as e:
-                        self.status_msg.emit(f"Inference error: {e}")
+                self._maybe_classify(iq)
                 # Auto-advance if the signal's been gone a while (e.g. the noise it
                 # locked onto stopped). No nudge — the LO stays fixed.
                 thresh = float(self.cfg.get("fp_peak_thresh_db", FP_PEAK_THRESH_DB))
@@ -468,6 +534,7 @@ class SweepWorker(QtCore.QThread):
             self.status_msg.emit(f"Focus tune error: {e}"); return
         self.mode_changed.emit("FOCUS", float(freq))
         time.sleep(self.cfg.get("fp_hold_settle_ms", FP_HOLD_SETTLE_MS) / 1000.0)
+        self._last_infer_t = 0.0        # classify the parked signal immediately
         while not self._stop:
             nf = int(self.cfg.get("focus_freq", freq))      # live retune if grabbed
             if nf != freq:
@@ -486,11 +553,7 @@ class SweepWorker(QtCore.QThread):
                 continue
             freqs, psd = self._narrowband_psd(iq, freq)
             self.zoom_ready.emit(freqs, psd, float(freq))
-            if self.engine is not None:
-                try:
-                    self.fingerprint_ready.emit(self.engine.classify_iq(iq))
-                except Exception as e:
-                    self.status_msg.emit(f"Inference error: {e}")
+            self._maybe_classify(iq)
             kind = self.cfg.get("record_kind", "device")
             if self.cfg.get("record") and kind in ("device", "noise_freq"):
                 # noise_freq writes a frequency-matched negative to the noise class.
@@ -528,6 +591,8 @@ class PlutoApp(QtWidgets.QMainWindow):
             "hop_freqs"       : [],
             # ── v2 fingerprinting ──
             "op_mode"             : "locking",    # locking | wideband | focus
+            "ml_enabled"          : True,         # run the classifier (live toggle)
+            "ml_interval_s"       : ML_INTERVAL_S,# throttle: min seconds between inferences
             "record"              : False,        # save data appropriate to the mode
             "record_kind"         : "device",     # Record toggle saves: device | noise
             "skip_lock"           : False,        # Locking mode: advance to next signal
@@ -656,6 +721,20 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.p_zoom.getAxis("left").setWidth(_axis_w)
         self.zoom_curve = self.p_zoom.plot(pen=pg.mkPen("c", width=1))
 
+        # Live signal markers (toggled from the panel): a solid red line at the
+        # signal's true middle and two dashed red lines at its edges. Positions
+        # come from signal_extent() each frame, so they drift with the signal.
+        _mid_pen  = pg.mkPen(color=(255, 40, 40), width=2)
+        _edge_pen = pg.mkPen(color=(255, 40, 40), width=1, style=QtCore.Qt.DashLine)
+        self.mid_line   = pg.InfiniteLine(angle=90, movable=False, pen=_mid_pen)
+        self.edge_lines = [pg.InfiniteLine(angle=90, movable=False, pen=_edge_pen)
+                           for _ in range(2)]
+        for _ln in (self.mid_line, *self.edge_lines):
+            _ln.setVisible(False)
+            _ln.setZValue(10)                 # keep markers above the curve
+            self.p_zoom.addItem(_ln, ignoreBounds=True)
+        self._last_zoom = None                # (freqs, psd) cache for instant retoggle
+
         # ── zoom waterfall  (row 1, col 1) ──────────────────────────────────────
         self.p_zoom_wf = self.win.addPlot(row=1, col=1, title="Narrowband Waterfall")
         self.p_zoom_wf.setLabel("bottom", "Frequency", units="Hz")
@@ -728,10 +807,6 @@ class PlutoApp(QtWidgets.QMainWindow):
         conf_grid.setVerticalSpacing(3)
         vbox.addWidget(self._conf_container)
 
-        self.infer_stat_lbl = QtWidgets.QLabel("Inference: —")
-        self.infer_stat_lbl.setStyleSheet("color: #aaaaaa; font-size: 10px;")
-        vbox.addWidget(self.infer_stat_lbl)
-
         vbox.addSpacing(4)
         model_row = QtWidgets.QHBoxLayout()
         self.w_model_path = QtWidgets.QLineEdit()
@@ -744,15 +819,20 @@ class PlutoApp(QtWidgets.QMainWindow):
         model_row.addWidget(browse_btn)
         vbox.addLayout(model_row)
 
+        load_row = QtWidgets.QHBoxLayout()
         load_btn = QtWidgets.QPushButton("⟳  Load / Reload Model")
         load_btn.setFixedHeight(28)
         load_btn.clicked.connect(self._on_load_model_btn)
-        vbox.addWidget(load_btn)
-
-        self.model_info_lbl = QtWidgets.QLabel("")
-        self.model_info_lbl.setWordWrap(True)
-        self.model_info_lbl.setStyleSheet("color: #aaaaaa; font-size: 10px;")
-        vbox.addWidget(self.model_info_lbl)
+        # Live ML on/off — gates the classifier in the worker. OFF makes the loop
+        # just rx -> PSD -> display (no per-frame CNN), the big speed win.
+        self.w_ml_toggle = QtWidgets.QPushButton("ML Inference: ON")
+        self.w_ml_toggle.setCheckable(True)
+        self.w_ml_toggle.setChecked(self.cfg.get("ml_enabled", True))
+        self.w_ml_toggle.setFixedHeight(28)
+        self.w_ml_toggle.toggled.connect(self._on_ml_toggle)
+        load_row.addWidget(load_btn, 1)
+        load_row.addWidget(self.w_ml_toggle)
+        vbox.addLayout(load_row)
 
         # ══════════════════════════════════════════════════════
         # MODE SECTION  (Locking / Wideband / Narrowband)
@@ -861,8 +941,22 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.w_wf_min.currentTextChanged.connect(self._apply_wf_scale)
         self.w_wf_max.currentTextChanged.connect(self._apply_wf_scale)
 
+        # ══════════════════════════════════════════════════════
+        # NARROWBAND MARKERS SECTION  (live red overlays on the zoom plot)
+        # ══════════════════════════════════════════════════════
+        section("Narrowband Markers")
+        marker_row = QtWidgets.QHBoxLayout()
+        self.w_show_mid = QtWidgets.QCheckBox("show signal middle")
+        self.w_show_mid.toggled.connect(self._on_marker_toggle)
+        self.w_show_borders = QtWidgets.QCheckBox("show signal borders")
+        self.w_show_borders.toggled.connect(self._on_marker_toggle)
+        marker_row.addWidget(self.w_show_mid)
+        marker_row.addWidget(self.w_show_borders)
+        marker_row.addStretch(1)
+        vbox.addLayout(marker_row)
 
-        section("Recording  ★")
+
+        section("Recording")
 
         # What to record: a parked DEVICE fingerprint (Focus capture) or band-swept
         # NOISE (Wideband capture). The Record toggle routes to the right acquisition.
@@ -882,10 +976,6 @@ class PlutoApp(QtWidgets.QMainWindow):
             kind_row.addWidget(b)
         self._rec_kind_btns["device"].setChecked(True)
         vbox.addLayout(kind_row)
-        self.rec_hint_lbl = QtWidgets.QLabel("")
-        self.rec_hint_lbl.setWordWrap(True)
-        self.rec_hint_lbl.setStyleSheet("color:#999999; font-size:10px;")
-        vbox.addWidget(self.rec_hint_lbl)
 
         rec_grid = QtWidgets.QGridLayout()
         rec_grid.setHorizontalSpacing(6)
@@ -933,6 +1023,14 @@ class PlutoApp(QtWidgets.QMainWindow):
 
         section("Status")
         _ss = "color: #cccccc; font-size: 11px;"   # one unified style for all rows
+        self.model_info_lbl = QtWidgets.QLabel("")
+        self.model_info_lbl.setWordWrap(True)
+        self.model_info_lbl.setStyleSheet(_ss)
+        vbox.addWidget(self.model_info_lbl)
+        self.infer_stat_lbl = QtWidgets.QLabel("Inference: —")
+        self.infer_stat_lbl.setWordWrap(True)
+        self.infer_stat_lbl.setStyleSheet(_ss)
+        vbox.addWidget(self.infer_stat_lbl)
         self.mode_lbl = QtWidgets.QLabel("Mode: —")
         self.mode_lbl.setStyleSheet(_ss)
         vbox.addWidget(self.mode_lbl)
@@ -1073,15 +1171,30 @@ class PlutoApp(QtWidgets.QMainWindow):
             self._set_badge_style("none")
             short = os.path.basename(path)
             self.model_info_lbl.setText(
-                f"✓ {short}\n"
-                f"Classes: {', '.join(engine.classes)}\n"
-                f"seg {engine.seg_len} · unknown < {engine.unknown_thresh:.2f}"
+                f"{_hl(short)} loaded successfully<br>"
+                f"Model classes: {_hl(', '.join(engine.classes))}"
             )
         except Exception as e:
             self._engine = None
             self.model_info_lbl.setText(f"⚠ Load error:\n{e}")
             self.det_badge.setText("LOAD ERROR")
             self._set_badge_style("error")
+
+    def _on_ml_toggle(self, checked: bool):
+        """Flip the worker's live inference gate. Reads through self.cfg (shared with
+        the worker), so it takes effect on the next loop without a restart."""
+        self.cfg["ml_enabled"] = checked
+        self.w_ml_toggle.setText(f"ML Inference: {'ON' if checked else 'OFF'}")
+        if not checked:
+            # Park the readouts so a stale prediction doesn't look live.
+            self.det_badge.setText("ML OFF")
+            self._set_badge_style("none")
+            for cls, bar in self._conf_bars.items():
+                bar.setValue(0)
+                self._conf_labels[cls].setText("0%")
+            self.infer_stat_lbl.setText("Inference: off")
+        elif self._engine is not None:
+            self.det_badge.setText("MODEL LOADED — SCANNING")
 
     # ── ML: result + zoom handlers (inference runs in the worker) ──────────────
 
@@ -1091,16 +1204,16 @@ class PlutoApp(QtWidgets.QMainWindow):
         conf  = result["confidence"]
         probs = result["probs"]
         if result.get("unknown"):
-            self.det_badge.setText(f"…  UNKNOWN  {conf:.0%}")
+            self.det_badge.setText(f"unknown ({conf:.0%})")
             self._set_badge_style("other")
         else:
-            self.det_badge.setText(f"✓  {label.upper()}  {conf:.0%}")
+            self.det_badge.setText(f"{label} ({conf:.0%})")
             self._set_badge_style("device")
         for cls, bar in self._conf_bars.items():
             p = probs.get(cls, 0.0)
             bar.setValue(int(p * 100))
             self._conf_labels[cls].setText(f"{p:.0%}")
-        self.infer_stat_lbl.setText(f"{label} @ {conf:.1%}")
+        self.infer_stat_lbl.setText(f"Inference: {_hl(f'{label} @ {conf:.1%}')}")
 
     def _on_zoom_ready(self, freqs, psd, held_freq):
         self.zoom_curve.setData(freqs, psd)
@@ -1118,6 +1231,43 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.zoom_wf_data[:, -1] = psd
         self.zoom_wf_img.setImage(self.zoom_wf_data, autoLevels=False)
         self.zoom_wf_img.setRect(QtCore.QRectF(held_freq - sr / 2, 0, sr, WATERFALL_ROWS))
+        self._last_zoom = (freqs, psd)
+        self._update_signal_markers(freqs, psd)
+
+    # ── narrowband signal markers ─────────────────────────────────────────────
+
+    def _on_marker_toggle(self, _checked=False):
+        """A marker checkbox flipped — hide what's now off, then refresh against
+        the last spectrum so turning one on shows it immediately (even in SCAN,
+        where no fresh zoom frame is arriving)."""
+        if not self.w_show_mid.isChecked():
+            self.mid_line.setVisible(False)
+        if not self.w_show_borders.isChecked():
+            for ln in self.edge_lines:
+                ln.setVisible(False)
+        if self._last_zoom is not None:
+            self._update_signal_markers(*self._last_zoom)
+
+    def _update_signal_markers(self, freqs, psd):
+        """Place the red middle/edge lines from the live PSD (see signal_extent).
+        Hidden checkboxes draw nothing; a signal below the floor hides them too."""
+        show_mid  = self.w_show_mid.isChecked()
+        show_edge = self.w_show_borders.isChecked()
+        if not (show_mid or show_edge):
+            return
+        extent = signal_extent(freqs, psd)
+        if extent is None:                         # nothing above the noise floor
+            self.mid_line.setVisible(False)
+            for ln in self.edge_lines:
+                ln.setVisible(False)
+            return
+        f_left, f_center, f_right = extent
+        self.mid_line.setPos(f_center)
+        self.mid_line.setVisible(show_mid)
+        self.edge_lines[0].setPos(f_left)
+        self.edge_lines[1].setPos(f_right)
+        for ln in self.edge_lines:
+            ln.setVisible(show_edge)
 
     def _on_mode_changed(self, mode, held_freq):
         if held_freq:
@@ -1243,16 +1393,6 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.w_rec_freq.setEnabled(parked)
         if kind in self._rec_kind_btns:
             self._rec_kind_btns[kind].setChecked(True)
-        hints = {
-            "device":     "Device → parks on Focus freq, records the held signal to "
-                          "fingerprint_data/<device>/.",
-            "noise_band": "Noise (band) → sweeps the whole band into "
-                          "fingerprint_data/noise/ (the band-varying ambient).",
-            "noise_freq": "Noise (freq) → parks on Focus freq (set it to a device's "
-                          "freq, device OFF) → fingerprint_data/noise/ : a "
-                          "frequency-matched negative for that device.",
-        }
-        self.rec_hint_lbl.setText(hints.get(kind, ""))
         # If already recording, re-route into the matching acquisition mode now.
         if self.cfg.get("record") and hasattr(self, "worker"):
             self._on_record_toggle(True)

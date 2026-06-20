@@ -27,6 +27,9 @@ N_FFT    = 256          # paper's STFT sweet spot (STFTP=256)
 STFT_HOP = 64           # hop between STFT frames within a spectrogram
 SEG_LEN  = 4096         # IQ samples per spectrogram (~0.4 ms @ 10 Msps)
 SEG_HOP  = 2048         # hop between successive spectrogram segments
+INFER_MAX_SEGS = 24     # live inference: cap segments per buffer (evenly subsampled).
+                        # Averaging softmax over a representative subset is as good as
+                        # all ~240 and ~10x cheaper. 0 = use every segment.
 
 _WINDOW = np.hanning(N_FFT).astype(np.float32)
 FRAMES  = (SEG_LEN - N_FFT) // STFT_HOP + 1   # time frames at the defaults
@@ -48,14 +51,20 @@ def iq_to_spectrogram(iq, n_fft=N_FFT, hop=STFT_HOP):
 
 
 def iq_segments_to_specs(iq, seg_len=SEG_LEN, seg_hop=SEG_HOP,
-                         n_fft=N_FFT, hop=STFT_HOP):
-    """Slice an IQ buffer into seg_len chunks -> (k, 1, n_fft, frames)."""
+                         n_fft=N_FFT, hop=STFT_HOP, max_segs=0):
+    """Slice an IQ buffer into seg_len chunks -> (k, 1, n_fft, frames).
+
+    max_segs > 0 evenly subsamples to at most that many segments (keeps the temporal
+    spread) — the live-inference speed lever, mirroring the trainer's max_segs_per_file."""
     iq = np.asarray(iq, dtype=np.complex64)
     if len(iq) < seg_len:
         return iq_to_spectrogram(iq, n_fft, hop)[None]      # single (1,1,nfft,fr)
     k = (len(iq) - seg_len) // seg_hop + 1
+    idx = np.arange(k)
+    if max_segs and k > max_segs:
+        idx = np.unique(np.linspace(0, k - 1, max_segs).round().astype(int))
     return np.stack([iq_to_spectrogram(iq[i * seg_hop:i * seg_hop + seg_len],
-                                       n_fft, hop) for i in range(k)])
+                                       n_fft, hop) for i in idx])
 
 
 class SpecCNN(nn.Module):
@@ -94,7 +103,7 @@ class FingerprintModel:
     "none of the above", so the threshold supplies one).
     """
 
-    def __init__(self, model_path, unknown_thresh=0.8):
+    def __init__(self, model_path, unknown_thresh=0.8, infer_max_segs=INFER_MAX_SEGS):
         meta_path = os.path.splitext(model_path)[0] + ".meta.json"
         with open(meta_path) as f:
             meta = json.load(f)
@@ -105,6 +114,7 @@ class FingerprintModel:
         self.seg_hop  = int(meta.get("seg_hop",  SEG_HOP))
         base          = int(meta.get("base_ch",  16))
         self.unknown_thresh = float(meta.get("unknown_thresh", unknown_thresh))
+        self.infer_max_segs = int(infer_max_segs)
 
         self.net = SpecCNN(len(self.classes), base=base)
         self.net.load_state_dict(torch.load(model_path, map_location="cpu"))
@@ -112,7 +122,8 @@ class FingerprintModel:
 
     def classify_iq(self, iq):
         specs = iq_segments_to_specs(iq, self.seg_len, self.seg_hop,
-                                     self.n_fft, self.stft_hop)
+                                     self.n_fft, self.stft_hop,
+                                     max_segs=self.infer_max_segs)
         x = torch.from_numpy(specs.astype(np.float32))
         with torch.no_grad():
             probs = torch.softmax(self.net(x), dim=1).mean(0).numpy()
