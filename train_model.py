@@ -21,6 +21,7 @@ Memory/time is bounded by the --max_* caps and --store_dtype (float16 by default
 --quick is the "is this going the right way?" preset.
 """
 
+import re
 import json
 import time
 import argparse
@@ -39,7 +40,7 @@ from fp_spectrogram import (iq_to_spectrogram, SpecCNN,
 DATA_DIR   = "./fingerprint_data"
 OUTPUT     = "./trained_model.pt"
 BATCH_SIZE = 128
-EPOCHS     = 5
+EPOCHS     = 8 
 LR         = 1e-3
 BASE_CH    = 16
 UNKNOWN_THRESH = 0.8
@@ -49,7 +50,7 @@ SEED       = 42
 QUICK               = False      # True = fast sanity run (few epochs + small caps)
 MAX_FILES_PER_CLASS = 0          # 0 = all; cap .iq files per class per session
 MAX_SEGS_PER_FILE   = 0          # 0 = all; cap spectrogram segments per file
-MAX_SEGS_PER_CLASS  = 0          # 0 = all; cap segments per class per split (reins in noise)
+MAX_SEGS_PER_CLASS  = 20000      # 0 = all; cap segments per class per split (reins in noise / RAM)
 STORE_DTYPE         = "float16"  # in-RAM cache: "float16" (half the RAM) or "float32"
 FORCE_CPU           = False      # True = force CPU even if CUDA is available
 
@@ -57,6 +58,11 @@ FORCE_CPU           = False      # True = force CPU even if CUDA is available
 GATE_DEVICE_SEGS = True          # True = keep only device segments above the noise floor
 GATE_MARGIN_DB   = 3.0           # a device segment must beat the noise 95th-pct by this
 NOISE_CLASS      = "noise"       # class treated as the noise floor / kept un-gated
+
+
+def _natkey(s):
+    """Natural sort key so session_10 sorts after session_9, not after session_1."""
+    return [int(t) if t.isdigit() else t for t in re.split(r"(\d+)", s)]
 
 
 def _seg_powers_db(raw, seg_len, seg_hop):
@@ -135,7 +141,7 @@ def load_split(data_dir: Path, seg_len: int, seg_hop: int, rng, *,
         files_by_sess = defaultdict(list)
         for f in (data_dir / cls).rglob("*.iq"):
             files_by_sess[f.parent.name].append(f)
-        sessions = sorted(files_by_sess)
+        sessions = sorted(files_by_sess, key=_natkey)
         if not sessions:
             print(f"  {cls:<10}: no .iq files, skipped")
             continue
@@ -301,7 +307,8 @@ def train(args):
             best_acc = va_acc
             best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
 
-    model.load_state_dict(best_state)
+    if best_state is not None:              # val acc can stay 0.0 on a broken run
+        model.load_state_dict(best_state)
     print_confusion(model, va_loader, classes, device)
 
     torch.save(model.state_dict(), args.out)
@@ -318,7 +325,9 @@ def train(args):
         "model"         : "SpecCNN",
         "representation": "stft256_logmag_1ch",
     }
-    with open(args.out.replace(".pt", ".meta.json"), "w") as f:
+    # with_suffix (not str.replace) so this always matches how FingerprintModel
+    # derives the meta path (splitext), whatever --out is called.
+    with open(Path(args.out).with_suffix(".meta.json"), "w") as f:
         json.dump(meta, f, indent=2)
 
     print(f"\n[ok] Model -> {args.out}")

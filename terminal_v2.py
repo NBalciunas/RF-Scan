@@ -24,17 +24,11 @@ import adi
 import pyqtgraph as pg
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-torch     = None
-nn        = None
-_TORCH_OK = False
 try:
-    import torch as _torch
-    import torch.nn as _nn
-    torch     = _torch
-    nn        = _nn
+    import torch  # presence check only — actual use is lazy-imported via fp_spectrogram
     _TORCH_OK = True
 except ImportError:
-    pass
+    _TORCH_OK = False
 
 # ==========================================
 # CONFIGURATION
@@ -65,8 +59,14 @@ FP_HOLD_SETTLE_MS    = 20        # LO settle before grabbing a held capture
 FP_GONE_S            = 2.5       # Locking: drop the lock if the signal's been gone this long
 FP_MEMORY_TTL_S      = 30.0      # remembered catches are skipped for this long, then revisitable
 FP_MEMORY_GUARD_HZ   = 3_000_000 # peaks within this of a remembered freq count as the same signal
+FP_AUTO_DWELL_MS     = 5000      # Auto: dwell on a lock this long before judging it noise
+FP_AUTO_NOISE_PCT    = 90        # Auto: auto-skip the lock when noise prob reaches this %
 ML_INTERVAL_S        = 0.75      # min seconds between classifier runs (throttle; a signal's
                                  # identity doesn't change 20x/s, so per-loop inference is wasted)
+NOISE_REC_EVERY_N    = 5         # wideband noise rec: save every Nth sweep. Undecimated, the
+                                 # max-files ring refills in ~100 s, so long recordings keep only
+                                 # the tail; every Nth spreads the same ring over N× the time
+                                 # (more diverse noise) and cuts disk churn to match.
 
 # ── Narrowband signal markers (live middle/edge overlay on the zoom plot) ─────
 # Measured straight off the displayed PSD — no center freq, no bandwidth param —
@@ -150,6 +150,27 @@ def compute_hop_freqs(center_freq, total_span, hop_bw, overlap_pct=0):
     n_hops     = math.ceil(total_span / step)
     start      = center_freq - total_span // 2
     return [int(start + hop_bw // 2 + i * step) for i in range(n_hops)]
+
+
+def composite_geometry(cfg):
+    """Geometry of the stitched sweep composite -> (n_keep, f_start, f_stop).
+
+    Each hop's FFT spans sample_rate Hz, but hops advance by only `step` Hz
+    (hop_bw minus overlap).  Stitching all FFT_BINS bins per hop would compress
+    the frequency axis by ~sample_rate/step and show the same signal in several
+    slots, so only the central n_keep bins (~step Hz) of every hop are kept —
+    slots then tile contiguously and bin -> Hz is one linear map, shared by the
+    worker (peak detect / hold overlay) and the GUI (axis, waterfall, hop lines).
+    """
+    sr   = float(cfg["sample_rate"])
+    hops = cfg["hop_freqs"]
+    if len(hops) > 1:
+        step = float(hops[1] - hops[0])
+    else:
+        step = min(sr, float(cfg["rx_bw"])) * (1.0 - cfg["overlap_pct"] / 100.0)
+    n_keep = max(2, min(FFT_BINS, int(round(FFT_BINS * step / sr))))
+    half   = n_keep * (sr / FFT_BINS) / 2.0
+    return n_keep, hops[0] - half, hops[-1] + half
 
 
 def signal_extent(freqs, psd, min_snr_db=MARK_MIN_SNR_DB,
@@ -248,6 +269,8 @@ class SweepWorker(QtCore.QThread):
         self._last_present_t = 0.0         # Locking: last time the locked signal was present
         self._last_infer_t   = 0.0         # throttle: last time the classifier ran
         self._caught         = []          # [(freq_hz, t_caught)] — memory of catches
+        self._lock_t         = 0.0         # Auto: when the current lock began (dwell timer)
+        self._last_class     = None        # Auto: most recent classifier result for this lock
 
     def stop(self):
         self._stop = True
@@ -261,14 +284,16 @@ class SweepWorker(QtCore.QThread):
     # ── geometry / DSP helpers ────────────────────────────────────────────────
 
     def _band_edges(self):
-        c, s = self.cfg["center_freq"], self.cfg["total_span"]
-        return c - s // 2, c + s // 2
+        _n, f0, f1 = composite_geometry(self.cfg)
+        return f0, f1
 
     def _sweep_once(self):
         """One wideband hop sweep -> (composite, hop_bufs). Mirrors v1 SCAN."""
         hop_freqs  = self.cfg["hop_freqs"]
         n_hops     = len(hop_freqs)
-        composite  = np.full(n_hops * FFT_BINS, -100.0, dtype=np.float32)
+        n_keep, _f0, _f1 = composite_geometry(self.cfg)
+        b0         = (FFT_BINS - n_keep) // 2       # central slice of each hop's PSD
+        composite  = np.full(n_hops * n_keep, -100.0, dtype=np.float32)
         hop_bufs   = {}
         for i, freq in enumerate(hop_freqs):
             if self._stop:
@@ -288,33 +313,33 @@ class SweepWorker(QtCore.QThread):
             if raw is None or len(raw) == 0:
                 continue
             hop_bufs[i] = raw
-            chunk = raw[:FFT_BINS]
-            if len(chunk) < FFT_BINS:
-                chunk = np.pad(chunk, (0, FFT_BINS - len(chunk)))
-            psd = 20.0 * np.log10(
-                np.abs(np.fft.fftshift(np.fft.fft(chunk * self._BLACKMAN)))
-                / FFT_BINS + 1e-10)
-            composite[i * FFT_BINS:(i + 1) * FFT_BINS] = psd.astype(np.float32)
+            # Peak-hold over the WHOLE dwell buffer (not just its first 102 µs):
+            # the radio already paid for these samples, and bursty emitters are
+            # invisible to a single window. Adds ~ms per hop vs the ~100 ms dwell.
+            psd = self._peak_hold_psd(raw)
+            composite[i * n_keep:(i + 1) * n_keep] = psd[b0:b0 + n_keep]
         return composite, hop_bufs
 
-    def _narrowband_psd(self, iq, center):
-        """Peak-hold dBFS spectrum of a held capture, mapped to absolute Hz.
-
-        Peak-hold across the whole buffer (not just the first window) so a burst
-        landing anywhere in the ~50 ms capture is shown — otherwise the display
-        flickers and mostly misses the bursty emission."""
+    def _peak_hold_psd(self, iq):
+        """1024-bin dBFS PSD, peak-held across contiguous gap-free windows spanning
+        the buffer, so a burst anywhere in the dwell shows at full amplitude (one
+        window would miss it ~99.8% of the time at the default 50 ms dwell).
+        Contiguous (not sparse) windows so a burst can't fall between them; batched
+        FFT; the window cap bounds CPU/RAM however long the dwell is."""
         n = len(iq)
         if n < FFT_BINS:
             iq = np.pad(iq, (0, FFT_BINS - n)); n = FFT_BINS
-        # Contiguous, gap-free windows (a sparse step lets a burst fall between
-        # windows and vanish).  Batched FFT, peak-hold across windows.
         nwin = min(1024, n // FFT_BINS)
         seg  = iq[:nwin * FFT_BINS].reshape(nwin, FFT_BINS) * self._BLACKMAN
         mag  = np.abs(np.fft.fftshift(np.fft.fft(seg, axis=1), axes=1)) / FFT_BINS
-        psd  = 20.0 * np.log10(mag.max(axis=0) + 1e-10)     # peak-hold
+        return (20.0 * np.log10(mag.max(axis=0) + 1e-10)).astype(np.float32)
+
+    def _narrowband_psd(self, iq, center):
+        """Peak-hold dBFS spectrum of a held capture, mapped to absolute Hz."""
+        psd = self._peak_hold_psd(iq)
         sr = self.cfg["sample_rate"]
         freqs = np.linspace(center - sr / 2, center + sr / 2, FFT_BINS)
-        return freqs, psd.astype(np.float32)
+        return freqs, psd
 
     def _composite_with_hold(self, held_freq, psd):
         """Overlay the live held-band spectrum onto the last full sweep, so the
@@ -322,7 +347,8 @@ class SweepWorker(QtCore.QThread):
         while parked in HOLD."""
         base = self._last_composite
         if base is None:                       # no prior sweep — synthesise a floor
-            base = np.full(len(self.cfg["hop_freqs"]) * FFT_BINS, -100.0, dtype=np.float32)
+            n_keep, _f0, _f1 = composite_geometry(self.cfg)
+            base = np.full(len(self.cfg["hop_freqs"]) * n_keep, -100.0, dtype=np.float32)
         comp = base.copy()
         f_min, f_max = self._band_edges()
         span = f_max - f_min
@@ -365,6 +391,14 @@ class SweepWorker(QtCore.QThread):
         self._caught.append((float(freq), time.time()))
         self.caught_changed.emit([f for f, _t in self._caught])
 
+    def _release_lock(self, msg):
+        """Forget the current lock, remember it as caught, and return to SCAN.
+        Caller still sets its local `mode = "SCAN"` and `continue`s."""
+        self._remember(self._held_freq)
+        self._held_freq = None
+        self.mode_changed.emit("SCAN", 0.0)
+        self.status_msg.emit(msg)
+
     def _prune_memory(self):
         """Forget catches older than the TTL so they can be revisited."""
         ttl = float(self.cfg.get("fp_memory_ttl_s", FP_MEMORY_TTL_S))
@@ -404,9 +438,17 @@ class SweepWorker(QtCore.QThread):
             return
         self._last_infer_t = now
         try:
-            self.fingerprint_ready.emit(self.engine.classify_iq(iq))
+            res = self.engine.classify_iq(iq)
+            self._last_class = res          # Auto reads this to judge the lock
+            self.fingerprint_ready.emit(res)
         except Exception as e:
             self.status_msg.emit(f"Inference error: {e}")
+
+    @staticmethod
+    def _noise_prob(res):
+        """Probability the classifier assigned to the 'noise' class (0.0 if the
+        model has no noise class or hasn't classified this lock yet)."""
+        return float((res or {}).get("probs", {}).get("noise", 0.0))
 
     # ── top-level dispatch ────────────────────────────────────────────────────
 
@@ -416,7 +458,7 @@ class SweepWorker(QtCore.QThread):
             self._run_wideband()
         elif op == "focus":
             self._run_focus()
-        else:
+        else:                       # locking + auto share the lock state-machine
             self._run_locking()
 
     def _run_locking(self):
@@ -433,8 +475,9 @@ class SweepWorker(QtCore.QThread):
             if jt:                              # jump straight onto a chosen freq
                 self.cfg["jump_to"] = None
                 self._held_freq, mode = int(jt), "LOCK"
-                self._last_present_t = time.time()
+                self._last_present_t = self._lock_t = time.time()
                 self._last_infer_t = 0.0        # classify the new lock immediately
+                self._last_class = None         # Auto: judge this lock on fresh results
                 self.mode_changed.emit("LOCK", float(jt))
                 self.status_msg.emit(f"Jumped to {jt/1e6:.3f} MHz — Skip to advance")
             if mode == "SCAN":
@@ -452,8 +495,9 @@ class SweepWorker(QtCore.QThread):
                 if f is not None and peak_db >= float(
                         self.cfg.get("fp_peak_thresh_db", FP_PEAK_THRESH_DB)):
                     self._held_freq, mode = f, "LOCK"
-                    self._last_present_t = time.time()
+                    self._last_present_t = self._lock_t = time.time()
                     self._last_infer_t = 0.0    # classify the new lock immediately
+                    self._last_class = None     # Auto: judge this lock on fresh results
                     self.mode_changed.emit("LOCK", f)
                     self.status_msg.emit(
                         f"Locked +{peak_db:.0f} dB @ {f/1e6:.3f} MHz — Skip to advance")
@@ -462,10 +506,8 @@ class SweepWorker(QtCore.QThread):
                     break
                 if self.cfg.get("skip_lock"):
                     self.cfg["skip_lock"] = False
-                    self._remember(self._held_freq)
-                    mode, self._held_freq = "SCAN", None
-                    self.mode_changed.emit("SCAN", 0.0)
-                    self.status_msg.emit("Skipped — scanning for the next signal")
+                    self._release_lock("Skipped — scanning for the next signal")
+                    mode = "SCAN"
                     continue
                 try:
                     self.sdr.rx_lo = int(self._held_freq)
@@ -485,24 +527,41 @@ class SweepWorker(QtCore.QThread):
                 if comp is not None:
                     self.sweep_ready.emit(comp, {})
                 self._maybe_classify(iq)
+                # Auto mode: once we've dwelled long enough on the lock, hand it to
+                # the classifier — if it reads as noise, skip on automatically so the
+                # user never has to Skip past a noise lock by hand. A real device
+                # (noise below threshold) is left held, exactly like plain Locking.
+                if self.cfg.get("op_mode") == "auto":
+                    dwell = float(self.cfg.get("auto_dwell_ms", FP_AUTO_DWELL_MS)) / 1000.0
+                    thr   = float(self.cfg.get("auto_noise_pct", FP_AUTO_NOISE_PCT)) / 100.0
+                    noise_p = self._noise_prob(self._last_class)
+                    if (self._last_class is not None
+                            and time.time() - self._lock_t >= dwell
+                            and noise_p >= thr):
+                        self._release_lock(
+                            f"Auto-skip: noise {noise_p:.0%} ≥ {thr:.0%} "
+                            f"after {dwell*1000:.0f} ms")
+                        mode = "SCAN"
+                        continue
                 # Auto-advance if the signal's been gone a while (e.g. the noise it
                 # locked onto stopped). No nudge — the LO stays fixed.
                 thresh = float(self.cfg.get("fp_peak_thresh_db", FP_PEAK_THRESH_DB))
                 if (float(psd.max()) - float(np.median(psd))) >= thresh:
                     self._last_present_t = time.time()
                 elif time.time() - self._last_present_t >= FP_GONE_S:
-                    self._remember(self._held_freq)
-                    mode, self._held_freq = "SCAN", None
-                    self.mode_changed.emit("SCAN", 0.0)
-                    self.status_msg.emit("Signal gone — moving on")
+                    self._release_lock("Signal gone — moving on")
+                    mode = "SCAN"
                     continue
                 self.status_msg.emit(
                     f"Locked @ {self._held_freq/1e6:.3f} MHz — Skip to advance")
 
     def _run_wideband(self):
         """Continuous full-band scan, no focus/hold — just the wideband view.
-        If 'record' is on, save each hop's raw IQ as the noise class."""
+        If 'record' is on, save every NOISE_REC_EVERY_N-th sweep's raw IQ as the
+        noise class (training caps noise at ~83 files, so sparser saves spanning
+        more wall-clock time beat contiguous ones)."""
         self.mode_changed.emit("WIDEBAND", 0.0)
+        sweep_i = 0
         while not self._stop:
             t0 = time.perf_counter()
             composite, hop_bufs = self._sweep_once()
@@ -512,14 +571,16 @@ class SweepWorker(QtCore.QThread):
             self.sweep_ready.emit(composite, hop_bufs)
             rec = (bool(self.cfg.get("record"))
                    and self.cfg.get("record_kind") == "noise_band")
-            if rec:
+            if rec and sweep_i % NOISE_REC_EVERY_N == 0:
                 session = self.cfg.get("record_session", "1")
                 for i, raw in hop_bufs.items():
                     if len(raw):
                         self._save_iq(raw, "noise", session,
                                       int(self.cfg["hop_freqs"][i]))
+            sweep_i += 1
             el  = (time.perf_counter() - t0) * 1000
-            tag = f"  |  REC noise: {len(self._fq)} files" if rec else ""
+            tag = (f"  |  REC noise: {len(self._fq)} files "
+                   f"(1/{NOISE_REC_EVERY_N} sweeps)" if rec else "")
             self.status_msg.emit(
                 f"Wideband: {el:.0f} ms  |  {len(self.cfg['hop_freqs'])} hops{tag}")
 
@@ -538,11 +599,14 @@ class SweepWorker(QtCore.QThread):
         while not self._stop:
             nf = int(self.cfg.get("focus_freq", freq))      # live retune if grabbed
             if nf != freq:
-                freq = nf
                 try:
-                    self.sdr.rx_lo = freq
+                    self.sdr.rx_lo = nf
                 except Exception as e:
-                    self.status_msg.emit(f"Focus tune error: {e}"); continue
+                    # keep the old freq: adopting nf here would label captures
+                    # with a frequency we never actually tuned to
+                    self.status_msg.emit(f"Focus tune error: {e}")
+                    time.sleep(0.5); continue
+                freq = nf
                 self.mode_changed.emit("FOCUS", float(freq))
                 time.sleep(self.cfg.get("fp_hold_settle_ms", FP_HOLD_SETTLE_MS) / 1000.0)
             try:
@@ -590,13 +654,15 @@ class PlutoApp(QtWidgets.QMainWindow):
             "overlap_pct"     : HOP_OVERLAP_PCT,
             "hop_freqs"       : [],
             # ── v2 fingerprinting ──
-            "op_mode"             : "locking",    # locking | wideband | focus
+            "op_mode"             : "auto",        # auto | locking | wideband | focus
             "ml_enabled"          : True,         # run the classifier (live toggle)
             "ml_interval_s"       : ML_INTERVAL_S,# throttle: min seconds between inferences
             "record"              : False,        # save data appropriate to the mode
             "record_kind"         : "device",     # Record toggle saves: device | noise
-            "skip_lock"           : False,        # Locking mode: advance to next signal
-            "jump_to"             : None,         # Locking mode: lock onto this freq now
+            "skip_lock"           : False,        # Locking/Auto mode: advance to next signal
+            "jump_to"             : None,         # Locking/Auto mode: lock onto this freq now
+            "auto_dwell_ms"       : FP_AUTO_DWELL_MS,   # Auto: dwell before judging a lock
+            "auto_noise_pct"      : FP_AUTO_NOISE_PCT,  # Auto: noise % that triggers a skip
             "record_device"       : "deviceA",
             "record_session"      : "1",
             "focus_freq"          : CENTER_FREQ,
@@ -609,7 +675,6 @@ class PlutoApp(QtWidgets.QMainWindow):
         self._recompute_hops()
 
         self._engine      = None
-        self._last_result = None
 
         self._build_ui()
 
@@ -643,9 +708,13 @@ class PlutoApp(QtWidgets.QMainWindow):
             self.cfg["center_freq"], self.cfg["total_span"],
             effective_bw, self.cfg["overlap_pct"])
         self.n_hops        = len(self.cfg["hop_freqs"])
-        self.total_bins    = self.n_hops * FFT_BINS
-        self.f_global_min  = self.cfg["center_freq"] - self.cfg["total_span"] // 2
-        self.f_global_max  = self.cfg["center_freq"] + self.cfg["total_span"] // 2
+        # Axis/waterfall extent = what the stitched composite actually covers
+        # (must match the worker's mapping bin-for-bin).
+        n_keep, f0, f1     = composite_geometry(self.cfg)
+        self.total_bins    = self.n_hops * n_keep
+        self.f_global_min  = f0
+        self.f_global_max  = f1
+        self._slot_hz      = (f1 - f0) / self.n_hops
         self._effective_bw = effective_bw
 
     def _push_sdr_settings(self):
@@ -835,15 +904,15 @@ class PlutoApp(QtWidgets.QMainWindow):
         vbox.addLayout(load_row)
 
         # ══════════════════════════════════════════════════════
-        # MODE SECTION  (Locking / Wideband / Narrowband)
+        # MODE SECTION  (Locking / Auto / Wideband / Narrowband)
         # ══════════════════════════════════════════════════════
         section("Mode")
         mode_row = QtWidgets.QHBoxLayout()
         self._mode_btns  = {}
         self._mode_group = QtWidgets.QButtonGroup(self)
         self._mode_group.setExclusive(True)
-        for key, label in (("locking", "Locking"), ("wideband", "Wideband"),
-                           ("focus", "Narrowband")):
+        for key, label in (("auto", "Auto"), ("locking", "Locking"),
+                           ("wideband", "Wideband"), ("focus", "Narrowband")):
             b = QtWidgets.QPushButton(label)
             b.setCheckable(True)
             b.setFixedHeight(26)
@@ -851,14 +920,14 @@ class PlutoApp(QtWidgets.QMainWindow):
             self._mode_group.addButton(b)
             self._mode_btns[key] = b
             mode_row.addWidget(b)
-        self._mode_btns["locking"].setChecked(True)
+        self._mode_btns["auto"].setChecked(True)
         vbox.addLayout(mode_row)
 
-        # Second row (Locking only): Skip the lock + Jump straight to a caught freq.
+        # Second row (Auto/Locking only): Skip the lock + Jump straight to a caught freq.
         skip_row = QtWidgets.QHBoxLayout()
         self.w_skip_btn = QtWidgets.QPushButton("Skip lock")
         self.w_skip_btn.setFixedHeight(26)
-        self.w_skip_btn.setEnabled(True)         # Locking is the default mode
+        self.w_skip_btn.setEnabled(True)         # Auto is the default mode (lock-based)
         self.w_skip_btn.clicked.connect(self._on_skip_lock)
         self.w_jump_btn = QtWidgets.QPushButton("Jump to:")
         self.w_jump_btn.setFixedHeight(26)
@@ -869,6 +938,31 @@ class PlutoApp(QtWidgets.QMainWindow):
         skip_row.addWidget(self.w_jump_btn)
         skip_row.addWidget(self.w_jump_combo, 1)
         vbox.addLayout(skip_row)
+
+        # Auto-mode tuning: dwell on each lock this long, then auto-skip it if the
+        # classifier calls it noise at or above the threshold. Enabled in Auto only.
+        auto_row = QtWidgets.QHBoxLayout()
+        auto_cap = QtWidgets.QLabel("Auto skip:")
+        auto_cap.setStyleSheet("color:#cccccc; font-size:11px;")
+        self.w_auto_dwell = QtWidgets.QSpinBox()
+        self.w_auto_dwell.setRange(100, 60000)
+        self.w_auto_dwell.setSingleStep(100)
+        self.w_auto_dwell.setSuffix(" ms")
+        self.w_auto_dwell.setValue(FP_AUTO_DWELL_MS)
+        self.w_auto_dwell.setToolTip("Dwell on each lock this long before judging it")
+        self.w_auto_noise = QtWidgets.QSpinBox()
+        self.w_auto_noise.setRange(1, 100)
+        self.w_auto_noise.setSuffix(" % noise")
+        self.w_auto_noise.setValue(FP_AUTO_NOISE_PCT)
+        self.w_auto_noise.setToolTip("Skip the lock when noise probability reaches this")
+        for w in (self.w_auto_dwell, self.w_auto_noise):
+            w.setFixedHeight(26)
+            w.setEnabled(True)              # Auto is the default mode
+            w.valueChanged.connect(self._on_auto_params)
+        auto_row.addWidget(auto_cap)
+        auto_row.addWidget(self.w_auto_dwell, 1)
+        auto_row.addWidget(self.w_auto_noise, 1)
+        vbox.addLayout(auto_row)
 
         # ══════════════════════════════════════════════════════
         # SDR SECTION
@@ -1073,10 +1167,6 @@ class PlutoApp(QtWidgets.QMainWindow):
     _BADGE_STYLES = {
         "none"  : ("background: #3a3a3a; color: #ffffff;"
                    " border: 1px solid #555555; border-radius: 6px;"),
-        "drone" : ("background: #cc2200; color: #ffffff;"
-                   " border: 1px solid #ff4422; border-radius: 6px;"),
-        "noise" : ("background: #1a5c1a; color: #ccffcc;"
-                   " border: 1px solid #33aa33; border-radius: 6px;"),
         "device": ("background: #14507a; color: #d6ecff;"
                    " border: 1px solid #2a86c8; border-radius: 6px;"),
         "other" : ("background: #4a4a4a; color: #ffffff;"
@@ -1110,16 +1200,10 @@ class PlutoApp(QtWidgets.QMainWindow):
             bar.setValue(0)
             bar.setTextVisible(False)
             bar.setFixedHeight(14)
-            if "drone" in cls.lower():
-                bar.setStyleSheet(
-                    "QProgressBar::chunk { background: #cc4422; }"
-                    "QProgressBar { border: 1px solid #666666; border-radius: 3px;"
-                    " background: #1e1e1e; }")
-            else:
-                bar.setStyleSheet(
-                    "QProgressBar::chunk { background: #336633; }"
-                    "QProgressBar { border: 1px solid #666666; border-radius: 3px;"
-                    " background: #1e1e1e; }")
+            bar.setStyleSheet(
+                "QProgressBar::chunk { background: #336633; }"
+                "QProgressBar { border: 1px solid #666666; border-radius: 3px;"
+                " background: #1e1e1e; }")
 
             pct_lbl = QtWidgets.QLabel("0%")
             pct_lbl.setFixedWidth(38)
@@ -1170,9 +1254,11 @@ class PlutoApp(QtWidgets.QMainWindow):
             self.det_badge.setText("MODEL LOADED — SCANNING")
             self._set_badge_style("none")
             short = os.path.basename(path)
+            warn = ("" if any(c.lower() == "noise" for c in engine.classes) else
+                    "<br>⚠ No 'noise' class — Auto mode's auto-skip will never trigger")
             self.model_info_lbl.setText(
                 f"{_hl(short)} loaded successfully<br>"
-                f"Model classes: {_hl(', '.join(engine.classes))}"
+                f"Model classes: {_hl(', '.join(engine.classes))}{warn}"
             )
         except Exception as e:
             self._engine = None
@@ -1199,7 +1285,6 @@ class PlutoApp(QtWidgets.QMainWindow):
     # ── ML: result + zoom handlers (inference runs in the worker) ──────────────
 
     def _on_fingerprint_ready(self, result):
-        self._last_result = result
         label = result["label"]
         conf  = result["confidence"]
         probs = result["probs"]
@@ -1313,12 +1398,8 @@ class PlutoApp(QtWidgets.QMainWindow):
         for ln in self.hop_lines:
             self.p1.removeItem(ln)
         self.hop_lines.clear()
-        effective_bw = getattr(self, "_effective_bw",
-                               min(self.cfg["sample_rate"], self.cfg["rx_bw"]))
-        overlap_hz = int(effective_bw * self.cfg["overlap_pct"] / 100.0)
-        step = effective_bw - overlap_hz
         for i in range(self.n_hops + 1):
-            x  = self.f_global_min + i * step
+            x  = self.f_global_min + i * self._slot_hz
             ln = pg.InfiniteLine(
                 pos=x, angle=90,
                 pen=pg.mkPen(color=(70, 70, 70),
@@ -1338,10 +1419,13 @@ class PlutoApp(QtWidgets.QMainWindow):
     def _switch_mode(self, key: str):
         """Apply op_mode `key` and restart the worker. Leaves recording state alone."""
         self.cfg["op_mode"] = key
-        is_lock = (key == "locking")
+        is_lock = key in ("locking", "auto")    # both run the lock state-machine
         self.w_skip_btn.setEnabled(is_lock)
         self.w_jump_btn.setEnabled(is_lock)
         self.w_jump_combo.setEnabled(is_lock)
+        is_auto = (key == "auto")
+        self.w_auto_dwell.setEnabled(is_auto)
+        self.w_auto_noise.setEnabled(is_auto)
         if key in self._mode_btns:
             self._mode_btns[key].setChecked(True)
         self.worker.stop()
@@ -1361,14 +1445,22 @@ class PlutoApp(QtWidgets.QMainWindow):
         self._switch_mode(key)
 
     def _on_skip_lock(self):
-        self.cfg["skip_lock"] = True        # Locking mode reads this live
+        self.cfg["skip_lock"] = True        # Locking/Auto mode reads this live
 
     def _on_jump_to(self):
         f = self.w_jump_combo.currentData()
         if f:
-            self.cfg["jump_to"] = int(f)    # Locking mode reads this live
+            self.cfg["jump_to"] = int(f)    # Locking/Auto mode reads this live
+
+    def _on_auto_params(self, _v=0):
+        self.cfg["auto_dwell_ms"]  = self.w_auto_dwell.value()   # Auto reads these live
+        self.cfg["auto_noise_pct"] = self.w_auto_noise.value()
 
     def _on_record_toggle(self, checked: bool):
+        if self.sdr is None:                 # no worker exists — nothing to record
+            self.w_rec_btn.setChecked(False)
+            self.status_lbl.setText("SDR not connected.")
+            return
         self._sync_record_cfg()
         if not checked:
             self.cfg["record"] = False

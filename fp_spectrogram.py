@@ -32,7 +32,6 @@ INFER_MAX_SEGS = 24     # live inference: cap segments per buffer (evenly subsam
                         # all ~240 and ~10x cheaper. 0 = use every segment.
 
 _WINDOW = np.hanning(N_FFT).astype(np.float32)
-FRAMES  = (SEG_LEN - N_FFT) // STFT_HOP + 1   # time frames at the defaults
 
 
 def iq_to_spectrogram(iq, n_fft=N_FFT, hop=STFT_HOP):

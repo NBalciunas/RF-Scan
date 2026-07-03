@@ -1,0 +1,5 @@
+numpy>=1.26
+torch>=2.3
+pyqtgraph>=0.13
+PyQt5>=5.15
+pyadi-iio>=0.0.19

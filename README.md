@@ -20,11 +20,13 @@ device is transmitting from its RF fingerprint.
 
 ## Workflow
 
+0. **Install**: `pip install -r requirements.txt`
 1. **Record** (GUI): for each device pick **Device** and record at its frequency;
    record **Noise** with the devices off. Do each across **≥2 sessions** (move the
    antenna between them) so the held-out-session accuracy is honest.
 2. **Train**: `python train_model.py` — add `--quick` for a fast sanity check.
-3. **Detect**: launch the GUI; it loads the model and runs the Locking loop.
+3. **Detect**: launch the GUI; it loads the model and runs the Auto loop (Locking
+   that auto-skips a held signal once the classifier calls it noise).
 
 ## Notes
 
