@@ -2,10 +2,10 @@
 __pycache__/
 output/
 
-# fingerprinting - raw IQ data + trained models
 fingerprint_data/
-trained_model.pt
-trained_model.meta.json
+*.pt
+*.meta.json
 
-# editor / tooling
+test_*.py
+
 .claude/settings.local.json

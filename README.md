@@ -1,44 +1,80 @@
-# RF-Scan
+# RF Scan
 
-PlutoSDR RF fingerprinting: watch a band, lock onto a signal, and identify which
-device is transmitting from its RF fingerprint.
+RF Scan is a monitor program for the PlutoSDR. It finds the devices that transmit in
+a radio band.
+
+The program sweeps a band. When a signal goes above the noise floor, the program
+tunes to that frequency and holds it. A classifier reads the raw IQ data of the
+signal and gives the signal a name.
+
+The same program records the training data. Thus, the record function and the detect
+function use the same data preparation.
+
+To install the software, type this command:
+
+```bash
+pip install -r requirements.txt
+```
 
 ## Programs
 
-- **`terminal_v2.py`** — the live GUI. Scans the band, locks onto signals, classifies
-  them, and records training data. Recording has three kinds:
-  - **Device** — park on a frequency and save that device's fingerprint.
-  - **Noise (band)** — sweep the whole band (devices off).
-  - **Noise (freq)** — park on a device's frequency with the device off (a clean
-    negative for that spot).
+**terminal_v2.py** is the graphical interface (GUI). It sweeps, holds, classifies and
+records. It writes the raw IQ data to `fingerprint_data/<class>/session_N/`. There
+are three record modes:
 
-  Everything is saved under `fingerprint_data/<class>/session_N/`.
-- **`train_model.py`** — trains the classifier from `fingerprint_data/`. Each folder is
-  one class; outputs `trained_model.pt` (+ `.meta.json`), which the GUI loads.
-- **`fp_spectrogram.py`** — shared spectrogram + model code, imported by both so
-  preprocessing can't drift.
+- **Device** - the radio stays on one frequency. The device transmits.
+- **Noise (band)** - the radio sweeps the full band. All the devices are off.
+- **Noise (freq)** - the radio stays on the frequency of the device. The device is off.
 
-## Workflow
+**train_model.py** trains the classifier with the data in `fingerprint_data/`. Each
+top-level folder is one class. The program keeps one full session out of the training
+data. Then it measures the accuracy with that session. The program writes a `.pt`
+file and a `.meta.json` file. The GUI reads these two files.
 
-0. **Install**: `pip install -r requirements.txt`
-1. **Record** (GUI): for each device pick **Device** and record at its frequency;
-   record **Noise** with the devices off. Do each across **≥2 sessions** (move the
-   antenna between them) so the held-out-session accuracy is honest.
-2. **Train**: `python train_model.py` — pick a speed/quality tier with
-   `--preset fast|balanced|best` (fast ≈ 1-min sanity check, balanced = default,
-   best = slowest/most accurate). Any explicit flag (e.g. `--epochs`) overrides
-   the preset.
-3. **Detect**: launch the GUI; it loads the model and runs the Auto loop (Locking
-   that auto-skips a held signal once the classifier calls it noise).
+**The helper programs** contain the shared code and the self-checks:
 
-## Notes
+- **`fp_spectrogram.py`** - the STFT front end and the SpecCNN model. The GUI and the
+  trainer import this code. Thus, the two programs always prepare the data in the
+  same way.
+- **`test_geometry.py`** - a self-check for the sweep geometry. To do the check, type
+  `python test_geometry.py`.
+- **`test_snr_aug.py`** - a self-check for the training data augmentation. To do the
+  check, type `python test_snr_aug.py`.
 
-- `fingerprint_data/` and trained models are git-ignored.
-- Quality is SNR-dominated. The trainer drops device segments sitting at the noise floor
-  (silent gaps), so record devices while they're actually transmitting.
-- The trainer augments device segments (re-embeds them in recorded noise at random SNR,
-  randomly retunes them, masks spectrogram patches) so weak, off-center, or partly
-  jammed signals are still recognised; the "Weak-signal val" line reports the faint-
-  signal accuracy separately.
-- Stock PlutoSDR caps ~20 MHz bandwidth and 3.8 GHz; 5.8 GHz / 40 MHz need the AD9364
-  firmware hack.
+## How to train
+
+1. Set all the devices to off. Record in the Noise (band) mode. This data becomes the
+   background class.
+
+2. Tune the radio to the frequency of the drone. Keep the drone off. Record in the
+   Noise (freq) mode. This data shows the classifier the frequency without the drone.
+   The classifier must not learn that all the energy at this frequency is a drone.
+
+3. Set the drone to on. Make sure that the drone transmits. Record in the Device mode.
+
+   Note: Do the steps 1 to 3 in two or more sessions. Move the antenna between the
+   sessions. The accuracy data is only correct if the held-out session is new.
+
+4. Train the classifier. Type this command:
+
+   ```bash
+   python train_model.py --out trained_model.pt
+   ```
+
+   To change the quality, add `--preset fast`, `--preset balanced` or `--preset best`.
+   A high quality takes more time. The GUI reads the file `trained_model.pt`
+   automatically.
+
+5. Start the GUI again. Click the **⟳ Load / Reload Model** button.
+
+6. Read the result on the badge. `clear` means that there is no device. A name and a
+   percentage mean that there is a device. The GUI shows a name when the confidence
+   is 60% or more. In the Auto mode, the program releases the hold when the noise
+   value is 75% or more.
+
+## Limits
+
+The PlutoSDR has a maximum bandwidth of 20 MHz and a maximum frequency of 3.8 GHz.
+For 5.8 GHz, you must install the AD9364 firmware modification.
+
+Git ignores the folder `fingerprint_data/` and the model files.
