@@ -34,7 +34,8 @@ except ImportError:
 # CONFIGURATION
 # ==========================================
 
-SDR_URI         = "ip:192.168.2.1"
+# ponytail: env override so two Plutos can run side by side (`iio_info -s` lists usb: URIs)
+SDR_URI         = os.environ.get("PLUTO_URI", "ip:192.168.3.1")
 SAMPLE_RATE     = 10_000_000
 RX_BW_HZ        = 4_000_000
 GAIN            = 10
@@ -60,7 +61,10 @@ FP_GONE_S            = 2.5       # Locking: drop the lock if the signal's been g
 FP_MEMORY_TTL_S      = 30.0      # remembered catches are skipped for this long, then revisitable
 FP_MEMORY_GUARD_HZ   = 3_000_000 # peaks within this of a remembered freq count as the same signal
 FP_AUTO_DWELL_MS     = 5000      # Auto: dwell on a lock this long before judging it noise
-FP_AUTO_NOISE_PCT    = 90        # Auto: auto-skip the lock when noise prob reaches this %
+FP_AUTO_NOISE_PCT    = 75        # Auto: auto-skip the lock when noise prob reaches this %
+FP_DEVICE_THRESH     = 0.6       # badge: prob needed to call a device present, and to name which
+                                 # one. Below it the lock reads "clear". Overrides the model's
+                                 # unknown_thresh for the badge only (segment votes still use it).
 ML_INTERVAL_S        = 0.75      # min seconds between classifier runs (throttle; a signal's
                                  # identity doesn't change 20x/s, so per-loop inference is wasted)
 NOISE_REC_EVERY_N    = 5         # wideband noise rec: save every Nth sweep. Undecimated, the
@@ -1288,12 +1292,30 @@ class PlutoApp(QtWidgets.QMainWindow):
         label = result["label"]
         conf  = result["confidence"]
         probs = result["probs"]
-        if result.get("unknown"):
-            self.det_badge.setText(f"unknown ({conf:.0%})")
-            self._set_badge_style("other")
-        else:
-            self.det_badge.setText(f"{label} ({conf:.0%})")
+        # "Is anything transmitting?" is answered by everything that ISN'T noise,
+        # not by the winning class — a 67% noise verdict is a clear channel, not an
+        # "unknown". Only once a device is likely does "which one?" mean anything,
+        # and that's unknown only when no single device class carries the mass.
+        # ponytail: one threshold for both, split them if presence/naming diverge
+        p_dev = 1.0 - probs.get("noise", 0.0)
+        best, p_best = max(((c, p) for c, p in probs.items() if c != "noise"),
+                           key=lambda cp: cp[1], default=(label, conf))
+        # Two or more transmitters sharing the buffer (per-segment vote) trumps the
+        # single averaged verdict — that average would smear into "unknown".
+        dets = [d for d in result.get("detections", []) if d["label"] != "noise"]
+        if len(dets) >= 2:
+            self.det_badge.setText(" + ".join(f"{d['label']} {d['share']:.0%}"
+                                              for d in dets))
             self._set_badge_style("device")
+        elif p_dev < FP_DEVICE_THRESH:
+            self.det_badge.setText(f"clear ({1.0 - p_dev:.0%} noise)")
+            self._set_badge_style("none")
+        elif p_best >= FP_DEVICE_THRESH:
+            self.det_badge.setText(f"{best} ({p_best:.0%})")
+            self._set_badge_style("device")
+        else:
+            self.det_badge.setText(f"unknown device ({p_dev:.0%})")
+            self._set_badge_style("other")
         for cls, bar in self._conf_bars.items():
             p = probs.get(cls, 0.0)
             bar.setValue(int(p * 100))

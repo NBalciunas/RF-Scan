@@ -1,0 +1,24 @@
+{
+  "classes": [
+    "drone",
+    "noise"
+  ],
+  "n_classes": 2,
+  "n_fft": 256,
+  "stft_hop": 64,
+  "seg_len": 4096,
+  "seg_hop": 2048,
+  "base_ch": 16,
+  "unknown_thresh": 0.8,
+  "val_acc": 0.9812583668005355,
+  "model": "SpecCNN",
+  "representation": "stft256_logmag_1ch",
+  "preset": "fast",
+  "snr_aug_p": 0.5,
+  "snr_aug_db": [
+    0.0,
+    20.0
+  ],
+  "freq_shift_frac": 0.1,
+  "weak_val_acc": 0.9727891156462585
+}

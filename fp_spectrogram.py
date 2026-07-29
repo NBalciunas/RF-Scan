@@ -30,6 +30,8 @@ SEG_HOP  = 2048         # hop between successive spectrogram segments
 INFER_MAX_SEGS = 24     # live inference: cap segments per buffer (evenly subsampled).
                         # Averaging softmax over a representative subset is as good as
                         # all ~240 and ~10x cheaper. 0 = use every segment.
+MIN_SEG_SHARE  = 0.2    # per-segment vote: a class counts as detected when it wins at
+                        # least this fraction of the buffer's segments (confidently).
 
 _WINDOW = np.hanning(N_FFT).astype(np.float32)
 
@@ -93,6 +95,26 @@ class SpecCNN(nn.Module):
         return self.head(self.cnn(x))
 
 
+def segment_vote(seg_probs, classes, thresh, min_share):
+    """Per-segment vote -> every class present in the buffer, not just the winner.
+
+    A segment votes for its argmax class when that softmax is confident (>= thresh);
+    a class is detected when it collects >= min_share of all segments. Catches
+    multiple time-interleaved (bursty) transmitters in one capture — it can NOT
+    separate two signals overlapping in the same segment (that needs multi-label).
+    Returns [{label, share, confidence}, …] sorted by share, strongest first.
+    """
+    win, wconf = seg_probs.argmax(1), seg_probs.max(1)
+    k = len(seg_probs)
+    out = []
+    for i, cls in enumerate(classes):
+        m = (win == i) & (wconf >= thresh)
+        if m.sum() / k >= min_share:
+            out.append({"label": cls, "share": float(m.sum() / k),
+                        "confidence": float(seg_probs[m, i].mean())})
+    return sorted(out, key=lambda d: d["share"], reverse=True)
+
+
 class FingerprintModel:
     """Qt/SDR-free inference wrapper used by the v2 GUI.
 
@@ -125,7 +147,8 @@ class FingerprintModel:
                                      max_segs=self.infer_max_segs)
         x = torch.from_numpy(specs.astype(np.float32))
         with torch.no_grad():
-            probs = torch.softmax(self.net(x), dim=1).mean(0).numpy()
+            seg_probs = torch.softmax(self.net(x), dim=1).numpy()   # (k, n_classes)
+        probs = seg_probs.mean(0)
         idx   = int(probs.argmax())
         conf  = float(probs[idx])
         label = self.classes[idx] if conf >= self.unknown_thresh else "unknown"
@@ -134,4 +157,19 @@ class FingerprintModel:
             "confidence": conf,
             "probs"     : {c: float(p) for c, p in zip(self.classes, probs)},
             "unknown"   : conf < self.unknown_thresh,
+            "detections": segment_vote(seg_probs, self.classes,
+                                       self.unknown_thresh, MIN_SEG_SHARE),
         }
+
+
+if __name__ == "__main__":
+    # self-check: two bursty transmitters interleaved in one buffer both surface
+    cls = ["deviceA", "droneB", "noise"]
+    p = np.array([[0.95, 0.03, 0.02]] * 5      # 5 segs deviceA
+                 + [[0.05, 0.90, 0.05]] * 4    # 4 segs droneB
+                 + [[0.40, 0.35, 0.25]] * 1)   # 1 unconfident seg -> no vote
+    dets = segment_vote(p, cls, thresh=0.8, min_share=0.2)
+    assert [d["label"] for d in dets] == ["deviceA", "droneB"], dets
+    assert abs(dets[0]["share"] - 0.5) < 1e-9 and abs(dets[1]["share"] - 0.4) < 1e-9
+    assert segment_vote(p[-1:], cls, 0.8, 0.2) == []   # all-unconfident -> nothing
+    print("segment_vote self-check OK:", dets)
