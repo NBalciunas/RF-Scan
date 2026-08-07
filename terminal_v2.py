@@ -34,7 +34,7 @@ except ImportError:
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
-SDR_URI         = os.environ.get("PLUTO_URI", "ip:192.168.3.1")
+SDR_URI         = os.environ.get("PLUTO_URI", "ip:192.168.2.1")   # the factory address
 SAMPLE_RATE     = 10_000_000
 RX_BW_HZ        = 4_000_000
 GAIN            = 10

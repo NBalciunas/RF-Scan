@@ -12,7 +12,9 @@ same way.
 The first application is the 2.4 GHz band. The program separates a drone control link
 or a drone video link from WiFi, from Bluetooth and from the background noise.
 
-## How it works
+## Features
+
+### The signal chain
 
 The program has one signal chain. Each step gives its result to the next step.
 
@@ -34,9 +36,7 @@ frequency goes into the memory of the caught signals for 30 s. Thus the scanner 
 through all the signals in the band, and it does not hold the strongest signal only.
 An entry in the memory expires. Thus the program can find that signal again.
 
-## Features
-
-**The monitor**
+### The monitor
 
 - Four modes: Auto, Locking, Wideband and Narrowband.
 - Four live plots: a wideband spectrum with a waterfall, and a narrowband spectrum
@@ -51,7 +51,7 @@ An entry in the memory expires. Thus the program can find that signal again.
 - Manual gain. The program sets the automatic gain control to off, because a constant
   level is necessary for the fingerprints.
 
-**The classifier**
+### The classifier
 
 - A CNN that identifies the transmitter from the raw IQ data.
 - A probability bar for each class.
@@ -62,7 +62,7 @@ An entry in the memory expires. Thus the program can find that signal again.
 - The Auto mode releases a lock that the classifier calls noise.
 - The program loads a new model without a restart.
 
-**The recorder**
+### The recorder
 
 - Three kinds of record: a device, the noise of the full band, and the noise at the
   frequency of the device.
@@ -70,7 +70,7 @@ An entry in the memory expires. Thus the program can find that signal again.
 - A limit on the number of files.
 - The Record button starts the mode that gives the correct data.
 
-**The trainer**
+### The trainer
 
 - Three presets: fast, balanced and best.
 - A split that holds one full session out of the training data.
@@ -92,8 +92,16 @@ This command installs numpy, torch, pyqtgraph, PyQt5 and pyadi-iio. The package
 pyadi-iio needs the libiio library of Analog Devices. Install the PlutoSDR drivers of
 your operating system first.
 
-The program connects to `ip:192.168.3.1`. To use a different address, set the
-environment variable `PLUTO_URI`. The command `iio_info -s` gives all the addresses.
+The program connects to `ip:192.168.2.1`. This address is the factory address of the
+PlutoSDR. If your radio has a different address, set the environment variable
+`PLUTO_URI`.
+
+```bash
+set PLUTO_URI=ip:192.168.3.1
+```
+
+A USB address also operates. The command `iio_info -s` gives the address of each radio
+that is connected.
 
 ```bash
 set PLUTO_URI=usb:1.5.5
@@ -115,10 +123,10 @@ The panel on the right side has four mode buttons:
 
 | Mode | Function |
 |---|---|
-| **Auto** | The program sweeps, it locks each new signal, and it releases the lock automatically if the classifier calls the signal noise. This is the default mode. |
-| **Locking** | The same operation, but the lock continues until you click **Skip lock**. |
-| **Wideband** | The program sweeps the band only. There is no lock. |
-| **Narrowband** | The radio holds one frequency only. Use this mode for a device record. |
+| Auto | The program sweeps, it locks each new signal, and it releases the lock automatically if the classifier calls the signal noise. This is the default mode. |
+| Locking | The same operation, but the lock continues until you click **Skip lock**. |
+| Wideband | The program sweeps the band only. There is no lock. |
+| Narrowband | The radio holds one frequency only. Use this mode for a device record. |
 
 The button **⟳ Apply Settings** sends the values of the SDR panel to the radio and
 starts the sweep again. A change of the mode or of the settings stops a record.
@@ -127,16 +135,16 @@ starts the sweep again. A change of the mode or of the settings stops a record.
 
 The window shows four plots.
 
-- **Wideband Spectrum** — the composite of the full sweep. The dashed grey lines show
+- **Wideband Spectrum** - the composite of the full sweep. The dashed grey lines show
   the hop boundaries. During a lock, the program puts the live narrowband spectrum
   into the composite. Thus the full band stays visible.
-- **Wideband Waterfall** — the last 200 sweeps. The time axis goes up.
-- **Narrowband Spectrum** — the spectrum of the held frequency. The two check boxes in
+- **Wideband Waterfall** - the last 200 sweeps. The time axis goes up.
+- **Narrowband Spectrum** - the spectrum of the held frequency. The two check boxes in
   the **Narrowband Markers** section put a red line at the middle of the signal, and
   two dashed red lines at the edges. The program calculates the edges at the point
   where the signal goes 3 dB above the noise floor. The middle is the center of the
   power between the two edges, and not the highest bin. Thus the marker is stable.
-- **Narrowband Waterfall** — the last 200 held captures.
+- **Narrowband Waterfall** - the last 200 held captures.
 
 The section **Waterfall Scale (dBFS)** sets the minimum and the maximum of the color
 scale of both waterfalls.
@@ -151,11 +159,11 @@ kinds of record. Each kind writes to a different class folder.
 
 | Kind | Mode | Folder | Condition |
 |---|---|---|---|
-| **Device** | Narrowband | `<device label>/` | The device transmits. |
-| **Noise (band)** | Wideband | `noise/` | All the devices are off. |
-| **Noise (freq)** | Narrowband | `noise/` | The radio is on the frequency of the device. The device is off. |
+| Device | Narrowband | `<device label>/` | The device transmits. |
+| Noise (band) | Wideband | `noise/` | All the devices are off. |
+| Noise (freq) | Narrowband | `noise/` | The radio is on the frequency of the device. The device is off. |
 
-The kind **Noise (freq)** is the most important kind. Without this data the classifier
+The kind Noise (freq) is the most important kind. Without this data the classifier
 learns that all the energy at that frequency is a drone. It does not learn the
 fingerprint of the drone.
 
@@ -178,13 +186,12 @@ fingerprint_data/
 The name of the top-level folder is the name of the class. The trainer reads the name
 of the folder only. It does not read the JSON file.
 
-**The full procedure for the data collection:**
+### The full procedure for the data collection
 
-1. Set all the devices to off. Record in the **Noise (band)** mode.
-2. Tune to the frequency of the drone. Keep the drone off. Record in the
-   **Noise (freq)** mode.
-3. Set the drone to on. Make sure that the drone transmits. Record in the **Device**
+1. Set all the devices to off. Record in the Noise (band) mode.
+2. Tune to the frequency of the drone. Keep the drone off. Record in the Noise (freq)
    mode.
+3. Set the drone to on. Make sure that the drone transmits. Record in the Device mode.
 4. Do the steps 1 to 3 again with a new session number. Move the antenna between the
    sessions. Two sessions are the minimum. Three sessions are better.
 
@@ -202,16 +209,17 @@ captures into spectrograms, it trains the network, and it writes two files: the
 weights in `trained_model.pt` and the geometry and the class names in
 `trained_model.meta.json`.
 
-**The model.** The network is `SpecCNN`, a small 2-D CNN. It has four blocks. Each
-block has a 3x3 convolution, a batch normalization, a GELU activation and a max pool.
-The number of channels is 16, 32, 64, 64 for the presets fast and balanced. Then an
-adaptive average pool, a dropout and one linear layer give the classes. The model has
-approximately 60 000 parameters, or 135 000 parameters with the preset best. The
-program trains the model from the start. There is no pretrained model. The input is
-one channel: the log magnitude of a 256-point STFT. The program does not keep the
-phase.
+### The model
 
-**The presets.**
+The network is `SpecCNN`, a small 2-D CNN. It has four blocks. Each block has a 3x3
+convolution, a batch normalization, a GELU activation and a max pool. The number of
+channels is 16, 32, 64, 64 for the presets fast and balanced. Then an adaptive average
+pool, a dropout and one linear layer give the classes. The model has approximately
+60 000 parameters, or 135 000 parameters with the preset best. The program trains the
+model from the start. There is no pretrained model. The input is one channel: the log
+magnitude of a 256-point STFT. The program does not keep the phase.
+
+### The presets
 
 | Preset | Epochs | Files for each class | Segments for each file | Channels |
 |---|---|---|---|---|
@@ -219,31 +227,32 @@ phase.
 | `balanced` | 8 | 5000 | 150 | 16 |
 | `best` | 30 | all | all | 24 |
 
-The preset `fast` is a check of the procedure only. Its accuracy value is not the
-final value. **A run without the flag `--preset` uses `fast`**, because the constant
-`PRESET` at the top of the file gives that value.
+The preset `fast` is a check of the procedure only. Its accuracy value is not the final
+value. A run without the flag `--preset` uses `fast`, because the constant `PRESET` at
+the top of the file gives that value.
 
-**What the trainer does with your data.**
+### What the trainer does with your data
 
-- **The energy gate.** A parked capture of a device is mostly silence between the
-  bursts. These quiet segments have the label of the device, but they are noise. The
-  gate removes each non-noise segment that is not 3 dB above the noise floor. The
-  program calculates the floor from the train sessions of the noise class.
-- **The signal-to-noise augmentation.** Your recordings are strong, because the
-  antenna is near. A live signal is weak. The trainer puts one half of the train
-  device segments into real recorded noise, at 0 to 20 dB.
-- **The frequency shift.** Your recordings always put the device at the same
-  spectrogram rows. Thus the network can learn the position and not the fingerprint. A
-  random shift of ±10% of the sample rate prevents this.
-- **The spectrogram mask.** The trainer hides a frequency band and a time stripe of
-  each batch. Thus the network learns from a part of the evidence. A WiFi burst above
-  your drone does not stop the identification.
+- The energy gate. A parked capture of a device is mostly silence between the bursts.
+  These quiet segments have the label of the device, but they are noise. The gate
+  removes each non-noise segment that is not 3 dB above the noise floor. The program
+  calculates the floor from the train sessions of the noise class.
+- The signal-to-noise augmentation. Your recordings are strong, because the antenna is
+  near. A live signal is weak. The trainer puts one half of the train device segments
+  into real recorded noise, at 0 to 20 dB.
+- The frequency shift. Your recordings always put the device at the same spectrogram
+  rows. Thus the network can learn the position and not the fingerprint. A random shift
+  of ±10% of the sample rate prevents this.
+- The spectrogram mask. The trainer hides a frequency band and a time stripe of each
+  batch. Thus the network learns from a part of the evidence. A WiFi burst above your
+  drone does not stop the identification.
 
-**The other flags.** Use `--epochs`, `--base_ch`, `--max_segs_per_class`,
-`--gate_margin_db`, `--snr_aug_p` and `--freq_shift_frac` to change one value of the
-preset. A flag has precedence over the preset. Use `--cpu` for the CPU, and
-`--store_dtype float32` for more precision in the cache. The command
-`python train_model.py --help` gives the full list.
+### The other flags
+
+Use `--epochs`, `--base_ch`, `--max_segs_per_class`, `--gate_margin_db`, `--snr_aug_p`
+and `--freq_shift_frac` to change one value of the preset. A flag has precedence over
+the preset. Use `--cpu` for the CPU, and `--store_dtype float32` for more precision in
+the cache. The command `python train_model.py --help` gives the full list.
 
 Give the flag `--out trained_model.pt` for each run. The default value of `--out` is a
 different name, and the graphical interface does not find that file automatically.
@@ -257,8 +266,8 @@ operate after a change of the constants.
 
 To load a different model, click **Browse…**, select the `.pt` file, and click
 **⟳ Load / Reload Model**. The program loads the model without a restart of the sweep.
-The button **ML Inference: ON** sets the classifier to off. Then the program only
-shows the spectrum, and it operates much faster.
+The button **ML Inference: ON** sets the classifier to off. Then the program only shows
+the spectrum, and it operates much faster.
 
 The badge above the buttons shows the result:
 
@@ -272,33 +281,35 @@ The badge above the buttons shows the result:
 The bar of each class shows the mean probability. The Auto mode releases a lock when
 the probability of the class `noise` is 75% or more, after a dwell time of 5000 ms.
 Both values are adjustable in the **Mode** section. The Auto mode needs a class with
-the name `noise`. Without that class the program does not release a lock
-automatically, and the panel gives a warning at the load of the model.
+the name `noise`. Without that class the program does not release a lock automatically,
+and the panel gives a warning at the load of the model.
 
 ## Example
 
 The images are placeholders. Replace them with screen captures of your system.
 
-**The main window during a sweep**
+### The main window during a sweep
 
 ![The main window during a sweep](docs/img/main-window.png)
 
-**A lock on a drone control link, with the markers of the signal**
+### A lock on a drone control link, with the markers of the signal
 
 ![A lock with the markers](docs/img/lock-markers.png)
 
-**The recording panel during a device record**
+### The recording panel during a device record
 
 ![The recording panel](docs/img/recording.png)
 
-**The output of the trainer with the confusion matrix**
+### The output of the trainer with the confusion matrix
 
 ![The output of the trainer](docs/img/training-output.png)
 
 ## Validation
 
-The project has three self-checks. They do not need an SDR, but numpy and torch must
-be installed. Each check gives an exception if it fails.
+### The self-checks
+
+The project has three self-checks. They do not need an SDR, but numpy and torch must be
+installed. Each check gives an exception if it fails.
 
 ```bash
 python fp_spectrogram.py
@@ -322,20 +333,21 @@ bandwidth that is equal to the sample rate, a large overlap, and one hop only.
 python tests/test_snr_aug.py
 ```
 
-This check verifies the mathematics of the augmentation. The function `_mix_noise`
-must put the tone at the exact signal-to-noise ratio, with an error of less than
-0.1 dB. A silent segment must not change. The function `_freq_shift` must move the FFT
-peak by the correct quantity, and it must not change the total power.
+This check verifies the mathematics of the augmentation. The function `_mix_noise` must
+put the tone at the exact signal-to-noise ratio, with an error of less than 0.1 dB. A
+silent segment must not change. The function `_freq_shift` must move the FFT peak by the
+correct quantity, and it must not change the total power.
 
-**The validation of the model.** The trainer measures the accuracy with a session that
-it did not train on. It gives three results:
+### The validation of the model
 
-- **ValAcc** — the accuracy on the held-out session.
-- **The confusion matrix**, with the precision, the recall and the F1 value of each
-  class.
-- **Weak-signal val** — the same held-out segments, but at 0 to 10 dB. **This is the
-  most important value.** ValAcc covers the strong recordings only. Thus it does not
-  show a decrease of the performance for a distant device.
+The trainer measures the accuracy with a session that it did not train on. It gives
+three results:
+
+- ValAcc - the accuracy on the held-out session.
+- The confusion matrix, with the precision, the recall and the F1 value of each class.
+- Weak-signal val - the same held-out segments, but at 0 to 10 dB. This is the most
+  important value. ValAcc covers the strong recordings only. Thus it does not show a
+  decrease of the performance for a distant device.
 
 If a class has one session only, the trainer uses a random split and gives a `[warn]`
 message. That accuracy value is not correct, because the adjacent segments of one
@@ -343,7 +355,7 @@ recording are almost identical.
 
 ## Limitations
 
-**The PlutoSDR.**
+### The PlutoSDR
 
 - The maximum bandwidth is 20 MHz. The program cannot see a wider signal in one hop.
   A sweep covers a wider span, but the hops are not simultaneous. Thus the program can
@@ -355,7 +367,7 @@ recording are almost identical.
 - The program does not verify the values that you type. The radio does not report an
   error for a span that it cannot receive.
 
-**The detection.**
+### The detection
 
 - The classifier knows your classes only. An unknown transmitter becomes `unknown
   device`, or the class that is the most similar.
@@ -365,10 +377,10 @@ recording are almost identical.
   segment stay together.
 - A weak signal below the peak threshold does not cause a lock. The threshold is 10 dB
   above the noise floor.
-- The quality of the model depends on your recordings. Without a **Noise (freq)**
-  record the model learns the frequency and not the fingerprint.
+- The quality of the model depends on your recordings. Without a Noise (freq) record
+  the model learns the frequency and not the fingerprint.
 
-**The program.**
+### The program
 
 - There is no command-line interface for the monitor. It is a graphical program only.
 - The memory of the caught frequencies does not continue after a change of the mode or
