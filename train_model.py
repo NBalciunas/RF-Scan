@@ -8,7 +8,7 @@ accuracy.
 The program reads the raw IQ captures from terminal_v2.py. It writes a .pt file and
 a .meta.json file. The GUI reads the two files with the same module.
 
-    python train_model.py                              # the PRESET constant below
+    python train_model.py                              # balanced, the PRESET below
     python train_model.py --preset fast                # a quick check
     python train_model.py --preset best                # slow, most accurate
     python train_model.py --preset best --epochs 15    # a flag has precedence
@@ -26,13 +26,14 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import TensorDataset, DataLoader, WeightedRandomSampler
+from torch.utils.data import (TensorDataset, DataLoader, WeightedRandomSampler,
+                              Dataset as TorchDataset)
 
-from fp_spectrogram import (iq_to_spectrogram, SpecCNN,
+from fp_spectrogram import (iq_to_spectrogram, remove_dc, SpecCNN, VOTE_THRESH,
                             N_FFT, STFT_HOP, SEG_LEN, SEG_HOP)
 
 DATA_DIR   = "./fingerprint_data"
-OUTPUT     = "./fast_demo_model.pt"
+OUTPUT     = "./trained_model.pt"   # the name that terminal_v2.py loads at the start
 BATCH_SIZE = 512
 EPOCHS     = 8
 LR         = 1e-3
@@ -41,7 +42,7 @@ UNKNOWN_THRESH = 0.8
 SEED       = 42
 
 # ── the budget for memory and time. A CLI flag has precedence. ────────────────
-PRESET              = "fast"     # the preset for a run without --preset (from the IDE)
+PRESET              = "balanced"  # the preset for a run without --preset (from the IDE)
 QUICK               = False      # True = the same as --preset fast
 MAX_FILES_PER_CLASS = 5000       # 0 = all; .iq files for each class and session
 MAX_SEGS_PER_FILE   = 150        # 0 = all; segments for each file
@@ -126,21 +127,18 @@ def _freq_shift(seg, rng, max_frac):
     return (seg * ramp).astype(np.complex64, copy=False)
 
 
-def file_to_specs(path: Path, seg_len: int, seg_hop: int, max_segs: int = 0,
-                  store_dtype=np.float32, min_power_db=None,
-                  noise_pool=None, aug_p=SNR_AUG_P, snr_db=SNR_AUG_DB,
-                  f_shift=0.0, rng=None) -> np.ndarray:
-    """Make the spectrograms (k, 1, N_FFT, frames) of one .iq file. None if there are none.
+def file_to_segments(path: Path, seg_len: int, seg_hop: int, max_segs: int = 0,
+                     min_power_db=None) -> np.ndarray:
+    """Give the raw IQ segments (k, seg_len) of one .iq file. None if there are none.
 
+    The DC offset goes here, before the gate measures the power and before any
+    frequency shift. A shift puts the offset away from 0 Hz, and a mean can not
+    find it after that.
     min_power_db removes the segments that are more quiet than that value. These
-    quiet segments are the gaps between the bursts, thus they are noise.
-    max_segs keeps that many segments at equal distances.
-    noise_pool and rng start the SNR augmentation: the function puts each segment
-    into noise with the probability aug_p.
-    The function does the shift first and the mix after it. Thus the added noise
-    floor stays at the correct level. The gate uses the original power. Thus only
-    a true burst becomes weak, and a quiet segment does not become a device."""
-    raw = np.fromfile(str(path), dtype=np.complex64)
+    quiet segments are the gaps between the bursts, thus they are noise. The gate
+    uses the original power, thus a quiet segment can not become a device.
+    max_segs keeps that many segments at equal distances."""
+    raw = remove_dc(np.fromfile(str(path), dtype=np.complex64))
     if len(raw) < seg_len:
         return None
     k = (len(raw) - seg_len) // seg_hop + 1
@@ -151,14 +149,100 @@ def file_to_specs(path: Path, seg_len: int, seg_hop: int, max_segs: int = 0,
             return None
     if max_segs and len(sel) > max_segs:
         sel = sel[np.unique(np.linspace(0, len(sel) - 1, max_segs).round().astype(int))]
-    segs = [raw[i * seg_hop:i * seg_hop + seg_len] for i in sel]
-    if rng is not None and f_shift > 0:
-        segs = [_freq_shift(s, rng, f_shift) for s in segs]
-    if rng is not None and noise_pool:
-        segs = [_mix_noise(s, noise_pool, rng, *snr_db) if rng.rand() < aug_p else s
-                for s in segs]
-    return np.stack([iq_to_spectrogram(s)
-                     for s in segs]).astype(store_dtype, copy=False)
+    return np.stack([remove_dc(raw[i * seg_hop:i * seg_hop + seg_len]) for i in sel])
+
+
+def augment_segments(segs, rng, noise_pool=None, aug_p=SNR_AUG_P,
+                     snr_db=SNR_AUG_DB, f_shift=0.0):
+    """Shift the segments in frequency, then put them into recorded noise.
+
+    The order matters. The shift is first, thus the noise that the mix adds becomes
+    the floor at the place where a real floor would be."""
+    if rng is None:
+        return segs
+    out = segs
+    if f_shift > 0:
+        out = [_freq_shift(s, rng, f_shift) for s in out]
+    if noise_pool:
+        out = [_mix_noise(s, noise_pool, rng, *snr_db) if rng.rand() < aug_p else s
+               for s in out]
+    return out
+
+
+def segments_to_specs(segs, store_dtype=np.float32):
+    return np.stack([iq_to_spectrogram(s) for s in segs]).astype(store_dtype,
+                                                                 copy=False)
+
+
+def file_to_specs(path: Path, seg_len: int, seg_hop: int, max_segs: int = 0,
+                  store_dtype=np.float32, min_power_db=None,
+                  noise_pool=None, aug_p=SNR_AUG_P, snr_db=SNR_AUG_DB,
+                  f_shift=0.0, rng=None) -> np.ndarray:
+    """Make the spectrograms (k, 1, N_FFT, frames) of one .iq file.
+
+    The val split and the weak-signal copy use this function, because they must not
+    change between two epochs. The train split keeps the raw segments and it makes
+    the images in SegmentDataset instead."""
+    segs = file_to_segments(path, seg_len, seg_hop, max_segs, min_power_db)
+    if segs is None:
+        return None
+    return segments_to_specs(augment_segments(segs, rng, noise_pool, aug_p,
+                                              snr_db, f_shift), store_dtype)
+
+
+class _Reservoir:
+    """Keep a uniform random sample of k rows from a stream of unknown length.
+
+    load_split used to build a whole class and then remove the extra rows. The peak
+    memory was the full uncapped class, and --preset best makes that very large.
+    The reservoir never holds more than k rows."""
+
+    def __init__(self, k, rng):
+        self.k, self.rng, self.n, self.buf = int(k or 0), rng, 0, []
+
+    def extend(self, block):
+        for row in block:
+            if not self.k or len(self.buf) < self.k:
+                self.buf.append(np.array(row, copy=True))
+            else:
+                j = self.rng.randint(self.n + 1)
+                if j < self.k:
+                    self.buf[j] = np.array(row, copy=True)
+            self.n += 1
+
+    def stack(self):
+        return np.stack(self.buf) if self.buf else None
+
+
+class SegmentDataset(TorchDataset):
+    """Make a spectrogram from a raw IQ segment, with a new augmentation each time.
+
+    The augmentation runs here and not at the load. Thus every epoch sees another
+    realisation of the noise and of the frequency shift. A cache of images gives one
+    realisation for the whole run, and 30 epochs then see the same image 30 times.
+
+    One segment costs about 320 us of CPU. A raw complex64 segment of 4096 samples
+    is 32 kB, and a float16 image of that segment is 31 kB. Thus the memory does not
+    change."""
+
+    def __init__(self, segs, labels, aug_ok, noise_pool, seed,
+                 snr_aug_p=0.0, snr_db=SNR_AUG_DB, f_shift=0.0):
+        self.segs, self.labels, self.aug_ok = segs, labels, aug_ok
+        self.pool = list(noise_pool) if noise_pool else None
+        self.rng = np.random.RandomState(seed)
+        self.snr_aug_p, self.snr_db, self.f_shift = snr_aug_p, snr_db, f_shift
+
+    def __len__(self):
+        return len(self.segs)
+
+    def __getitem__(self, i):
+        seg = self.segs[i]
+        if self.aug_ok[i]:
+            if self.f_shift > 0:
+                seg = _freq_shift(seg, self.rng, self.f_shift)
+            if self.pool and self.rng.rand() < self.snr_aug_p:
+                seg = _mix_noise(seg, self.pool, self.rng, *self.snr_db)
+        return torch.from_numpy(iq_to_spectrogram(seg)), int(self.labels[i])
 
 
 def load_split(data_dir: Path, seg_len: int, seg_hop: int, rng, *,
@@ -166,21 +250,29 @@ def load_split(data_dir: Path, seg_len: int, seg_hop: int, rng, *,
                store_dtype=np.float32, gate: bool = False, gate_margin_db: float = 3.0,
                noise_class: str = "noise", snr_aug_p: float = 0.0,
                f_shift: float = 0.0):
-    """Make the train tensors and the val tensors. A folder is a class. A session
-    gives the split.
+    """Read the dataset. A folder is a class. A session gives the split.
+
+    Gives (classes, Str, ytr, Atr, Xva, yva, Xwk, ywk, noise_pool).
+
+      * Str is the raw IQ of the train segments, (n, seg_len) complex64.
+        SegmentDataset makes the image and augments it again at every epoch.
+      * Atr says which train segments may be augmented: the device classes that
+        have two sessions or more.
+      * Xva and Xwk are spectrograms, made one time. An evaluation set must not
+        change between two epochs.
 
     The caps max_files, max_segs_file and max_segs_class limit the memory and the
-    time. max_segs_class also prevents a large noise class in the loss.
+    time. max_segs_class also prevents a large noise class in the loss. A reservoir
+    holds the cap while the program reads, thus the peak memory is the cap.
 
     gate=True removes from each device class the segments that are below the noise
     floor. The floor is the 95th percentile of the noise class plus gate_margin_db.
     A parked capture of a device is mostly noise between the bursts. Without the gate
     these segments have the label of the device, and the classifier fails.
 
-    snr_aug_p and f_shift augment the train device segments only. The val segments
-    and the noise class stay unchanged. The function also makes a weak copy of the
-    device val segments at WEAK_VAL_DB and gives it as (Xwk, ywk). Thus the program
-    measures the accuracy for a weak signal."""
+    snr_aug_p and f_shift do not augment anything here. They decide only whether the
+    function collects a noise pool, and what the log says. The function also makes a
+    weak copy of the device val segments at WEAK_VAL_DB, and that copy is fixed."""
     classes = sorted(d.name for d in data_dir.iterdir() if d.is_dir())
     if not classes:
         raise RuntimeError(f"No class folders found under {data_dir}.")
@@ -198,7 +290,7 @@ def load_split(data_dir: Path, seg_len: int, seg_hop: int, rng, *,
         per_file = max(1, NOISE_POOL_MAX // max(1, len(files)))
         npw = []
         for f in files:
-            raw = np.fromfile(str(f), dtype=np.complex64)
+            raw = remove_dc(np.fromfile(str(f), dtype=np.complex64))
             if len(raw) < seg_len:
                 continue
             if gate:
@@ -206,7 +298,8 @@ def load_split(data_dir: Path, seg_len: int, seg_hop: int, rng, *,
             if snr_aug_p > 0:
                 k = (len(raw) - seg_len) // seg_hop + 1
                 for i in rng.permutation(k)[:per_file]:
-                    noise_pool.append(raw[i * seg_hop:i * seg_hop + seg_len].copy())
+                    noise_pool.append(
+                        remove_dc(raw[i * seg_hop:i * seg_hop + seg_len]))
         if gate and npw:
             ceiling = float(np.percentile(np.concatenate(npw), 95))
             gate_thr = ceiling + gate_margin_db
@@ -225,8 +318,10 @@ def load_split(data_dir: Path, seg_len: int, seg_hop: int, rng, *,
             print("  [aug]  no noise segments available — SNR augmentation disabled")
     if f_shift > 0:
         print(f"  [aug]  freq-shift aug: ±{f_shift:.2f} × fs on train device segments")
+    if snr_aug_p > 0 or f_shift > 0:
+        print("  [aug]  both run again at every epoch, not once at the load")
 
-    Xtr, ytr, Xva, yva, Xwk, ywk = [], [], [], [], [], []
+    Str, ytr, Atr, Xva, yva, Xwk, ywk = [], [], [], [], [], [], []
     for lab, cls in enumerate(classes):
         files_by_sess = defaultdict(list)
         for f in (data_dir / cls).rglob("*.iq"):
@@ -244,59 +339,46 @@ def load_split(data_dir: Path, seg_len: int, seg_hop: int, rng, *,
                   f"using a RANDOM split — that val accuracy is optimistic.")
 
         min_pdb = None if (gate_thr is None or cls == noise_class) else gate_thr
-        # A random split does not divide the train data and the val data before the
-        # conversion. Thus a class with one session stays without augmentation.
+        # A random split does not divide the train data and the val data by session.
+        # Thus a class with one session stays without augmentation.
         aug_dev = cls != noise_class and not random_val
-        tr_parts, va_parts, wk_parts = [], [], []
+        # The reservoirs hold the cap. Thus the peak memory is the cap and not the
+        # full class. See the defect #8.
+        tr_res = _Reservoir(max_segs_class, rng)
+        va_res = _Reservoir(max_segs_class, rng)
+        wk_res = _Reservoir(max_segs_class, rng)
         for sess, files in files_by_sess.items():
             if max_files and len(files) > max_files:        # keep a random subset
                 files = [files[i] for i in rng.permutation(len(files))[:max_files]]
-            is_train = aug_dev and sess not in val_sessions
-            pool  = noise_pool if (is_train and noise_pool) else None
-            shift = f_shift if is_train else 0.0
-            specs = [file_to_specs(f, seg_len, seg_hop, max_segs_file, store_dtype,
-                                   min_pdb, noise_pool=pool, aug_p=snr_aug_p,
-                                   f_shift=shift, rng=rng)
-                     for f in files]
-            specs = [s for s in specs if s is not None]
-            if not specs:
-                continue
-            specs = np.concatenate(specs)
+            for f in files:
+                segs = file_to_segments(f, seg_len, seg_hop, max_segs_file, min_pdb)
+                if segs is None:
+                    continue
+                if random_val:
+                    perm = rng.permutation(len(segs))
+                    n_va = max(1, int(0.2 * len(segs)))
+                    va_res.extend(segments_to_specs(segs[perm[:n_va]], store_dtype))
+                    tr_res.extend(segs[perm[n_va:]])
+                elif sess in val_sessions:
+                    va_res.extend(segments_to_specs(segs, store_dtype))
+                    # The weak copy uses the noise of the train pool. That makes the
+                    # task more difficult only, thus the accuracy stays correct.
+                    if aug_dev and noise_pool:
+                        wk_res.extend(segments_to_specs(
+                            augment_segments(segs, rng, noise_pool, 1.0,
+                                             WEAK_VAL_DB, 0.0), store_dtype))
+                else:
+                    # The train split keeps the raw IQ. SegmentDataset makes the
+                    # image and augments it again at every epoch. See the defect #7.
+                    tr_res.extend(segs)
 
-            if random_val:
-                perm = rng.permutation(len(specs))
-                n_va = max(1, int(0.2 * len(specs)))
-                va_parts.append(specs[perm[:n_va]]); tr_parts.append(specs[perm[n_va:]])
-            elif sess in val_sessions:
-                va_parts.append(specs)
-                # The weak copy uses the noise of the train pool. This makes the task
-                # more difficult only. Thus the accuracy stays correct.
-                if aug_dev and noise_pool:
-                    wk = [file_to_specs(f, seg_len, seg_hop, max_segs_file,
-                                        store_dtype, min_pdb, noise_pool=noise_pool,
-                                        aug_p=1.0, snr_db=WEAK_VAL_DB, rng=rng)
-                          for f in files]
-                    wk = [s for s in wk if s is not None]
-                    if wk:
-                        wk_parts.append(np.concatenate(wk))
-            else:
-                tr_parts.append(specs)
-
-        tr = np.concatenate(tr_parts) if tr_parts else None
-        va = np.concatenate(va_parts) if va_parts else None
-        wk = np.concatenate(wk_parts) if wk_parts else None
-        if max_segs_class and tr is not None and len(tr) > max_segs_class:
-            tr = tr[rng.permutation(len(tr))[:max_segs_class]]
-        if max_segs_class and va is not None and len(va) > max_segs_class:
-            va = va[rng.permutation(len(va))[:max_segs_class]]
-        if max_segs_class and wk is not None and len(wk) > max_segs_class:
-            wk = wk[rng.permutation(len(wk))[:max_segs_class]]
-
+        tr, va, wk = tr_res.stack(), va_res.stack(), wk_res.stack()
         n_tr = 0 if tr is None else len(tr)
         n_va = 0 if va is None else len(va)
         n_wk = 0 if wk is None else len(wk)
         if n_tr:
-            Xtr.append(tr); ytr.append(np.full(n_tr, lab, np.int64))
+            Str.append(tr); ytr.append(np.full(n_tr, lab, np.int64))
+            Atr.append(np.full(n_tr, aug_dev, bool))
         if n_va:
             Xva.append(va); yva.append(np.full(n_va, lab, np.int64))
         if n_wk:
@@ -306,16 +388,21 @@ def load_split(data_dir: Path, seg_len: int, seg_hop: int, rng, *,
         weak = f" + {n_wk:,} weak" if n_wk else ""
         print(f"  {cls:<10}: {n_tr:,} train / {n_va:,} val{weak}  (val = {held})")
 
-    if not Xtr or not Xva:
+    if not Str or not Xva:
         raise RuntimeError("Not enough data to form both a train and a val split.")
     return (classes,
-            np.concatenate(Xtr), np.concatenate(ytr),
+            np.concatenate(Str), np.concatenate(ytr), np.concatenate(Atr),
             np.concatenate(Xva), np.concatenate(yva),
             np.concatenate(Xwk) if Xwk else None,
-            np.concatenate(ywk) if ywk else None)
+            np.concatenate(ywk) if ywk else None,
+            noise_pool)
 
 
 def print_confusion(model, loader, classes, device):
+    """Print the confusion matrix and the per-class figures. Give them back too.
+
+    The caller writes them to a .metrics.json file. The numbers are what a report
+    needs, and a print alone loses them."""
     model.eval()
     n = len(classes)
     cm = np.zeros((n, n), dtype=np.int64)
@@ -329,12 +416,51 @@ def print_confusion(model, loader, classes, device):
     for i, c in enumerate(classes):
         print(f"{c:>10} " + "".join(f"{cm[i, j]:>12,}" for j in range(n)))
     print("\nPer-class (val):")
+    per_class = {}
     for i, c in enumerate(classes):
         tp, col, row = int(cm[i, i]), int(cm[:, i].sum()), int(cm[i, :].sum())
         prec = tp / col if col else 0.0
         rec  = tp / row if row else 0.0
         f1   = 2 * prec * rec / (prec + rec) if (prec + rec) else 0.0
+        per_class[c] = {"precision": prec, "recall": rec, "f1": f1,
+                        "support": row, "predicted": col}
         print(f"  {c:>10}: precision {prec:6.1%}   recall {rec:6.1%}   f1 {f1:6.1%}")
+    return cm.tolist(), per_class
+
+
+def spec_mask(xb, p=SPEC_MASK_P):
+    """Hide a frequency band and a time stripe of each image, with probability p.
+
+    Each image of the batch gets its own mask and its own draw. One mask for the
+    full batch gives the network the same hole 512 times, thus it learns much less.
+
+    The value 0 is the mean of an image, because each image is standardized. The
+    function multiplies and it does not write in place, because xb can share memory
+    with the cache. The widths are clamped to the size of the image."""
+    b, _c, nf, nt = xb.shape
+    dev = xb.device
+    fw = torch.randint(1, min(SPEC_MASK_FREQ, nf) + 1, (b,), device=dev)
+    fs = (torch.rand(b, device=dev) * (nf - fw + 1).float()).long()
+    tw = torch.randint(1, min(SPEC_MASK_TIME, nt) + 1, (b,), device=dev)
+    ts = (torch.rand(b, device=dev) * (nt - tw + 1).float()).long()
+    on = (torch.rand(b, device=dev) < p)          # which images get a mask at all
+    fi = torch.arange(nf, device=dev)[None, :]
+    ti = torch.arange(nt, device=dev)[None, :]
+    fkeep = ~(((fi >= fs[:, None]) & (fi < (fs + fw)[:, None])) & on[:, None])
+    tkeep = ~(((ti >= ts[:, None]) & (ti < (ts + tw)[:, None])) & on[:, None])
+    return xb * fkeep[:, None, :, None] * tkeep[:, None, None, :]
+
+
+def _git_commit():
+    """Give the short commit of the working tree, or None outside a repository."""
+    try:
+        import subprocess
+        return subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=str(Path(__file__).resolve().parent),
+            stderr=subprocess.DEVNULL, text=True).strip() or None
+    except Exception:
+        return None
 
 
 def train(args):
@@ -357,19 +483,36 @@ def train(args):
     if args.max_segs_per_class:  caps.append(f"<={args.max_segs_per_class} segs/class/split")
     print(f"Caps   : {', '.join(caps) if caps else 'none (full dataset)'}")
     print("\nLoading captures…")
-    classes, Xtr, ytr, Xva, yva, Xwk, ywk = load_split(
+    classes, Str, ytr, Atr, Xva, yva, Xwk, ywk, noise_pool = load_split(
         Path(args.data_dir), args.seg_len, args.seg_hop, rng,
         max_files=args.max_files_per_class, max_segs_file=args.max_segs_per_file,
         max_segs_class=args.max_segs_per_class, store_dtype=store_dtype,
         gate=GATE_DEVICE_SEGS, gate_margin_db=args.gate_margin_db,
         noise_class=NOISE_CLASS, snr_aug_p=args.snr_aug_p,
         f_shift=args.freq_shift_frac)
-    mem = (Xtr.nbytes + Xva.nbytes) / 1e6
-    print(f"\nClasses  : {classes}")
-    print(f"Train/Val: {len(Xtr):,} / {len(Xva):,} spectrograms  shape {Xtr.shape[1:]}"
-          f"   (~{mem:.0f} MB cached)")
 
-    tr_ds = TensorDataset(torch.from_numpy(Xtr), torch.from_numpy(ytr))
+    present = np.unique(ytr)
+    if len(present) < 2:
+        raise RuntimeError(
+            f"Only one class has training data: '{classes[present[0]]}'. A model of "
+            f"one class reaches 100% and it means nothing. Record a second class, "
+            f"and a '{NOISE_CLASS}' class as well.")
+    empty = [c for i, c in enumerate(classes) if i not in present]
+    if empty:
+        print(f"  [warn] no train segments for {empty}. Those classes get an output "
+              f"that the network can never learn.")
+
+    mem = (Str.nbytes + Xva.nbytes) / 1e6
+    frames = (args.seg_len - N_FFT) // STFT_HOP + 1
+    print(f"\nClasses  : {classes}")
+    print(f"Train/Val: {len(Str):,} raw segments / {len(Xva):,} spectrograms"
+          f"   image (1, {N_FFT}, {frames})   (~{mem:.0f} MB cached)")
+    print(f"Aug      : {int(Atr.sum()):,} of {len(Atr):,} train segments are "
+          f"augmented again at every epoch")
+
+    tr_ds = SegmentDataset(Str, ytr, Atr, noise_pool, args.seed,
+                           snr_aug_p=args.snr_aug_p, snr_db=SNR_AUG_DB,
+                           f_shift=args.freq_shift_frac)
     va_ds = TensorDataset(torch.from_numpy(Xva), torch.from_numpy(yva))
 
     counts = np.bincount(ytr, minlength=len(classes))
@@ -396,19 +539,8 @@ def train(args):
         tl = tc = tn = 0
         for xb, yb in tr_loader:
             xb, yb = xb.to(device).float(), yb.to(device)
-            if SPEC_MASK_P and torch.rand(()).item() < SPEC_MASK_P:
-                # Hide a frequency band and a time stripe. The value 0 is the mean of
-                # the image. Thus the network learns from a part of the evidence.
-                # Use a multiplication and not an in-place operation. The tensor xb
-                # can use the same memory as the cache.
-                m = torch.ones(1, 1, xb.shape[2], xb.shape[3], device=xb.device)
-                fw = int(torch.randint(1, SPEC_MASK_FREQ + 1, ()).item())
-                fs = int(torch.randint(0, xb.shape[2] - fw + 1, ()).item())
-                tw = int(torch.randint(1, SPEC_MASK_TIME + 1, ()).item())
-                ts = int(torch.randint(0, xb.shape[3] - tw + 1, ()).item())
-                m[..., fs:fs + fw, :] = 0.0
-                m[..., ts:ts + tw] = 0.0
-                xb = xb * m
+            if SPEC_MASK_P:
+                xb = spec_mask(xb, SPEC_MASK_P)
             opt.zero_grad()
             logits = model(xb)
             loss = crit(logits, yb)
@@ -438,11 +570,11 @@ def train(args):
 
     if best_state is not None:              # the accuracy can stay 0.0 after a failure
         model.load_state_dict(best_state)
-    print_confusion(model, va_loader, classes, device)
+    confusion, per_class = print_confusion(model, va_loader, classes, device)
 
     # The weak-signal accuracy: the same val segments, but at a low SNR. This value
     # decreases if the program becomes worse for a weak signal.
-    weak_acc = None
+    weak_acc, weak_per_class = None, {}
     if Xwk is not None:
         wk_loader = DataLoader(TensorDataset(torch.from_numpy(Xwk),
                                              torch.from_numpy(ywk)),
@@ -456,11 +588,15 @@ def train(args):
                 for t, p in zip(yb.numpy(), pred):
                     tot[t] += 1; hit[t] += int(t == p)
         weak_acc = float(hit.sum() / max(1, tot.sum()))
+        weak_per_class = {classes[i]: {"accuracy": float(hit[i] / tot[i]),
+                                       "support": int(tot[i])}
+                          for i in range(len(classes)) if tot[i]}
         per = "   ".join(f"{classes[i]} {hit[i]/tot[i]:.1%}"
                          for i in range(len(classes)) if tot[i])
         print(f"\nWeak-signal val ({WEAK_VAL_DB[0]:.0f}-{WEAK_VAL_DB[1]:.0f} dB SNR): "
               f"{weak_acc:.2%}   ({per})")
 
+    Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     torch.save(model.state_dict(), args.out)
     meta = {
         "classes"       : classes,
@@ -471,6 +607,7 @@ def train(args):
         "seg_hop"       : args.seg_hop,
         "base_ch"       : args.base_ch,
         "unknown_thresh": args.unknown_thresh,
+        "vote_thresh"   : args.vote_thresh,
         "val_acc"       : best_acc,
         "model"         : "SpecCNN",
         "representation": "stft256_logmag_1ch",
@@ -479,13 +616,43 @@ def train(args):
         "snr_aug_db"    : list(SNR_AUG_DB),
         "freq_shift_frac": args.freq_shift_frac,
         "weak_val_acc"  : weak_acc,
+        # Provenance. Without it you can not say later which code and which flags
+        # made a model, and a report needs that.
+        "git_commit"    : _git_commit(),
+        "trained_at"    : time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "args"          : {k: v for k, v in sorted(vars(args).items())},
     }
     # Use with_suffix. Thus the path is always the same as the path that
     # FingerprintModel calculates with splitext.
     with open(Path(args.out).with_suffix(".meta.json"), "w") as f:
         json.dump(meta, f, indent=2)
 
+    # The figures of the report go in their own file. A print alone loses them, and
+    # the meta must stay small because the GUI reads it at every load.
+    metrics = {
+        "classes"        : classes,
+        "val_acc"        : best_acc,
+        "weak_val_acc"   : weak_acc,
+        "weak_val_db"    : list(WEAK_VAL_DB),
+        "confusion"      : confusion,
+        "confusion_rows" : "true", "confusion_cols": "pred",
+        "per_class"      : per_class,
+        "weak_per_class" : weak_per_class,
+        "n_train"        : int(len(Str)),
+        "n_val"          : int(len(Xva)),
+        "n_weak"         : 0 if Xwk is None else int(len(Xwk)),
+        "epochs"         : args.epochs,
+        "preset"         : args.preset,
+        "git_commit"     : meta["git_commit"],
+        "trained_at"     : meta["trained_at"],
+        "train_minutes"  : (time.time() - t0) / 60.0,
+    }
+    metrics_path = Path(args.out).with_suffix(".metrics.json")
+    with open(metrics_path, "w") as f:
+        json.dump(metrics, f, indent=2)
+
     print(f"\n[ok] Model -> {args.out}")
+    print(f"     Metrics -> {metrics_path}")
     print(f"     Best val accuracy : {best_acc:.2%}")
     print(f"     Total time        : {(time.time() - t0)/60:.1f} min")
 
@@ -498,7 +665,11 @@ def parse_args():
     p.add_argument("--seg_hop",        type=int,   default=SEG_HOP)
     p.add_argument("--batch_size",     type=int,   default=BATCH_SIZE)
     p.add_argument("--lr",             type=float, default=LR)
-    p.add_argument("--unknown_thresh", type=float, default=UNKNOWN_THRESH)
+    p.add_argument("--unknown_thresh", type=float, default=UNKNOWN_THRESH,
+                   help="the probability of the mean of a buffer that gives a name")
+    p.add_argument("--vote_thresh",    type=float, default=VOTE_THRESH,
+                   help="the probability of one segment that gives a vote. It is "
+                        "lower than unknown_thresh, because one segment is 0.4 ms.")
     p.add_argument("--seed",           type=int,   default=SEED)
     # The default of these flags is None. Thus the program can find a value that
     # the user gives, and use the preset for the other values.

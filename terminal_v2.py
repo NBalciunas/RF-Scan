@@ -20,6 +20,7 @@ import json
 import math
 import re
 import collections
+from pathlib import Path
 
 import numpy as np
 import adi
@@ -46,6 +47,8 @@ HOP_SETTLE_MS   = 50
 HOP_OVERLAP_PCT = 30
 
 FFT_BINS           = 1024
+PSD_CHUNK_WINS     = 1024     # FFT windows for each block of the peak hold. Memory only.
+EMPTY_SLOT_DBFS    = -300.0   # a hop that gave no data. _peak_hold_psd stops at -200.
 WATERFALL_ROWS     = 200
 WF_SCALE_MIN_DBFS  = -10.0
 WF_SCALE_MAX_DBFS  = 10.0
@@ -54,7 +57,9 @@ _SCRIPT_DIR        = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_MODEL_PATH = os.path.join(_SCRIPT_DIR, "trained_model.pt")
 
 # ── The parameters of the lock. Adjust them against a live signal. ────────────
-FP_PEAK_THRESH_DB    = 10.0      # dB above the floor for a peak to cause a lock
+FP_PEAK_THRESH_DB    = 18.0      # dB of true SNR for a peak to cause a lock. The floor is
+                                 # corrected with peak_hold_bias_db, thus this value is a
+                                 # real SNR and it does not move with the dwell time.
 FP_HOLD_SETTLE_MS    = 20        # wait for the radio before the program reads a capture
 FP_GONE_S            = 2.5       # release the lock if the signal stops for this time
 FP_MEMORY_TTL_S      = 30.0      # a caught frequency stays in the memory this long
@@ -64,9 +69,11 @@ FP_AUTO_NOISE_PCT    = 75        # Auto: release the lock at this probability of
 FP_DEVICE_THRESH     = 0.6       # the badge shows a device at this probability. Below it, the
                                  # badge shows "clear". The votes use unknown_thresh.
 ML_INTERVAL_S        = 0.75      # the minimum time between two runs of the classifier
-NOISE_REC_EVERY_N    = 5         # the wideband record keeps every Nth sweep. Thus the same
-                                 # quantity of files covers more time and gives more different
-                                 # noise. It also decreases the operations on the disk.
+RECORD_DIR           = "./fingerprint_data"   # relative to the current directory
+RECORD_EVERY_N       = 5         # the record keeps every Nth buffer, or every Nth sweep in
+                                 # Wideband. Thus the same quantity of files covers more time
+                                 # and gives more different data. One buffer at the default
+                                 # settings is 4 MB, and there are 20 of them each second.
 
 # ── The markers of the narrowband signal on the zoom plot. ────────────────────
 MARK_MIN_SNR_DB     = 6.0   # the peak must be this many dB above the floor
@@ -140,12 +147,30 @@ def _hl_values(text):
     return _VAL_RE.sub(lambda mt: _hl(mt.group(1)), text)
 
 
+def peak_hold_bias_db(n_windows):
+    """Give the dB that a peak-hold floor sits above the true mean noise floor.
+
+    Each bin of _peak_hold_psd is the maximum of n_windows samples. For noise those
+    samples are exponential, and the median of their maximum is
+    -ln(1 - 0.5^(1/n)) times the mean. The value grows with the dwell time: +6.3 dB
+    at 48 windows and +9.8 dB at 9765. Without this correction every SNR that the
+    program reports moves with the Dwell/hop setting.
+    """
+    n = max(1, int(n_windows))
+    return 10.0 * math.log10(-math.log(1.0 - 0.5 ** (1.0 / n)))
+
+
 def compute_hop_freqs(center_freq, total_span, hop_bw, overlap_pct=0):
+    """Give the LO frequency of each hop of one sweep.
+
+    The first hop is at start + step/2 and not at start + hop_bw/2, because the sweep
+    keeps only the central `step` Hz of each hop. With hop_bw/2 the whole band moves
+    up by overlap/2, and the low end of the requested span is never received."""
     overlap_hz = int(hop_bw * overlap_pct / 100.0)
     step       = hop_bw - overlap_hz
     n_hops     = math.ceil(total_span / step)
     start      = center_freq - total_span // 2
-    return [int(start + hop_bw // 2 + i * step) for i in range(n_hops)]
+    return [int(start + step // 2 + i * step) for i in range(n_hops)]
 
 
 def composite_geometry(cfg):
@@ -208,6 +233,41 @@ def signal_extent(freqs, psd, min_snr_db=MARK_MIN_SNR_DB,
     return float(freqs[l]), f_center, float(freqs[r])
 
 
+def badge_for(result, device_thresh=None):
+    """Turn a classifier result into the badge text and its style.
+
+    The function is separate from the widget. Thus a check can prove the rule that
+    decides what the user reads.
+
+    Presence and identity are two different questions.
+      1. p_dev = 1 - P(noise) answers "does a device transmit?". The strongest class
+         alone does not answer it. A result of 67% noise is a clear channel, and not
+         an unknown device.
+      2. Only above device_thresh does the name mean something. The name is unknown
+         when no single device class holds enough of the probability.
+      3. The votes of the segments have precedence. The mean of two transmitters in
+         one buffer becomes "unknown", but the votes give the two names.
+
+    Gives (text, style). The style is a key of PlutoApp._BADGE_STYLES.
+    """
+    if device_thresh is None:
+        device_thresh = FP_DEVICE_THRESH
+    probs = result.get("probs", {})
+    p_dev = 1.0 - probs.get("noise", 0.0)
+    best, p_best = max(((c, p) for c, p in probs.items() if c != "noise"),
+                       key=lambda cp: cp[1],
+                       default=(result.get("label", "unknown"),
+                                result.get("confidence", 0.0)))
+    dets = [d for d in result.get("detections", []) if d["label"] != "noise"]
+    if len(dets) >= 2:
+        return " + ".join(f"{d['label']} {d['share']:.0%}" for d in dets), "device"
+    if p_dev < device_thresh:
+        return f"clear ({1.0 - p_dev:.0%} noise)", "none"
+    if p_best >= device_thresh:
+        return f"{best} ({p_best:.0%})", "device"
+    return f"unknown device ({p_dev:.0%})", "other"
+
+
 def _write_iq_sidecar(iq_path, device, session, freq, cfg, n_samples, ts):
     """Write the JSON metadata file next to a recorded .iq file."""
     meta = {
@@ -235,7 +295,7 @@ class SweepWorker(QtCore.QThread):
     caught_changed    = QtCore.pyqtSignal(object)               # the caught frequencies
     hop_progress      = QtCore.pyqtSignal(int, int)
     status_msg        = QtCore.pyqtSignal(str)
-    files_changed     = QtCore.pyqtSignal(int)
+    files_changed     = QtCore.pyqtSignal(int, int)             # this run, on the disk
 
     _BLACKMAN = np.blackman(FFT_BINS).astype(np.float32)
 
@@ -246,6 +306,9 @@ class SweepWorker(QtCore.QThread):
         self.engine     = engine           # a FingerprintModel, or None
         self._stop      = False
         self._fq        = collections.deque()   # the paths of the recorded files
+        self._disk_files = None            # the .iq count on the disk. None = not read.
+        self._rec_i      = 0               # the counter for record_every_n
+        self._seq        = 0               # makes each file name unique
         self._held_freq = None
         self._last_composite = None        # the last full sweep, kept during a lock
         self._last_present_t = 0.0         # the last time that the signal was present
@@ -253,12 +316,21 @@ class SweepWorker(QtCore.QThread):
         self._caught         = []          # [(freq_hz, t_caught)]
         self._lock_t         = 0.0         # the time when the current lock started
         self._last_class     = None        # the last result from the classifier
+        self._psd_bias_db    = 0.0         # the bias of the last peak-hold floor
 
     def stop(self):
+        """Stop the worker. Wait for one hop, then force the thread to terminate.
+
+        The worker tests _stop between two hops only. Thus the wait must cover one
+        settle plus one dwell plus the read. A fixed wait of 4 s made a terminate
+        certain at each mode change when the dwell was large."""
         self._stop = True
-        if not self.wait(4000):
+        budget = 2000 + 3 * (int(self.cfg.get("settle_ms", 0))
+                             + int(self.cfg.get("dwell_ms", 0)))
+        if not self.wait(budget):
             self.status_msg.emit(
-                "Warning: sweep thread blocked on sdr.rx() — forcing terminate."
+                f"Warning: sweep thread blocked on sdr.rx() for {budget} ms "
+                f"— forcing terminate."
             )
             self.terminate()
             self.wait(1000)
@@ -275,7 +347,7 @@ class SweepWorker(QtCore.QThread):
         n_hops     = len(hop_freqs)
         n_keep, _f0, _f1 = composite_geometry(self.cfg)
         b0         = (FFT_BINS - n_keep) // 2       # the central part of each hop
-        composite  = np.full(n_hops * n_keep, -100.0, dtype=np.float32)
+        composite  = np.full(n_hops * n_keep, EMPTY_SLOT_DBFS, dtype=np.float32)
         hop_bufs   = {}
         for i, freq in enumerate(hop_freqs):
             if self._stop:
@@ -302,16 +374,29 @@ class SweepWorker(QtCore.QThread):
     def _peak_hold_psd(self, iq):
         """Make a 1024-bin dBFS spectrum and keep the maximum of all the windows.
 
-        The windows touch each other and cover the full buffer. Thus a short burst at
-        any time in the buffer is visible at its true amplitude. One window only
-        would not find the burst. The limit on the windows keeps the load low."""
+        The windows touch each other and they cover the full buffer, at every dwell
+        time. Thus a short burst at any time in the buffer is visible at its true
+        amplitude. One window only would not find the burst.
+
+        The program does the work in blocks of PSD_CHUNK_WINS windows and it keeps a
+        running maximum. Thus the memory stays the same at a long dwell, and no part
+        of the buffer is lost."""
         n = len(iq)
         if n < FFT_BINS:
             iq = np.pad(iq, (0, FFT_BINS - n)); n = FFT_BINS
-        nwin = min(1024, n // FFT_BINS)
-        seg  = iq[:nwin * FFT_BINS].reshape(nwin, FFT_BINS) * self._BLACKMAN
-        mag  = np.abs(np.fft.fftshift(np.fft.fft(seg, axis=1), axes=1)) / FFT_BINS
-        return (20.0 * np.log10(mag.max(axis=0) + 1e-10)).astype(np.float32)
+        nwin = n // FFT_BINS
+        self._psd_bias_db = peak_hold_bias_db(nwin)
+        # Remove the mean. The LO leakage is a constant offset, thus it makes a false
+        # peak at the middle of every hop slot, and the scanner locks on it.
+        dc = iq[:nwin * FFT_BINS].mean()
+        peak = None
+        for a in range(0, nwin, PSD_CHUNK_WINS):
+            b   = min(a + PSD_CHUNK_WINS, nwin)
+            seg = (iq[a * FFT_BINS:b * FFT_BINS].reshape(b - a, FFT_BINS) - dc)
+            mag = np.abs(np.fft.fftshift(np.fft.fft(seg * self._BLACKMAN, axis=1),
+                                         axes=1)).max(axis=0)
+            peak = mag if peak is None else np.maximum(peak, mag)
+        return (20.0 * np.log10(peak / FFT_BINS + 1e-10)).astype(np.float32)
 
     def _narrowband_psd(self, iq, center):
         """Give the spectrum of a held capture on an absolute frequency axis."""
@@ -326,7 +411,8 @@ class SweepWorker(QtCore.QThread):
         base = self._last_composite
         if base is None:                       # there is no sweep yet: make a floor
             n_keep, _f0, _f1 = composite_geometry(self.cfg)
-            base = np.full(len(self.cfg["hop_freqs"]) * n_keep, -100.0, dtype=np.float32)
+            base = np.full(len(self.cfg["hop_freqs"]) * n_keep, EMPTY_SLOT_DBFS,
+                           dtype=np.float32)
         comp = base.copy()
         f_min, f_max = self._band_edges()
         span = f_max - f_min
@@ -344,11 +430,21 @@ class SweepWorker(QtCore.QThread):
         return comp
 
     def _detect_new_peak(self, composite):
-        """Find the strongest peak that is not in the memory of the caught signals."""
+        """Find the strongest peak that is not in the memory of the caught signals.
+
+        The floor is the median of the slots that received data. A hop that failed
+        keeps EMPTY_SLOT_DBFS. If those slots stay in the median, the floor falls,
+        and each real bin then looks like a large peak.
+
+        peak_hold_bias_db corrects the median. Thus the value that comes back is a
+        true SNR and it does not change with the dwell time."""
         f_min, f_max = self._band_edges()
         span  = f_max - f_min
         total = len(composite)
-        med   = float(np.median(composite))
+        filled = composite > EMPTY_SLOT_DBFS + 1.0
+        if not filled.any():
+            return None, -999.0
+        med   = float(np.median(composite[filled])) - self._psd_bias_db
         masked = composite.copy()
         guard = float(self.cfg.get("fp_memory_guard_hz", FP_MEMORY_GUARD_HZ))
         for cf, _t in self._caught:
@@ -387,13 +483,45 @@ class SweepWorker(QtCore.QThread):
             self._caught = kept
             self.caught_changed.emit([f for f, _t in self._caught])
 
+    def _count_on_disk(self):
+        """Count the .iq files that fingerprint_data already holds.
+
+        The ring removes the files of this worker only. Thus the number on the disk
+        is larger, and it is the number that tells you the space that you use."""
+        try:
+            return sum(1 for _ in Path(RECORD_DIR).rglob("*.iq"))
+        except OSError:
+            return 0
+
+    def _record_step(self):
+        """Give True when this buffer or this sweep must go to the disk.
+
+        The narrowband record writes one file for each buffer, which is one file
+        each dwell_ms. At the default that is 20 files and 80 MB each second. The
+        divisor makes the same quantity of files cover more time, and it gives more
+        different data."""
+        n = max(1, int(self.cfg.get("record_every_n", RECORD_EVERY_N)))
+        take = (self._rec_i % n) == 0
+        self._rec_i += 1
+        return take
+
     def _save_iq(self, iq, device, session, freq):
-        d = os.path.join("./fingerprint_data", device, f"session_{session}")
+        safe = re.sub(r"[^A-Za-z0-9_.-]", "_", str(device)).strip("._") or "device"
+        d = os.path.join(RECORD_DIR, safe, f"session_{session}")
         os.makedirs(d, exist_ok=True)
-        ts    = int(time.time() * 1000)
-        fpath = os.path.join(d, f"{device}_s{session}_{ts}.iq")
+        if self._disk_files is None:            # one scan, before the first write
+            self._disk_files = self._count_on_disk()
+        ts = int(time.time() * 1000)
+        # A sweep writes every hop in one burst, thus the millisecond is not unique.
+        # The sequence number makes the name unique, and the loop covers a restart.
+        while True:
+            fpath = os.path.join(d, f"{safe}_s{session}_{ts}_{self._seq:05d}.iq")
+            self._seq += 1
+            if not os.path.exists(fpath):
+                break
         iq.astype(np.complex64).tofile(fpath)
-        _write_iq_sidecar(fpath, device, session, freq, self.cfg, len(iq), ts)
+        _write_iq_sidecar(fpath, safe, session, freq, self.cfg, len(iq), ts)
+        self._disk_files += 1
         self._fq.append(fpath)
         max_files = int(self.cfg.get("record_max_files", 1000))
         while len(self._fq) > max_files:
@@ -402,9 +530,11 @@ class SweepWorker(QtCore.QThread):
                 if os.path.exists(p):
                     try:
                         os.remove(p)
+                        if p.endswith(".iq"):
+                            self._disk_files -= 1
                     except OSError as e:
                         self.status_msg.emit(f"Warning: could not remove {p}: {e}")
-        self.files_changed.emit(len(self._fq))
+        self.files_changed.emit(len(self._fq), self._disk_files)
 
     def _maybe_classify(self, iq):
         """Run the classifier, but not more than one time each ml_interval_s.
@@ -525,7 +655,8 @@ class SweepWorker(QtCore.QThread):
                         continue
                 # Release the lock if the signal is absent for FP_GONE_S.
                 thresh = float(self.cfg.get("fp_peak_thresh_db", FP_PEAK_THRESH_DB))
-                if (float(psd.max()) - float(np.median(psd))) >= thresh:
+                snr = (float(psd.max()) - float(np.median(psd)) + self._psd_bias_db)
+                if snr >= thresh:
                     self._last_present_t = time.time()
                 elif time.time() - self._last_present_t >= FP_GONE_S:
                     self._release_lock("Signal gone — moving on")
@@ -540,7 +671,6 @@ class SweepWorker(QtCore.QThread):
         If the record is on, the program saves the raw IQ data of every
         NOISE_REC_EVERY_N-th sweep to the noise class."""
         self.mode_changed.emit("WIDEBAND", 0.0)
-        sweep_i = 0
         while not self._stop:
             t0 = time.perf_counter()
             composite, hop_bufs = self._sweep_once()
@@ -550,16 +680,16 @@ class SweepWorker(QtCore.QThread):
             self.sweep_ready.emit(composite, hop_bufs)
             rec = (bool(self.cfg.get("record"))
                    and self.cfg.get("record_kind") == "noise_band")
-            if rec and sweep_i % NOISE_REC_EVERY_N == 0:
+            every = max(1, int(self.cfg.get("record_every_n", RECORD_EVERY_N)))
+            if rec and self._record_step():
                 session = self.cfg.get("record_session", "1")
                 for i, raw in hop_bufs.items():
                     if len(raw):
                         self._save_iq(raw, "noise", session,
                                       int(self.cfg["hop_freqs"][i]))
-            sweep_i += 1
             el  = (time.perf_counter() - t0) * 1000
             tag = (f"  |  REC noise: {len(self._fq)} files "
-                   f"(1/{NOISE_REC_EVERY_N} sweeps)" if rec else "")
+                   f"(1/{every} sweeps)" if rec else "")
             self.status_msg.emit(
                 f"Wideband: {el:.0f} ms  |  {len(self.cfg['hop_freqs'])} hops{tag}")
 
@@ -603,11 +733,13 @@ class SweepWorker(QtCore.QThread):
                 # noise_freq saves to the noise class at the frequency of the device
                 label = "noise" if kind == "noise_freq" else \
                     self.cfg.get("record_device", "deviceA")
-                self._save_iq(iq, label, self.cfg.get("record_session", "1"), freq)
+                every = max(1, int(self.cfg.get("record_every_n", RECORD_EVERY_N)))
+                if self._record_step():
+                    self._save_iq(iq, label, self.cfg.get("record_session", "1"), freq)
                 self.status_msg.emit(
                     f"{'NOISE' if kind == 'noise_freq' else 'DEVICE'} REC "
                     f"{label}/s{self.cfg.get('record_session','1')} @ "
-                    f"{freq/1e6:.3f} MHz: {len(self._fq)} files")
+                    f"{freq/1e6:.3f} MHz: {len(self._fq)} files (1/{every} buffers)")
             else:
                 self.status_msg.emit(f"Focus @ {freq/1e6:.3f} MHz")
 
@@ -645,6 +777,7 @@ class PlutoApp(QtWidgets.QMainWindow):
             "record_session"      : "1",
             "focus_freq"          : CENTER_FREQ,
             "record_max_files"    : 1000,
+            "record_every_n"      : RECORD_EVERY_N,
             "fp_peak_thresh_db"   : FP_PEAK_THRESH_DB,
             "fp_hold_settle_ms"   : FP_HOLD_SETTLE_MS,
             "fp_memory_ttl_s"     : FP_MEMORY_TTL_S,
@@ -1056,6 +1189,17 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.w_rec_max     = rec_cell(2, 1, "Max files",       QtWidgets.QSpinBox())
         self.w_rec_max.setRange(1, 200000)
         self.w_rec_max.setValue(1000)
+        self.w_rec_every   = rec_cell(4, 0, "Keep every Nth",  QtWidgets.QSpinBox())
+        self.w_rec_every.setRange(1, 1000)
+        self.w_rec_every.setValue(RECORD_EVERY_N)
+        self.w_rec_every.setToolTip(
+            "Save 1 buffer of N. Narrowband gives one buffer each dwell, thus N=1 "
+            "writes about 80 MB each second at the default settings.")
+        self.w_rec_rate    = rec_cell(4, 1, "Write rate", QtWidgets.QLineEdit())
+        self.w_rec_rate.setReadOnly(True)
+        for _w in (self.w_rec_every, self.w_rec_max):
+            _w.valueChanged.connect(self._update_rec_rate_label)
+        self.w_dwell.valueChanged.connect(self._update_rec_rate_label)
         vbox.addLayout(rec_grid)
 
         rec_btn_row = QtWidgets.QHBoxLayout()
@@ -1072,6 +1216,7 @@ class PlutoApp(QtWidgets.QMainWindow):
         vbox.addLayout(rec_btn_row)
         self._update_record_btn_style(False)
         self._on_record_kind("device")     # enable the correct fields
+        self._update_rec_rate_label()
 
         vbox.addSpacing(8)
         apply_btn = QtWidgets.QPushButton("⟳  Apply Settings")
@@ -1103,7 +1248,7 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.status_lbl = QtWidgets.QLabel("Starting…")
         self.status_lbl.setWordWrap(True)
         self.status_lbl.setStyleSheet(_ss)
-        self.file_lbl = QtWidgets.QLabel("Files on disk: 0")
+        self.file_lbl = QtWidgets.QLabel("Files: 0 this run · 0 on disk")
         self.file_lbl.setStyleSheet(_ss)
         self.prog_bar = QtWidgets.QProgressBar()
         self.prog_bar.setRange(0, 100)
@@ -1218,8 +1363,11 @@ class PlutoApp(QtWidgets.QMainWindow):
             self.det_badge.setText("MODEL LOADED — SCANNING")
             self._set_badge_style("none")
             short = os.path.basename(path)
-            warn = ("" if any(c.lower() == "noise" for c in engine.classes) else
-                    "<br>⚠ No 'noise' class — Auto mode's auto-skip will never trigger")
+            self._no_noise_class = not any(c.lower() == "noise"
+                                           for c in engine.classes)
+            warn = ("<br>⚠ No 'noise' class — Auto mode's auto-skip will never "
+                    "trigger, and the badge can never say 'clear'"
+                    if self._no_noise_class else "")
             self.model_info_lbl.setText(
                 f"{_hl(short)} loaded successfully<br>"
                 f"Model classes: {_hl(', '.join(engine.classes))}{warn}"
@@ -1252,29 +1400,12 @@ class PlutoApp(QtWidgets.QMainWindow):
         label = result["label"]
         conf  = result["confidence"]
         probs = result["probs"]
-        # The sum of all the device classes tells you if a device transmits. The
-        # strongest class alone does not. A result of 67% noise is a clear channel
-        # and not an unknown device. The name is unknown only if a device is
-        # probable, but no single device class has a sufficient probability.
-        p_dev = 1.0 - probs.get("noise", 0.0)
-        best, p_best = max(((c, p) for c, p in probs.items() if c != "noise"),
-                           key=lambda cp: cp[1], default=(label, conf))
-        # The votes of the segments have precedence. The mean of two transmitters
-        # in one buffer becomes "unknown", but the votes give the two names.
-        dets = [d for d in result.get("detections", []) if d["label"] != "noise"]
-        if len(dets) >= 2:
-            self.det_badge.setText(" + ".join(f"{d['label']} {d['share']:.0%}"
-                                              for d in dets))
-            self._set_badge_style("device")
-        elif p_dev < FP_DEVICE_THRESH:
-            self.det_badge.setText(f"clear ({1.0 - p_dev:.0%} noise)")
-            self._set_badge_style("none")
-        elif p_best >= FP_DEVICE_THRESH:
-            self.det_badge.setText(f"{best} ({p_best:.0%})")
-            self._set_badge_style("device")
-        else:
-            self.det_badge.setText(f"unknown device ({p_dev:.0%})")
-            self._set_badge_style("other")
+        text, kind = badge_for(result, FP_DEVICE_THRESH)
+        if getattr(self, "_no_noise_class", False):
+            text += "  ⚠ no noise class"
+            kind = "error" if kind == "none" else kind
+        self.det_badge.setText(text)
+        self._set_badge_style(kind)
         for cls, bar in self._conf_bars.items():
             p = probs.get(cls, 0.0)
             bar.setValue(int(p * 100))
@@ -1468,10 +1599,24 @@ class PlutoApp(QtWidgets.QMainWindow):
         if self.cfg.get("record") and hasattr(self, "worker"):
             self._on_record_toggle(True)
 
+    def _update_rec_rate_label(self, _v=0):
+        """Show the size that a narrowband record writes each second.
+
+        One buffer is sample_rate * dwell_ms / 1000 samples of complex64, and the
+        program reads one buffer each dwell. Thus the rate does not change with the
+        dwell, and only the divisor moves it."""
+        every = max(1, self.w_rec_every.value())
+        n = max(1024, int(self.cfg["sample_rate"] * self.w_dwell.value() / 1000.0))
+        mb = n * 8 / 1e6
+        per_s = mb * (1000.0 / max(1, self.w_dwell.value())) / every
+        cap_gb = mb * self.w_rec_max.value() / 1000.0
+        self.w_rec_rate.setText(f"{per_s:.0f} MB/s · cap {cap_gb:.1f} GB")
+
     def _sync_record_cfg(self):
         self.cfg["record_device"]    = self.w_rec_device.text().strip() or "deviceA"
         self.cfg["record_session"]   = self.w_rec_session.text().strip() or "1"
         self.cfg["record_max_files"] = self.w_rec_max.value()
+        self.cfg["record_every_n"]   = self.w_rec_every.value()
         try:
             self.cfg["focus_freq"] = int(float(self.w_rec_freq.text()))
         except ValueError:
@@ -1572,8 +1717,11 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.status_lbl.setText(_hl_values(msg))
         self.prog_bar.setValue(100)
 
-    def _on_files_changed(self, count):
-        self.file_lbl.setText(f"Files on disk: {_hl(count)}")
+    def _on_files_changed(self, this_run, on_disk):
+        cap = self.cfg.get("record_max_files", 1000)
+        warn = "  ⚠ over the cap" if on_disk > cap else ""
+        self.file_lbl.setText(
+            f"Files: {_hl(this_run)} this run · {_hl(on_disk)} on disk{warn}")
 
     def closeEvent(self, event):
         if hasattr(self, "worker"):

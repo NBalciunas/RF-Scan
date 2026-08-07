@@ -9,6 +9,7 @@ one channel of log magnitude. The phase is not kept.
 
 import os
 import json
+import functools
 
 import numpy as np
 import torch
@@ -20,20 +21,39 @@ SEG_LEN  = 4096         # IQ samples for one spectrogram (0.4 ms at 10 Msps)
 SEG_HOP  = 2048         # samples between two spectrogram segments
 INFER_MAX_SEGS = 24     # live inference: maximum segments for one buffer (0 = all)
 MIN_SEG_SHARE  = 0.2    # a class is present when it wins this part of the segments
+VOTE_THRESH    = 0.5    # a segment votes when its best class has this probability
 
-_WINDOW = np.hanning(N_FFT).astype(np.float32)
+
+@functools.lru_cache(maxsize=8)
+def _window(n_fft):
+    return np.hanning(n_fft).astype(np.float32)
+
+
+def remove_dc(iq):
+    """Remove the constant offset of the receiver from an IQ buffer.
+
+    The LO leakage of the radio is a constant. It makes a line at 0 Hz in every
+    capture of every class, because the radio always parks on the signal. Two things
+    then go wrong. The scanner locks on that line, and an augmentation that moves a
+    segment in frequency moves the line with it. Thus the position of the line
+    becomes a class cue that has nothing to do with a drone.
+
+    Call this function before any frequency shift. After a shift the offset is no
+    longer at 0 Hz, and a mean can not find it."""
+    iq = np.asarray(iq, dtype=np.complex64)
+    return iq - iq.mean() if len(iq) else iq
 
 
 def iq_to_spectrogram(iq, n_fft=N_FFT, hop=STFT_HOP):
     """Make one log-magnitude spectrogram (1, n_fft, n_frames) from complex IQ data.
 
     The function normalizes each image with its own mean and standard deviation."""
-    iq = np.asarray(iq, dtype=np.complex64)
+    iq = remove_dc(iq)
     if len(iq) < n_fft:
         iq = np.pad(iq, (0, n_fft - len(iq)))
     n   = (len(iq) - n_fft) // hop + 1
     idx = np.arange(n_fft)[None, :] + hop * np.arange(n)[:, None]
-    frames = iq[idx] * _WINDOW
+    frames = iq[idx] * _window(n_fft)
     S   = np.fft.fftshift(np.fft.fft(frames, axis=1), axes=1)
     mag = 20.0 * np.log10(np.abs(S) / n_fft + 1e-10)
     spec = mag.T.astype(np.float32)
@@ -93,6 +113,10 @@ def segment_vote(seg_probs, classes, thresh, min_share):
     or more transmitters that send at different times in one capture. The function
     can not divide two signals that are in the same segment.
 
+    thresh is VOTE_THRESH and not unknown_thresh. One segment is 0.4 ms, thus its
+    probability is always lower than the mean of a full buffer. A limit that is
+    correct for the mean stops all the votes.
+
     The function gives [{label, share, confidence}, ...]. The strongest is first.
     """
     win, wconf = seg_probs.argmax(1), seg_probs.max(1)
@@ -125,6 +149,7 @@ class FingerprintModel:
         self.seg_hop  = int(meta.get("seg_hop",  SEG_HOP))
         base          = int(meta.get("base_ch",  16))
         self.unknown_thresh = float(meta.get("unknown_thresh", unknown_thresh))
+        self.vote_thresh    = float(meta.get("vote_thresh", VOTE_THRESH))
         self.infer_max_segs = int(infer_max_segs)
 
         self.net = SpecCNN(len(self.classes), base=base)
@@ -148,7 +173,7 @@ class FingerprintModel:
             "probs"     : {c: float(p) for c, p in zip(self.classes, probs)},
             "unknown"   : conf < self.unknown_thresh,
             "detections": segment_vote(seg_probs, self.classes,
-                                       self.unknown_thresh, MIN_SEG_SHARE),
+                                       self.vote_thresh, MIN_SEG_SHARE),
         }
 
 

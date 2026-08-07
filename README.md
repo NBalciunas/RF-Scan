@@ -171,6 +171,39 @@ Set the **Device label**, the **Session** number and the **Focus freq**. Then cl
 **● Record**. The program starts the correct mode automatically. The button **Lock
 freq** copies the frequency of the last lock into the Focus freq field.
 
+The Narrowband mode reads one buffer for each dwell time. At the default settings that
+is 4 MB every 50 ms, which is 80 MB each second. The field **Keep every Nth** saves 1
+buffer of N. The default value is 5. The same quantity of files then covers 5 times
+more time, and it gives more different data. The field **Write rate** shows the rate
+and the total size of the limit **Max files**. Both values change while you type.
+
+The counter at the bottom gives two numbers. The first is the number of files that
+this run wrote. The second is the number of `.iq` files in `fingerprint_data/`. The
+limit **Max files** removes the oldest file of the current run only. It never removes
+a file of an earlier session, thus a long series of sessions can use more space than
+the limit. The counter gives a warning in that condition.
+
+### Verify the data before you train
+
+```bash
+python dataset_info.py
+```
+
+This command gives the number of files, segments, seconds and bytes of each class and
+each session, the frequency of each class, and a warning for each condition that makes
+a training run useless.
+
+| Warning | Why it is important |
+|---|---|
+| A class has 1 session | The trainer uses a random split, and that accuracy has no meaning. |
+| There is no `noise` class | The energy gate and the Auto mode both need it. |
+| The dataset mixes RX gains | The energy gate compares raw dB, thus a gain change makes the limit false. |
+| A capture has no `.json` file | The tool can not give the duration or the gain of that capture. |
+| There is less than 1 device class | Two drones are necessary for the goal. |
+
+Use this command after each recording session. A gain that is not the same in each
+session is the error that is the most difficult to see later.
+
 The files go to this structure:
 
 ```
@@ -205,9 +238,13 @@ python train_model.py --preset balanced --out trained_model.pt
 ```
 
 Each top-level folder in `fingerprint_data/` is one class. The trainer converts the
-captures into spectrograms, it trains the network, and it writes two files: the
-weights in `trained_model.pt` and the geometry and the class names in
-`trained_model.meta.json`.
+captures into spectrograms, it trains the network, and it writes three files.
+
+| File | Content |
+|---|---|
+| `trained_model.pt` | The weights. |
+| `trained_model.meta.json` | The geometry, the class names, the two limits, the git commit, the time and every argument. The graphical interface reads this file. |
+| `trained_model.metrics.json` | The confusion matrix, the precision, the recall, the F1 value and the support of each class, and the weak-signal figures. Use this file for a report. |
 
 ### The model
 
@@ -228,8 +265,8 @@ magnitude of a 256-point STFT. The program does not keep the phase.
 | `best` | 30 | all | all | 24 |
 
 The preset `fast` is a check of the procedure only. Its accuracy value is not the final
-value. A run without the flag `--preset` uses `fast`, because the constant `PRESET` at
-the top of the file gives that value.
+value. A run without the flag `--preset` uses `balanced`, because the constant `PRESET`
+at the top of the file gives that value.
 
 ### What the trainer does with your data
 
@@ -244,8 +281,15 @@ the top of the file gives that value.
   rows. Thus the network can learn the position and not the fingerprint. A random shift
   of ±10% of the sample rate prevents this.
 - The spectrogram mask. The trainer hides a frequency band and a time stripe of each
-  batch. Thus the network learns from a part of the evidence. A WiFi burst above your
+  image. Thus the network learns from a part of the evidence. A WiFi burst above your
   drone does not stop the identification.
+
+All three run again at each epoch, and each image gets its own values. The trainer
+keeps the raw data of the train split and it makes the image at the moment of use. A
+cache of images gives one version of each segment, and 30 epochs then see the same
+picture 30 times. This costs approximately 320 us for each segment, which is 6 s for
+each epoch at 20 000 segments. The val data and the weak-signal data do not change,
+because a measurement must give the same result at each epoch.
 
 ### The other flags
 
@@ -254,8 +298,15 @@ and `--freq_shift_frac` to change one value of the preset. A flag has precedence
 the preset. Use `--cpu` for the CPU, and `--store_dtype float32` for more precision in
 the cache. The command `python train_model.py --help` gives the full list.
 
-Give the flag `--out trained_model.pt` for each run. The default value of `--out` is a
-different name, and the graphical interface does not find that file automatically.
+The default value of `--out` is `./trained_model.pt`, which is the name that the
+graphical interface loads at the start. The trainer makes the directory of the output
+if it does not exist.
+
+Two limits control the names that the program gives. The flag `--unknown_thresh`
+(0.8) is the probability of the mean of a full buffer that gives a name. The flag
+`--vote_thresh` (0.5) is the probability of one 0.4 ms segment that gives a vote. The
+second value is lower, because one segment holds much less evidence than a full
+buffer. Both values go into the meta file, thus each model carries its own limits.
 
 ## Loading ML
 
@@ -276,7 +327,7 @@ The badge above the buttons shows the result:
 | `clear (82% noise)` | There is no device. |
 | `deviceA (93%)` | The named device transmits. The limit is 60%. |
 | `unknown device (71%)` | A device transmits, but no single class has a sufficient probability. |
-| `deviceA 50% + droneB 40%` | The votes of the segments found two transmitters in one capture. |
+| `deviceA 50% + droneB 40%` | The votes of the segments found two transmitters in one capture. A segment votes at 50%, and a class needs 20% of all the segments. |
 
 The bar of each class shows the mean probability. The Auto mode releases a lock when
 the probability of the class `noise` is 75% or more, after a dwell time of 5000 ms.
@@ -308,35 +359,64 @@ The images are placeholders. Replace them with screen captures of your system.
 
 ### The self-checks
 
-The project has three self-checks. They do not need an SDR, but numpy and torch must be
-installed. Each check gives an exception if it fails.
+The project has 132 self-checks in 9 scripts. One command runs all of them. The same
+command runs on each push, through `.github/workflows/tests.yml`.
 
 ```bash
-python fp_spectrogram.py
+python tests/run_all.py
 ```
 
-This check gives the function `segment_vote` a buffer with two transmitters. The
-function must find both names, and it must give the correct part for each name. A
-buffer with a low probability must give no name.
+The checks do not need a PlutoSDR. They do not need Qt and they do not need the libiio
+library. They need numpy and torch only, because the support module replaces the three
+driver packages if they are absent. A package that is installed always has precedence
+over a replacement. A full run takes approximately 36 s.
 
 ```bash
-python tests/test_geometry.py
+python tests/run_all.py --fast
 ```
 
-This check calculates the FFT bin of a tone at 97 frequencies, in each hop. Then it
-joins the hops as the sweep does. The linear map of the composite must give the
-original frequency again. Thus the check finds a difference between the worker and the
-graphical interface. It uses four configurations: the values of the program, a
-bandwidth that is equal to the sample rate, a large overlap, and one hop only.
+The flag `--fast` removes the end-to-end check, which trains a small model. The other
+checks take approximately 12 s. Each script also operates alone, and from any
+directory.
 
 ```bash
-python tests/test_snr_aug.py
+python tests/test_dsp.py
 ```
 
-This check verifies the mathematics of the augmentation. The function `_mix_noise` must
-put the tone at the exact signal-to-noise ratio, with an error of less than 0.1 dB. A
-silent segment must not change. The function `_freq_shift` must move the FFT peak by the
-correct quantity, and it must not change the total power.
+### What each script holds
+
+| Script | Checks | Subject |
+|---|---|---|
+| `fp_spectrogram.py` | 1 | The function `segment_vote` must find two transmitters in one buffer, and it must give no name to a buffer with a low probability. |
+| `tests/test_geometry.py` | 6 | The frequency of a tone must return through the map of the composite. The parts must join without a gap. The band must be the band that you asked for. |
+| `tests/test_spectrogram.py` | 15 | The size of the image, the normalization, the frequency of each row, and the segment cutter. A gain of 60 dB must not move the image. The DC blocker must remove the leakage of the LO and keep a signal that is near it. |
+| `tests/test_dsp.py` | 30 | The peak hold must find a burst that is in 1 window of 100, and also a burst at the end of a long buffer. One window alone must miss it. A constant offset must not make a peak. The corrected noise floor must not change with the dwell time. The markers must give the correct middle and the correct edges of a signal of a known width. A hop that failed must not change the noise floor. The badge must give the correct name in each condition. |
+| `tests/test_snr_aug.py` | 11 | The function `_mix_noise` must give the exact signal-to-noise ratio, with an error of less than 0.1 dB. The function `_freq_shift` must change the phase of each sample only. |
+| `tests/test_model.py` | 15 | The sizes and the parameter count of `SpecCNN`, the votes of the segments, and a write and read cycle of `FingerprintModel`. The trainer and the graphical interface must calculate the same path for the meta file. |
+| `tests/test_dataset.py` | 26 | The split by session, the energy gate, and the augmentation. A device segment must give a new image at each epoch, and a noise segment must never change. The val data must never change. A device class and the noise class must get the same DC treatment. The tool `dataset_info` must give each warning. |
+| `tests/test_worker.py` | 16 | A false radio replaces the PlutoSDR. The sweep must tune to each hop and find the tone at its true frequency. The lock must hold one frequency. Skip, Jump to and the memory of the caught signals must operate. The record must write the correct file and the correct metadata, and each name must be different. |
+| `tests/test_end_to_end.py` | 11 | A synthetic dataset of two drones goes through the real trainer. Then the same `FingerprintModel` that the graphical interface loads must give the correct name to a capture of a session that it did not see, and it must report both drones when both transmit. |
+
+### How to read the result
+
+| Line | Meaning |
+|---|---|
+| `ok` | The behaviour is correct. |
+| `FAIL` | Something is broken. The script gives the exit code 1. |
+| `defect #N` | A known defect. This result is the expected result. |
+| `FIXED #N` | A known defect that is now correct. |
+| `..` | A measurement. It is not a check. |
+
+A `defect` line is not a failure. The program has known defects, and each one has a
+check that fails while the defect is open. Thus the suite stays correct today, and it
+tells you the moment that a correction operates. The developer notes give the full
+list of the defects.
+
+The end-to-end check is the most important one. It builds a dataset of two synthetic
+drones and a noise class, it starts the real trainer, and it gives the result to the
+same wrapper that the graphical interface uses. The two drones are separable, thus the
+accuracy must be more than 90%. A low value shows that something in the chain is
+broken, and not that the task is difficult.
 
 ### The validation of the model
 
@@ -375,8 +455,14 @@ recording are almost identical.
   the same model.
 - The votes of the segments separate two transmitters in time only. Two signals in one
   segment stay together.
-- A weak signal below the peak threshold does not cause a lock. The threshold is 10 dB
-  above the noise floor.
+- The votes of the segments use the limit `vote_thresh`, which is 50% for each
+  segment. A lower value finds more transmitters and it also gives more false names.
+  A class must also win 20% of all the segments. If a report of two transmitters looks
+  wrong, look at the probability of each segment first.
+- A weak signal below the peak threshold does not cause a lock. The threshold is 18 dB
+  of signal-to-noise ratio. The program corrects the peak-hold spectrum before it
+  measures the floor, thus this value is a true ratio and it does not change with the
+  dwell time.
 - The quality of the model depends on your recordings. Without a Noise (freq) record
   the model learns the frequency and not the fingerprint.
 
@@ -385,8 +471,10 @@ recording are almost identical.
 - There is no command-line interface for the monitor. It is a graphical program only.
 - The memory of the caught frequencies does not continue after a change of the mode or
   of the settings.
-- The counter of the files knows the files of the current sweep only. The old files on
-  the disk stay. Thus a long session can use much space.
+- The limit **Max files** removes the files of the current run only. The old files on
+  the disk stay, because a program must not remove the recordings that you made
+  before. Thus a long series of sessions can use more space than the limit. The
+  counter shows both numbers and it gives a warning.
 - Git ignores the folder `fingerprint_data/` and the model files. They are not in the
   repository.
 
