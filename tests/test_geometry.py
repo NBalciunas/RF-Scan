@@ -1,10 +1,16 @@
-"""Self-check for the sweep-composite geometry (run: python test_geometry.py).
+"""Self-check for the sweep geometry. Type `python tests/test_geometry.py`.
 
-Simulates where a tone at frequency F lands in each hop's FFT, stitches it the
-way SweepWorker._sweep_once does, and asserts the composite's linear bin->Hz map
-gives F back. Fails if composite_geometry / the slicing ever drift apart.
+The program calculates the FFT bin of a tone at the frequency F in each hop. Then it
+joins the hops as SweepWorker._sweep_once does. The linear bin-to-Hz map of the
+composite must give F again. The check fails if composite_geometry and the slice
+operation do not agree.
 """
+import sys
+from pathlib import Path
+
 import numpy as np
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))   # find the modules
 
 from terminal_v2 import compute_hop_freqs, composite_geometry, FFT_BINS
 
@@ -21,10 +27,10 @@ def check(sample_rate, rx_bw, center, span, overlap_pct):
     for F in np.linspace(f0 + binw, f1 - binw, 97):
         errs = []
         for i, hc in enumerate(hops):
-            b = int(round((F - (hc - sample_rate / 2)) / binw))   # FFT bin of F in hop i
-            if b0 <= b < b0 + n_keep:                             # survives the slice?
+            b = int(round((F - (hc - sample_rate / 2)) / binw))   # the FFT bin of F
+            if b0 <= b < b0 + n_keep:                             # inside the slice?
                 idx  = i * n_keep + (b - b0)
-                back = f0 + (idx / total) * (f1 - f0)             # the app/worker map
+                back = f0 + (idx / total) * (f1 - f0)             # the map of the app
                 errs.append(abs(back - F))
         assert errs, f"{F/1e6:.3f} MHz falls in no slot (gap in coverage)"
         assert min(errs) < 3 * binw, \
@@ -34,8 +40,8 @@ def check(sample_rate, rx_bw, center, span, overlap_pct):
 
 
 if __name__ == "__main__":
-    check(10_000_000, 4_000_000, 2_400_000_000, 20_000_000, 30)   # app defaults
-    check(10_000_000, 10_000_000, 2_400_000_000, 20_000_000, 0)   # bw == sr, no overlap
-    check(2_000_000, 4_000_000, 915_000_000, 5_000_000, 50)       # sr-limited, heavy overlap
-    check(10_000_000, 4_000_000, 2_400_000_000, 4_000_000, 30)    # single hop
+    check(10_000_000, 4_000_000, 2_400_000_000, 20_000_000, 30)   # the app defaults
+    check(10_000_000, 10_000_000, 2_400_000_000, 20_000_000, 0)   # bw = sr, no overlap
+    check(2_000_000, 4_000_000, 915_000_000, 5_000_000, 50)       # large overlap
+    check(10_000_000, 4_000_000, 2_400_000_000, 4_000_000, 30)    # one hop only
     print("all geometry checks passed")

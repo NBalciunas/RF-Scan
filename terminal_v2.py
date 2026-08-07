@@ -1,14 +1,16 @@
-"""
-terminal_v2.py  –  PlutoSDR monitor + RF-fingerprint detection.
+"""The PlutoSDR monitor with the RF-fingerprint detection.
 
-v2 reworks the v1 drone/noise monitor into a fingerprinting tool:
-  * ML is the spectrogram FingerprintModel (fp_spectrogram.py);
-  * the worker runs a SCAN -> HOLD state machine: hop+scan, and when a peak crosses
-    FP_PEAK_THRESH_DB park the LO on a fixed frequency, zoom in, and classify the
-    held signal until the user Skips or the signal stops;
-  * recording (raw fixed-LO IQ) has three kinds — a device fingerprint, band-swept
-    noise, or narrowband noise at one frequency — all under fingerprint_data/;
-  * a third "zoom" plot shows the currently-held narrowband signal.
+The worker thread has four modes:
+  * Auto and Locking sweep the band. When a peak goes above FP_PEAK_THRESH_DB, the
+    program holds the radio on that frequency and classifies the signal. The hold
+    continues until the user clicks Skip, or until the signal stops. In Auto the
+    program also releases a hold that the classifier calls noise.
+  * Wideband sweeps the band only.
+  * Narrowband holds one frequency only.
+
+The program also records raw IQ data to fingerprint_data/ for train_model.py. There
+are three kinds of record: a device, the noise of the full band, and the noise at
+one frequency.
 """
 
 import os
@@ -25,16 +27,13 @@ import pyqtgraph as pg
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 try:
-    import torch  # presence check only — actual use is lazy-imported via fp_spectrogram
+    import torch  # a check only — fp_spectrogram does the import of the model
     _TORCH_OK = True
 except ImportError:
     _TORCH_OK = False
 
-# ==========================================
-# CONFIGURATION
-# ==========================================
+# ── Configuration ─────────────────────────────────────────────────────────────
 
-# ponytail: env override so two Plutos can run side by side (`iio_info -s` lists usb: URIs)
 SDR_URI         = os.environ.get("PLUTO_URI", "ip:192.168.3.1")
 SAMPLE_RATE     = 10_000_000
 RX_BW_HZ        = 4_000_000
@@ -54,32 +53,27 @@ WF_SCALE_MAX_DBFS  = 10.0
 _SCRIPT_DIR        = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_MODEL_PATH = os.path.join(_SCRIPT_DIR, "trained_model.pt")
 
-# ── Fingerprint Locking state-machine params (tune against live signals) ──────
-FP_PEAK_THRESH_DB    = 10.0      # peak-above-floor (dB) for a signal to count / trigger a lock
-FP_HOLD_SETTLE_MS    = 20        # LO settle before grabbing a held capture
-FP_GONE_S            = 2.5       # Locking: drop the lock if the signal's been gone this long
-FP_MEMORY_TTL_S      = 30.0      # remembered catches are skipped for this long, then revisitable
-FP_MEMORY_GUARD_HZ   = 3_000_000 # peaks within this of a remembered freq count as the same signal
-FP_AUTO_DWELL_MS     = 5000      # Auto: dwell on a lock this long before judging it noise
-FP_AUTO_NOISE_PCT    = 75        # Auto: auto-skip the lock when noise prob reaches this %
-FP_DEVICE_THRESH     = 0.6       # badge: prob needed to call a device present, and to name which
-                                 # one. Below it the lock reads "clear". Overrides the model's
-                                 # unknown_thresh for the badge only (segment votes still use it).
-ML_INTERVAL_S        = 0.75      # min seconds between classifier runs (throttle; a signal's
-                                 # identity doesn't change 20x/s, so per-loop inference is wasted)
-NOISE_REC_EVERY_N    = 5         # wideband noise rec: save every Nth sweep. Undecimated, the
-                                 # max-files ring refills in ~100 s, so long recordings keep only
-                                 # the tail; every Nth spreads the same ring over N× the time
-                                 # (more diverse noise) and cuts disk churn to match.
+# ── The parameters of the lock. Adjust them against a live signal. ────────────
+FP_PEAK_THRESH_DB    = 10.0      # dB above the floor for a peak to cause a lock
+FP_HOLD_SETTLE_MS    = 20        # wait for the radio before the program reads a capture
+FP_GONE_S            = 2.5       # release the lock if the signal stops for this time
+FP_MEMORY_TTL_S      = 30.0      # a caught frequency stays in the memory this long
+FP_MEMORY_GUARD_HZ   = 3_000_000 # a peak nearer than this to a caught frequency is the same
+FP_AUTO_DWELL_MS     = 5000      # Auto: hold this long before the program judges the lock
+FP_AUTO_NOISE_PCT    = 75        # Auto: release the lock at this probability of noise
+FP_DEVICE_THRESH     = 0.6       # the badge shows a device at this probability. Below it, the
+                                 # badge shows "clear". The votes use unknown_thresh.
+ML_INTERVAL_S        = 0.75      # the minimum time between two runs of the classifier
+NOISE_REC_EVERY_N    = 5         # the wideband record keeps every Nth sweep. Thus the same
+                                 # quantity of files covers more time and gives more different
+                                 # noise. It also decreases the operations on the disk.
 
-# ── Narrowband signal markers (live middle/edge overlay on the zoom plot) ─────
-# Measured straight off the displayed PSD — no center freq, no bandwidth param —
-# so the red lines track the true signal and drift with it.
-MARK_MIN_SNR_DB     = 6.0   # peak must beat the noise floor by this before any line is drawn
-MARK_EDGE_MARGIN_DB = 3.0   # an edge is where the signal crosses floor + this (occupied BW)
-MARK_SMOOTH_BINS    = 5     # light smoothing so one noisy bin can't make the edges jump
+# ── The markers of the narrowband signal on the zoom plot. ────────────────────
+MARK_MIN_SNR_DB     = 6.0   # the peak must be this many dB above the floor
+MARK_EDGE_MARGIN_DB = 3.0   # an edge is where the signal goes below floor plus this
+MARK_SMOOTH_BINS    = 5     # a smooth operation prevents a movement of the edges
 
-# ── Stylesheet applied to every input widget so text is always white on dark ──
+# ── The stylesheet of the panel: white text on a dark background. ─────────────
 _INPUT_SS = (
     "QLineEdit, QSpinBox, QDoubleSpinBox {"
     "  color: #ffffff;"
@@ -130,21 +124,19 @@ _INPUT_SS = (
     "QProgressBar::chunk { background: #0064b4; }"
 )
 
-# ==========================================
-# HELPERS
-# ==========================================
+# ── Helpers ───────────────────────────────────────────────────────────────────
 
-_VAL_COLOR = "#66ccff"   # accent for variable values in the status readouts
+_VAL_COLOR = "#66ccff"   # the accent color of the values in the status text
 _VAL_RE = re.compile(r'([+\-]?\d+\.?\d*\s?(?:GHz|MHz|kHz|dB|ms|hops|files|sweeps?))')
 
 
 def _hl(x):
-    """Wrap a value in the status accent colour (rich text)."""
+    """Put the accent color on a value."""
     return f"<span style='color:{_VAL_COLOR}'>{x}</span>"
 
 
 def _hl_values(text):
-    """Colour every numeric value-with-unit in a free-form status string."""
+    """Put the accent color on each value that has a unit."""
     return _VAL_RE.sub(lambda mt: _hl(mt.group(1)), text)
 
 
@@ -157,14 +149,12 @@ def compute_hop_freqs(center_freq, total_span, hop_bw, overlap_pct=0):
 
 
 def composite_geometry(cfg):
-    """Geometry of the stitched sweep composite -> (n_keep, f_start, f_stop).
+    """Give the geometry of the sweep composite: (n_keep, f_start, f_stop).
 
-    Each hop's FFT spans sample_rate Hz, but hops advance by only `step` Hz
-    (hop_bw minus overlap).  Stitching all FFT_BINS bins per hop would compress
-    the frequency axis by ~sample_rate/step and show the same signal in several
-    slots, so only the central n_keep bins (~step Hz) of every hop are kept —
-    slots then tile contiguously and bin -> Hz is one linear map, shared by the
-    worker (peak detect / hold overlay) and the GUI (axis, waterfall, hop lines).
+    The FFT of each hop covers sample_rate Hz, but the hops move only `step` Hz.
+    Thus the program keeps only the central n_keep bins of each hop. The parts then
+    join end to end, and one linear map gives the frequency of each bin. The worker
+    and the GUI use the same map.
     """
     sr   = float(cfg["sample_rate"])
     hops = cfg["hop_freqs"]
@@ -179,17 +169,15 @@ def composite_geometry(cfg):
 
 def signal_extent(freqs, psd, min_snr_db=MARK_MIN_SNR_DB,
                   edge_margin_db=MARK_EDGE_MARGIN_DB, smooth_bins=MARK_SMOOTH_BINS):
-    """True (LO-independent) middle and edges of the dominant signal in a spectrum.
+    """Find the middle and the edges of the strongest signal in a spectrum.
 
-    Read straight off the live PSD — no center frequency, no bandwidth assumption —
-    so the result tracks the real signal and moves with it. Returns
-    (f_left, f_center, f_right) in the same units as `freqs`, or None when nothing
-    clears the noise floor.
+    The function reads the spectrum only. It does not use the center frequency or a
+    bandwidth. Thus the result moves with the signal. The function gives
+    (f_left, f_center, f_right). If no signal is above the noise floor, it gives None.
 
-      * edges  : walk out from the peak while the (smoothed) PSD stays above
-                 floor + edge_margin_db — the band the signal actually occupies.
-      * middle : power-weighted centroid across that band — the energy centre of
-                 mass, which is steadier and truer than just the single peak bin.
+      * The edges are where the smooth spectrum goes below floor + edge_margin_db.
+      * The middle is the center of the power between the two edges. This value is
+        more stable than the single bin of the peak.
     """
     n = len(psd)
     if n == 0 or len(freqs) != n:
@@ -199,12 +187,12 @@ def signal_extent(freqs, psd, min_snr_db=MARK_MIN_SNR_DB,
         L   = int(smooth_bins)
         k   = np.ones(L) / float(L)
         pad = L // 2
-        # Edge-pad (NOT zero-pad): dBFS sits near -80, so a zero-padded convolution
-        # would pull the end bins up toward 0 and fake a peak at the window edges.
+        # Use the edge value and not zero. The dBFS values are near -80. Thus a zero
+        # increases the last bins and makes a false peak at the ends.
         sm  = np.convolve(np.pad(sm, pad, mode="edge"), k, mode="valid")[:n]
     floor = float(np.median(sm))
     pk    = int(np.argmax(sm))
-    if sm[pk] - floor < min_snr_db:            # no signal worth marking
+    if sm[pk] - floor < min_snr_db:            # there is no signal
         return None
     thr = floor + edge_margin_db
     l = pk
@@ -213,22 +201,15 @@ def signal_extent(freqs, psd, min_snr_db=MARK_MIN_SNR_DB,
     r = pk
     while r < n - 1 and sm[r + 1] >= thr:
         r += 1
-    lin   = np.power(10.0, np.asarray(psd[l:r + 1], dtype=np.float64) / 10.0)  # dB power -> linear
+    lin   = np.power(10.0, np.asarray(psd[l:r + 1], dtype=np.float64) / 10.0)
     fseg  = np.asarray(freqs[l:r + 1], dtype=np.float64)
     denom = float(lin.sum())
     f_center = float((fseg * lin).sum() / denom) if denom > 0 else float(freqs[pk])
     return float(freqs[l]), f_center, float(freqs[r])
 
 
-# ==========================================
-# ML  (fingerprinting)
-# ==========================================
-# The spectrogram FingerprintModel lives in fp_spectrogram.py — imported lazily in
-# PlutoApp._load_model so the GUI still starts if torch is missing.
-
-
 def _write_iq_sidecar(iq_path, device, session, freq, cfg, n_samples, ts):
-    """JSON metadata next to a recorded .iq (carries the recorded_device label)."""
+    """Write the JSON metadata file next to a recorded .iq file."""
     meta = {
         "recorded_device": device,
         "session"        : str(session),
@@ -244,17 +225,14 @@ def _write_iq_sidecar(iq_path, device, session, freq, cfg, n_samples, ts):
         json.dump(meta, f, indent=2)
 
 
-# ==========================================
-# SWEEP WORKER
-# ==========================================
+# ── Sweep worker ──────────────────────────────────────────────────────────────
 
 class SweepWorker(QtCore.QThread):
-    # display + control signals
     sweep_ready       = QtCore.pyqtSignal(object, object)        # composite, hop_bufs
     zoom_ready        = QtCore.pyqtSignal(object, object, float)  # freqs, psd, held_freq
-    fingerprint_ready = QtCore.pyqtSignal(object)               # result dict
-    mode_changed      = QtCore.pyqtSignal(str, float)           # mode label, held_freq
-    caught_changed    = QtCore.pyqtSignal(object)               # list of remembered freqs
+    fingerprint_ready = QtCore.pyqtSignal(object)               # the result dictionary
+    mode_changed      = QtCore.pyqtSignal(str, float)           # the mode, held_freq
+    caught_changed    = QtCore.pyqtSignal(object)               # the caught frequencies
     hop_progress      = QtCore.pyqtSignal(int, int)
     status_msg        = QtCore.pyqtSignal(str)
     files_changed     = QtCore.pyqtSignal(int)
@@ -265,16 +243,16 @@ class SweepWorker(QtCore.QThread):
         super().__init__()
         self.sdr        = sdr
         self.cfg        = cfg
-        self.engine     = engine          # fp_spectrogram.FingerprintModel (or None)
+        self.engine     = engine           # a FingerprintModel, or None
         self._stop      = False
-        self._fq        = collections.deque()
+        self._fq        = collections.deque()   # the paths of the recorded files
         self._held_freq = None
-        self._last_composite = None        # last full sweep, kept alive during a lock
-        self._last_present_t = 0.0         # Locking: last time the locked signal was present
-        self._last_infer_t   = 0.0         # throttle: last time the classifier ran
-        self._caught         = []          # [(freq_hz, t_caught)] — memory of catches
-        self._lock_t         = 0.0         # Auto: when the current lock began (dwell timer)
-        self._last_class     = None        # Auto: most recent classifier result for this lock
+        self._last_composite = None        # the last full sweep, kept during a lock
+        self._last_present_t = 0.0         # the last time that the signal was present
+        self._last_infer_t   = 0.0         # the last time that the classifier ran
+        self._caught         = []          # [(freq_hz, t_caught)]
+        self._lock_t         = 0.0         # the time when the current lock started
+        self._last_class     = None        # the last result from the classifier
 
     def stop(self):
         self._stop = True
@@ -285,18 +263,18 @@ class SweepWorker(QtCore.QThread):
             self.terminate()
             self.wait(1000)
 
-    # ── geometry / DSP helpers ────────────────────────────────────────────────
+    # ── The geometry and the DSP ──────────────────────────────────────────────
 
     def _band_edges(self):
         _n, f0, f1 = composite_geometry(self.cfg)
         return f0, f1
 
     def _sweep_once(self):
-        """One wideband hop sweep -> (composite, hop_bufs). Mirrors v1 SCAN."""
+        """Do one sweep of the full band. Gives (composite, hop_bufs)."""
         hop_freqs  = self.cfg["hop_freqs"]
         n_hops     = len(hop_freqs)
         n_keep, _f0, _f1 = composite_geometry(self.cfg)
-        b0         = (FFT_BINS - n_keep) // 2       # central slice of each hop's PSD
+        b0         = (FFT_BINS - n_keep) // 2       # the central part of each hop
         composite  = np.full(n_hops * n_keep, -100.0, dtype=np.float32)
         hop_bufs   = {}
         for i, freq in enumerate(hop_freqs):
@@ -317,19 +295,16 @@ class SweepWorker(QtCore.QThread):
             if raw is None or len(raw) == 0:
                 continue
             hop_bufs[i] = raw
-            # Peak-hold over the WHOLE dwell buffer (not just its first 102 µs):
-            # the radio already paid for these samples, and bursty emitters are
-            # invisible to a single window. Adds ~ms per hop vs the ~100 ms dwell.
             psd = self._peak_hold_psd(raw)
             composite[i * n_keep:(i + 1) * n_keep] = psd[b0:b0 + n_keep]
         return composite, hop_bufs
 
     def _peak_hold_psd(self, iq):
-        """1024-bin dBFS PSD, peak-held across contiguous gap-free windows spanning
-        the buffer, so a burst anywhere in the dwell shows at full amplitude (one
-        window would miss it ~99.8% of the time at the default 50 ms dwell).
-        Contiguous (not sparse) windows so a burst can't fall between them; batched
-        FFT; the window cap bounds CPU/RAM however long the dwell is."""
+        """Make a 1024-bin dBFS spectrum and keep the maximum of all the windows.
+
+        The windows touch each other and cover the full buffer. Thus a short burst at
+        any time in the buffer is visible at its true amplitude. One window only
+        would not find the burst. The limit on the windows keeps the load low."""
         n = len(iq)
         if n < FFT_BINS:
             iq = np.pad(iq, (0, FFT_BINS - n)); n = FFT_BINS
@@ -339,18 +314,17 @@ class SweepWorker(QtCore.QThread):
         return (20.0 * np.log10(mag.max(axis=0) + 1e-10)).astype(np.float32)
 
     def _narrowband_psd(self, iq, center):
-        """Peak-hold dBFS spectrum of a held capture, mapped to absolute Hz."""
+        """Give the spectrum of a held capture on an absolute frequency axis."""
         psd = self._peak_hold_psd(iq)
         sr = self.cfg["sample_rate"]
         freqs = np.linspace(center - sr / 2, center + sr / 2, FFT_BINS)
         return freqs, psd
 
     def _composite_with_hold(self, held_freq, psd):
-        """Overlay the live held-band spectrum onto the last full sweep, so the
-        wideband view keeps showing the whole band (with the locked spot live)
-        while parked in HOLD."""
+        """Put the live spectrum of the held band into the last full sweep. Thus the
+        wideband plot keeps the full band during a lock."""
         base = self._last_composite
-        if base is None:                       # no prior sweep — synthesise a floor
+        if base is None:                       # there is no sweep yet: make a floor
             n_keep, _f0, _f1 = composite_geometry(self.cfg)
             base = np.full(len(self.cfg["hop_freqs"]) * n_keep, -100.0, dtype=np.float32)
         comp = base.copy()
@@ -370,7 +344,7 @@ class SweepWorker(QtCore.QThread):
         return comp
 
     def _detect_new_peak(self, composite):
-        """Strongest peak-above-floor whose frequency isn't already in memory."""
+        """Find the strongest peak that is not in the memory of the caught signals."""
         f_min, f_max = self._band_edges()
         span  = f_max - f_min
         total = len(composite)
@@ -384,27 +358,28 @@ class SweepWorker(QtCore.QThread):
             if e > s:
                 masked[s:e] = -1e9
         idx = int(np.argmax(masked))
-        if masked[idx] <= -1e8:                     # whole band already in memory
+        if masked[idx] <= -1e8:                     # all the band is in the memory
             return None, -999.0
         return f_min + (idx / total) * span, float(composite[idx]) - med
 
     def _remember(self, freq):
-        """Add a caught frequency to memory (drop near-duplicates first)."""
+        """Put a caught frequency in the memory. Remove the near duplicates first."""
         guard = float(self.cfg.get("fp_memory_guard_hz", FP_MEMORY_GUARD_HZ))
         self._caught = [(f, t) for (f, t) in self._caught if abs(f - freq) > guard]
         self._caught.append((float(freq), time.time()))
         self.caught_changed.emit([f for f, _t in self._caught])
 
     def _release_lock(self, msg):
-        """Forget the current lock, remember it as caught, and return to SCAN.
-        Caller still sets its local `mode = "SCAN"` and `continue`s."""
+        """Release the lock, put the frequency in the memory, and go back to SCAN.
+        The caller must also set its local `mode` to "SCAN"."""
         self._remember(self._held_freq)
         self._held_freq = None
         self.mode_changed.emit("SCAN", 0.0)
         self.status_msg.emit(msg)
 
     def _prune_memory(self):
-        """Forget catches older than the TTL so they can be revisited."""
+        """Remove the frequencies that are in the memory for more than fp_memory_ttl_s.
+        The program can then find them again."""
         ttl = float(self.cfg.get("fp_memory_ttl_s", FP_MEMORY_TTL_S))
         now = time.time()
         kept = [(f, t) for (f, t) in self._caught if now - t < ttl]
@@ -432,9 +407,10 @@ class SweepWorker(QtCore.QThread):
         self.files_changed.emit(len(self._fq))
 
     def _maybe_classify(self, iq):
-        """Run the classifier, but at most once every ml_interval_s. Gated by the
-        live ML on/off flag. Throttling keeps the per-frame CNN forward off the
-        hot loop so the PSD/waterfall/markers stay responsive."""
+        """Run the classifier, but not more than one time each ml_interval_s.
+
+        The identity of a signal does not change quickly. Thus a limit on the runs
+        keeps the plots and the markers fast."""
         if self.engine is None or not self.cfg.get("ml_enabled", True):
             return
         now = time.time()
@@ -443,18 +419,18 @@ class SweepWorker(QtCore.QThread):
         self._last_infer_t = now
         try:
             res = self.engine.classify_iq(iq)
-            self._last_class = res          # Auto reads this to judge the lock
+            self._last_class = res          # Auto uses this to judge the lock
             self.fingerprint_ready.emit(res)
         except Exception as e:
             self.status_msg.emit(f"Inference error: {e}")
 
     @staticmethod
     def _noise_prob(res):
-        """Probability the classifier assigned to the 'noise' class (0.0 if the
-        model has no noise class or hasn't classified this lock yet)."""
+        """Give the probability of the 'noise' class. If the model has no noise class,
+        or if the classifier did not run, the value is 0.0."""
         return float((res or {}).get("probs", {}).get("noise", 0.0))
 
-    # ── top-level dispatch ────────────────────────────────────────────────────
+    # ── The modes ─────────────────────────────────────────────────────────────
 
     def run(self):
         op = self.cfg.get("op_mode", "locking")
@@ -462,26 +438,28 @@ class SweepWorker(QtCore.QThread):
             self._run_wideband()
         elif op == "focus":
             self._run_focus()
-        else:                       # locking + auto share the lock state-machine
+        else:                       # Locking and Auto use the same loop
             self._run_locking()
 
     def _run_locking(self):
-        """Scan -> lock the strongest not-yet-caught signal -> HOLD it on a FIXED
-        frequency (no nudge, no rescan, so the narrowband stays put) until the user
-        hits Skip -> remember it and step to the next. The Caught list walks through
-        every signal; entries expire after the TTL so they become revisitable."""
+        """Sweep, lock the strongest new signal, and hold that frequency.
+
+        The frequency does not move during the hold. Thus the narrowband plot is
+        stable. The hold continues until the user clicks Skip, or until the signal
+        stops. Then the program puts the frequency in the memory and continues the
+        sweep. A frequency in the memory expires after fp_memory_ttl_s."""
         mode = "SCAN"
         self.cfg["skip_lock"] = False
         self.cfg["jump_to"] = None
         self.mode_changed.emit("SCAN", 0.0)
         while not self._stop:
             jt = self.cfg.get("jump_to")
-            if jt:                              # jump straight onto a chosen freq
+            if jt:                              # go to a frequency that the user chose
                 self.cfg["jump_to"] = None
                 self._held_freq, mode = int(jt), "LOCK"
                 self._last_present_t = self._lock_t = time.time()
-                self._last_infer_t = 0.0        # classify the new lock immediately
-                self._last_class = None         # Auto: judge this lock on fresh results
+                self._last_infer_t = 0.0        # classify the new lock now
+                self._last_class = None         # Auto: use only the new results
                 self.mode_changed.emit("LOCK", float(jt))
                 self.status_msg.emit(f"Jumped to {jt/1e6:.3f} MHz — Skip to advance")
             if mode == "SCAN":
@@ -500,12 +478,12 @@ class SweepWorker(QtCore.QThread):
                         self.cfg.get("fp_peak_thresh_db", FP_PEAK_THRESH_DB)):
                     self._held_freq, mode = f, "LOCK"
                     self._last_present_t = self._lock_t = time.time()
-                    self._last_infer_t = 0.0    # classify the new lock immediately
-                    self._last_class = None     # Auto: judge this lock on fresh results
+                    self._last_infer_t = 0.0    # classify the new lock now
+                    self._last_class = None     # Auto: use only the new results
                     self.mode_changed.emit("LOCK", f)
                     self.status_msg.emit(
                         f"Locked +{peak_db:.0f} dB @ {f/1e6:.3f} MHz — Skip to advance")
-            else:  # LOCK — fixed-freq hold until skipped or the signal stops
+            else:  # LOCK: hold the frequency
                 if self._stop:
                     break
                 if self.cfg.get("skip_lock"):
@@ -531,10 +509,8 @@ class SweepWorker(QtCore.QThread):
                 if comp is not None:
                     self.sweep_ready.emit(comp, {})
                 self._maybe_classify(iq)
-                # Auto mode: once we've dwelled long enough on the lock, hand it to
-                # the classifier — if it reads as noise, skip on automatically so the
-                # user never has to Skip past a noise lock by hand. A real device
-                # (noise below threshold) is left held, exactly like plain Locking.
+                # Auto: after the dwell time, release the lock if the classifier calls
+                # the signal noise. The program keeps a lock on a true device.
                 if self.cfg.get("op_mode") == "auto":
                     dwell = float(self.cfg.get("auto_dwell_ms", FP_AUTO_DWELL_MS)) / 1000.0
                     thr   = float(self.cfg.get("auto_noise_pct", FP_AUTO_NOISE_PCT)) / 100.0
@@ -547,8 +523,7 @@ class SweepWorker(QtCore.QThread):
                             f"after {dwell*1000:.0f} ms")
                         mode = "SCAN"
                         continue
-                # Auto-advance if the signal's been gone a while (e.g. the noise it
-                # locked onto stopped). No nudge — the LO stays fixed.
+                # Release the lock if the signal is absent for FP_GONE_S.
                 thresh = float(self.cfg.get("fp_peak_thresh_db", FP_PEAK_THRESH_DB))
                 if (float(psd.max()) - float(np.median(psd))) >= thresh:
                     self._last_present_t = time.time()
@@ -560,10 +535,10 @@ class SweepWorker(QtCore.QThread):
                     f"Locked @ {self._held_freq/1e6:.3f} MHz — Skip to advance")
 
     def _run_wideband(self):
-        """Continuous full-band scan, no focus/hold — just the wideband view.
-        If 'record' is on, save every NOISE_REC_EVERY_N-th sweep's raw IQ as the
-        noise class (training caps noise at ~83 files, so sparser saves spanning
-        more wall-clock time beat contiguous ones)."""
+        """Sweep the full band continuously. There is no lock.
+
+        If the record is on, the program saves the raw IQ data of every
+        NOISE_REC_EVERY_N-th sweep to the noise class."""
         self.mode_changed.emit("WIDEBAND", 0.0)
         sweep_i = 0
         while not self._stop:
@@ -589,9 +564,10 @@ class SweepWorker(QtCore.QThread):
                 f"Wideband: {el:.0f} ms  |  {len(self.cfg['hop_freqs'])} hops{tag}")
 
     def _run_focus(self):
-        """Park on one frequency (focus_freq), show the zoom only (no band sweep),
-        classify if a model is loaded, and — if 'record' is on — save the held IQ
-        as the device's fingerprints. Used for fingerprint recording."""
+        """Hold one frequency (focus_freq) and show the narrowband plot only.
+
+        The program classifies the signal if a model is available. If the record is
+        on, the program saves the IQ data. This mode makes the device recordings."""
         freq = int(self.cfg.get("focus_freq", self.cfg["center_freq"]))
         try:
             self.sdr.rx_lo = freq
@@ -599,15 +575,15 @@ class SweepWorker(QtCore.QThread):
             self.status_msg.emit(f"Focus tune error: {e}"); return
         self.mode_changed.emit("FOCUS", float(freq))
         time.sleep(self.cfg.get("fp_hold_settle_ms", FP_HOLD_SETTLE_MS) / 1000.0)
-        self._last_infer_t = 0.0        # classify the parked signal immediately
+        self._last_infer_t = 0.0        # classify the held signal now
         while not self._stop:
-            nf = int(self.cfg.get("focus_freq", freq))      # live retune if grabbed
+            nf = int(self.cfg.get("focus_freq", freq))      # the user can change this
             if nf != freq:
                 try:
                     self.sdr.rx_lo = nf
                 except Exception as e:
-                    # keep the old freq: adopting nf here would label captures
-                    # with a frequency we never actually tuned to
+                    # Keep the old frequency. If the program keeps nf, the captures
+                    # get a frequency that the radio did not tune to.
                     self.status_msg.emit(f"Focus tune error: {e}")
                     time.sleep(0.5); continue
                 freq = nf
@@ -624,7 +600,7 @@ class SweepWorker(QtCore.QThread):
             self._maybe_classify(iq)
             kind = self.cfg.get("record_kind", "device")
             if self.cfg.get("record") and kind in ("device", "noise_freq"):
-                # noise_freq writes a frequency-matched negative to the noise class.
+                # noise_freq saves to the noise class at the frequency of the device
                 label = "noise" if kind == "noise_freq" else \
                     self.cfg.get("record_device", "deviceA")
                 self._save_iq(iq, label, self.cfg.get("record_session", "1"), freq)
@@ -636,9 +612,7 @@ class SweepWorker(QtCore.QThread):
                 self.status_msg.emit(f"Focus @ {freq/1e6:.3f} MHz")
 
 
-# ==========================================
-# MAIN APPLICATION
-# ==========================================
+# ── Main application ──────────────────────────────────────────────────────────
 
 class PlutoApp(QtWidgets.QMainWindow):
 
@@ -657,16 +631,16 @@ class PlutoApp(QtWidgets.QMainWindow):
             "settle_ms"       : HOP_SETTLE_MS,
             "overlap_pct"     : HOP_OVERLAP_PCT,
             "hop_freqs"       : [],
-            # ── v2 fingerprinting ──
-            "op_mode"             : "auto",        # auto | locking | wideband | focus
-            "ml_enabled"          : True,         # run the classifier (live toggle)
-            "ml_interval_s"       : ML_INTERVAL_S,# throttle: min seconds between inferences
-            "record"              : False,        # save data appropriate to the mode
-            "record_kind"         : "device",     # Record toggle saves: device | noise
-            "skip_lock"           : False,        # Locking/Auto mode: advance to next signal
-            "jump_to"             : None,         # Locking/Auto mode: lock onto this freq now
-            "auto_dwell_ms"       : FP_AUTO_DWELL_MS,   # Auto: dwell before judging a lock
-            "auto_noise_pct"      : FP_AUTO_NOISE_PCT,  # Auto: noise % that triggers a skip
+            # The worker reads these keys live. A change is effective immediately.
+            "op_mode"             : "auto",       # auto | locking | wideband | focus
+            "ml_enabled"          : True,         # run the classifier
+            "ml_interval_s"       : ML_INTERVAL_S,
+            "record"              : False,
+            "record_kind"         : "device",     # device | noise_band | noise_freq
+            "skip_lock"           : False,        # go to the next signal
+            "jump_to"             : None,         # lock on this frequency now
+            "auto_dwell_ms"       : FP_AUTO_DWELL_MS,
+            "auto_noise_pct"      : FP_AUTO_NOISE_PCT,
             "record_device"       : "deviceA",
             "record_session"      : "1",
             "focus_freq"          : CENTER_FREQ,
@@ -704,7 +678,7 @@ class PlutoApp(QtWidgets.QMainWindow):
         self._update_waterfall_rect()
         self._start_worker()
 
-    # ── SDR / hop helpers ─────────────────────────────────────────────────────
+    # ── The SDR and the hops ──────────────────────────────────────────────────
 
     def _recompute_hops(self):
         effective_bw = min(self.cfg["sample_rate"], self.cfg["rx_bw"])
@@ -712,8 +686,7 @@ class PlutoApp(QtWidgets.QMainWindow):
             self.cfg["center_freq"], self.cfg["total_span"],
             effective_bw, self.cfg["overlap_pct"])
         self.n_hops        = len(self.cfg["hop_freqs"])
-        # Axis/waterfall extent = what the stitched composite actually covers
-        # (must match the worker's mapping bin-for-bin).
+        # The axis and the waterfall must cover the same range as the composite.
         n_keep, f0, f1     = composite_geometry(self.cfg)
         self.total_bins    = self.n_hops * n_keep
         self.f_global_min  = f0
@@ -725,7 +698,7 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.sdr.sample_rate           = int(self.cfg["sample_rate"])
         self.sdr.rx_rf_bandwidth       = int(self.cfg["rx_bw"])
         self.sdr.rx_lo                 = int(self.cfg["hop_freqs"][0])
-        # Fixed manual gain (AGC off) — consistent level matters for fingerprints.
+        # Use a manual gain. A constant level is necessary for the fingerprints.
         try:
             self.sdr.gain_control_mode_chan0 = "manual"
         except Exception:
@@ -738,7 +711,7 @@ class PlutoApp(QtWidgets.QMainWindow):
         return np.full((self.total_bins, WATERFALL_ROWS),
                        WF_SCALE_MIN_DBFS, dtype=np.float32)
 
-    # ── UI ────────────────────────────────────────────────────────────────────
+    # ── The user interface ────────────────────────────────────────────────────
 
     def _build_ui(self):
         central = QtWidgets.QWidget()
@@ -749,13 +722,13 @@ class PlutoApp(QtWidgets.QMainWindow):
 
         self.win = pg.GraphicsLayoutWidget()
         root.addWidget(self.win, stretch=5)
-        _axis_w = 64   # shared left-axis width so the four plots line up in columns
+        _axis_w = 64   # one width for all the left axes. Thus the plots are aligned.
 
-        # ── wideband spectrum  (row 0, col 0) ───────────────────────────────────
+        # ── The wideband spectrum ───────────────────────────────────────────────
         self.p1 = self.win.addPlot(row=0, col=0, title="Wideband Spectrum")
         self.p1.setLabel("bottom", "Frequency", units="Hz")
         self.p1.setLabel("left",   "Power",     units="dBFS")
-        # Disable auto-range so per-sweep setData() can't re-fit the view.
+        # Stop the automatic range. If not, each sweep changes the view.
         self.p1.enableAutoRange(x=False, y=False)
         self.p1.setXRange(self.f_global_min, self.f_global_max, padding=0)
         self.p1.setYRange(WF_SCALE_MIN_DBFS, WF_SCALE_MAX_DBFS, padding=0)
@@ -767,7 +740,7 @@ class PlutoApp(QtWidgets.QMainWindow):
         self._rebuild_hop_lines()
         self.curve = self.p1.plot(pen=pg.mkPen("y", width=1))
 
-        # ── wideband waterfall  (row 1, col 0) ──────────────────────────────────
+        # ── The wideband waterfall ──────────────────────────────────────────────
         self.p2 = self.win.addPlot(row=1, col=0, title="Wideband Waterfall")
         self.p2.setLabel("bottom", "Frequency", units="Hz")
         self.p2.setLabel("left",   "Time",      units="sweeps")
@@ -783,20 +756,19 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.img.setLookupTable(cmap.getLookupTable())
         self.img.setLevels([WF_SCALE_MIN_DBFS, WF_SCALE_MAX_DBFS])
 
-        # ── zoom spectrum  (row 0, col 1) — the currently-held signal ───────────
+        # ── The narrowband spectrum of the held signal ──────────────────────────
         self.p_zoom = self.win.addPlot(row=0, col=1, title="Narrowband Spectrum")
         self.p_zoom.setLabel("bottom", "Frequency", units="Hz")
         self.p_zoom.setLabel("left",   "Power",     units="dBFS")
-        self.p_zoom.setMouseEnabled(x=True, y=True)   # pan/zoom the held view
+        self.p_zoom.setMouseEnabled(x=True, y=True)
         self.p_zoom.setMenuEnabled(True)
         self.p_zoom.showGrid(x=True, y=True, alpha=0.25)
         self.p_zoom.setYRange(WF_SCALE_MIN_DBFS, WF_SCALE_MAX_DBFS, padding=0)
         self.p_zoom.getAxis("left").setWidth(_axis_w)
         self.zoom_curve = self.p_zoom.plot(pen=pg.mkPen("c", width=1))
 
-        # Live signal markers (toggled from the panel): a solid red line at the
-        # signal's true middle and two dashed red lines at its edges. Positions
-        # come from signal_extent() each frame, so they drift with the signal.
+        # The markers: a red line at the middle of the signal and two dashed red
+        # lines at the edges. signal_extent() gives the positions for each frame.
         _mid_pen  = pg.mkPen(color=(255, 40, 40), width=2)
         _edge_pen = pg.mkPen(color=(255, 40, 40), width=1, style=QtCore.Qt.DashLine)
         self.mid_line   = pg.InfiniteLine(angle=90, movable=False, pen=_mid_pen)
@@ -804,16 +776,16 @@ class PlutoApp(QtWidgets.QMainWindow):
                            for _ in range(2)]
         for _ln in (self.mid_line, *self.edge_lines):
             _ln.setVisible(False)
-            _ln.setZValue(10)                 # keep markers above the curve
+            _ln.setZValue(10)                 # keep the markers above the curve
             self.p_zoom.addItem(_ln, ignoreBounds=True)
-        self._last_zoom = None                # (freqs, psd) cache for instant retoggle
+        self._last_zoom = None                # the last (freqs, psd) for the markers
 
-        # ── zoom waterfall  (row 1, col 1) ──────────────────────────────────────
+        # ── The narrowband waterfall ────────────────────────────────────────────
         self.p_zoom_wf = self.win.addPlot(row=1, col=1, title="Narrowband Waterfall")
         self.p_zoom_wf.setLabel("bottom", "Frequency", units="Hz")
         self.p_zoom_wf.setLabel("left",   "Time",      units="holds")
         self.p_zoom_wf.setXLink(self.p_zoom)
-        self.p_zoom_wf.setMouseEnabled(x=True, y=False)   # x-pan follows p_zoom
+        self.p_zoom_wf.setMouseEnabled(x=True, y=False)
         self.p_zoom_wf.setMenuEnabled(True)
         self.p_zoom_wf.getViewBox().setAutoVisible(x=False, y=False)
         self.p_zoom_wf.enableAutoRange(x=False, y=False)
@@ -830,18 +802,17 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.p_zoom.setXRange(_zc - _zsr / 2, _zc + _zsr / 2, padding=0)
         self.p_zoom_wf.setYRange(0, WATERFALL_ROWS, padding=0)
 
-        # Wideband column wider than the zoom column.
+        # Make the wideband column wider than the narrowband column.
         try:
             self.win.ci.layout.setColumnStretchFactor(0, 2)
             self.win.ci.layout.setColumnStretchFactor(1, 1)
         except Exception:
             pass
 
-        # ── right side panel ───────────────────────────────────────────────────
+        # ── The panel on the right side ────────────────────────────────────────
         panel = QtWidgets.QWidget()
-        # Apply the global input stylesheet to the whole panel so every
-        # QLineEdit / QSpinBox / QDoubleSpinBox / QPushButton inside it
-        # inherits white-on-dark styling without individual setStyleSheet calls.
+        # One stylesheet for the full panel. Thus each widget in the panel has the
+        # correct colors, and no widget needs its own setStyleSheet call.
         panel.setStyleSheet(_INPUT_SS)
         vbox = QtWidgets.QVBoxLayout(panel)
         vbox.setAlignment(QtCore.Qt.AlignTop)
@@ -860,9 +831,7 @@ class PlutoApp(QtWidgets.QMainWindow):
             vbox.addWidget(widget)
             return widget
 
-        # ══════════════════════════════════════════════════════
-        # ML INFERENCE SECTION
-        # ══════════════════════════════════════════════════════
+        # ── The ML inference panel ─────────────────────────────────────────────
         section("ML Inference")
 
         self.det_badge = QtWidgets.QLabel("NO MODEL LOADED")
@@ -896,8 +865,8 @@ class PlutoApp(QtWidgets.QMainWindow):
         load_btn = QtWidgets.QPushButton("⟳  Load / Reload Model")
         load_btn.setFixedHeight(28)
         load_btn.clicked.connect(self._on_load_model_btn)
-        # Live ML on/off — gates the classifier in the worker. OFF makes the loop
-        # just rx -> PSD -> display (no per-frame CNN), the big speed win.
+        # The switch for the classifier. If it is off, the worker only reads the data
+        # and shows it. This makes the program much faster.
         self.w_ml_toggle = QtWidgets.QPushButton("ML Inference: ON")
         self.w_ml_toggle.setCheckable(True)
         self.w_ml_toggle.setChecked(self.cfg.get("ml_enabled", True))
@@ -907,9 +876,7 @@ class PlutoApp(QtWidgets.QMainWindow):
         load_row.addWidget(self.w_ml_toggle)
         vbox.addLayout(load_row)
 
-        # ══════════════════════════════════════════════════════
-        # MODE SECTION  (Locking / Auto / Wideband / Narrowband)
-        # ══════════════════════════════════════════════════════
+        # ── The mode panel ─────────────────────────────────────────────────────
         section("Mode")
         mode_row = QtWidgets.QHBoxLayout()
         self._mode_btns  = {}
@@ -927,11 +894,12 @@ class PlutoApp(QtWidgets.QMainWindow):
         self._mode_btns["auto"].setChecked(True)
         vbox.addLayout(mode_row)
 
-        # Second row (Auto/Locking only): Skip the lock + Jump straight to a caught freq.
+        # These two buttons are for Auto and Locking: skip the lock, or go to a
+        # frequency in the caught list.
         skip_row = QtWidgets.QHBoxLayout()
         self.w_skip_btn = QtWidgets.QPushButton("Skip lock")
         self.w_skip_btn.setFixedHeight(26)
-        self.w_skip_btn.setEnabled(True)         # Auto is the default mode (lock-based)
+        self.w_skip_btn.setEnabled(True)         # Auto is the default mode
         self.w_skip_btn.clicked.connect(self._on_skip_lock)
         self.w_jump_btn = QtWidgets.QPushButton("Jump to:")
         self.w_jump_btn.setFixedHeight(26)
@@ -943,8 +911,8 @@ class PlutoApp(QtWidgets.QMainWindow):
         skip_row.addWidget(self.w_jump_combo, 1)
         vbox.addLayout(skip_row)
 
-        # Auto-mode tuning: dwell on each lock this long, then auto-skip it if the
-        # classifier calls it noise at or above the threshold. Enabled in Auto only.
+        # The parameters of the Auto mode: the dwell time on each lock, and the
+        # probability of noise that releases the lock.
         auto_row = QtWidgets.QHBoxLayout()
         auto_cap = QtWidgets.QLabel("Auto skip:")
         auto_cap.setStyleSheet("color:#cccccc; font-size:11px;")
@@ -953,12 +921,12 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.w_auto_dwell.setSingleStep(100)
         self.w_auto_dwell.setSuffix(" ms")
         self.w_auto_dwell.setValue(FP_AUTO_DWELL_MS)
-        self.w_auto_dwell.setToolTip("Dwell on each lock this long before judging it")
+        self.w_auto_dwell.setToolTip("Hold each lock this long before you judge it")
         self.w_auto_noise = QtWidgets.QSpinBox()
         self.w_auto_noise.setRange(1, 100)
         self.w_auto_noise.setSuffix(" % noise")
         self.w_auto_noise.setValue(FP_AUTO_NOISE_PCT)
-        self.w_auto_noise.setToolTip("Skip the lock when noise probability reaches this")
+        self.w_auto_noise.setToolTip("Release the lock at this probability of noise")
         for w in (self.w_auto_dwell, self.w_auto_noise):
             w.setFixedHeight(26)
             w.setEnabled(True)              # Auto is the default mode
@@ -968,9 +936,7 @@ class PlutoApp(QtWidgets.QMainWindow):
         auto_row.addWidget(self.w_auto_noise, 1)
         vbox.addLayout(auto_row)
 
-        # ══════════════════════════════════════════════════════
-        # SDR SECTION
-        # ══════════════════════════════════════════════════════
+        # ── The SDR panel ──────────────────────────────────────────────────────
         def hz_combo(presets, current):
             cb = QtWidgets.QComboBox()
             cb.setEditable(True)
@@ -992,7 +958,6 @@ class PlutoApp(QtWidgets.QMainWindow):
             grid.addWidget(widget, r + 1, c)
             return widget
 
-        # row 0/1: sample rate · bandwidth · gain
         self.w_sr   = cell(0, 0, "Sample Rate (Hz)",
                            hz_combo([2e6, 4e6, 5e6, 10e6, 15e6, 20e6, 30e6, 56e6], SAMPLE_RATE))
         self.w_bw   = cell(0, 1, "Bandwidth (Hz)",
@@ -1000,15 +965,13 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.w_gain = cell(0, 2, "RX Gain (dB)", QtWidgets.QSpinBox())
         self.w_gain.setRange(-3, 71)
         self.w_gain.setValue(GAIN)
-        # row 2/3: center freq · total span · overlap
         self.w_center = cell(2, 0, "Center Freq (Hz)", QtWidgets.QLineEdit(str(CENTER_FREQ)))
         self.w_span   = cell(2, 1, "Total Span (Hz)",
                              hz_combo([5e6, 10e6, 20e6, 40e6, 80e6], TOTAL_SPAN_HZ))
         self.w_olap_pct = cell(2, 2, "Overlap (%)", QtWidgets.QComboBox())
         self.w_olap_pct.addItems(["0", "10", "20", "30", "40", "50", "60", "75"])
         self.w_olap_pct.setCurrentText(str(HOP_OVERLAP_PCT))
-        # row 4/5: per-hop timing (rarely changed; dwell = sample time per hop,
-        # settle = PLL settle wait after retune)
+        # dwell = the time to read data at one hop. settle = the wait after a retune.
         self.w_dwell = cell(4, 0, "Dwell/hop (ms)", QtWidgets.QSpinBox())
         self.w_dwell.setRange(1, 5000)
         self.w_dwell.setValue(HOP_DWELL_MS)
@@ -1039,9 +1002,7 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.w_wf_min.currentTextChanged.connect(self._apply_wf_scale)
         self.w_wf_max.currentTextChanged.connect(self._apply_wf_scale)
 
-        # ══════════════════════════════════════════════════════
-        # NARROWBAND MARKERS SECTION  (live red overlays on the zoom plot)
-        # ══════════════════════════════════════════════════════
+        # ── The marker panel ───────────────────────────────────────────────────
         section("Narrowband Markers")
         marker_row = QtWidgets.QHBoxLayout()
         self.w_show_mid = QtWidgets.QCheckBox("show signal middle")
@@ -1056,8 +1017,7 @@ class PlutoApp(QtWidgets.QMainWindow):
 
         section("Recording")
 
-        # What to record: a parked DEVICE fingerprint (Focus capture) or band-swept
-        # NOISE (Wideband capture). The Record toggle routes to the right acquisition.
+        # The kind of record. The Record button then starts the correct mode.
         kind_row = QtWidgets.QHBoxLayout()
         self._rec_kind_btns  = {}
         self._rec_kind_group = QtWidgets.QButtonGroup(self)
@@ -1088,8 +1048,8 @@ class PlutoApp(QtWidgets.QMainWindow):
             rec_grid.addWidget(widget, r + 1, c)
             return widget
 
-        # Device label + Focus freq apply to a Device recording; Noise ignores them
-        # (it sweeps the band into noise/). Session + Max files apply to both.
+        # The device label and the focus frequency are for a Device record only.
+        # The session and the maximum files are for all the kinds of record.
         self.w_rec_device  = rec_cell(0, 0, "Device label",    QtWidgets.QLineEdit("deviceA"))
         self.w_rec_session = rec_cell(0, 1, "Session",         QtWidgets.QLineEdit("1"))
         self.w_rec_freq    = rec_cell(2, 0, "Focus freq (Hz)", QtWidgets.QLineEdit(str(CENTER_FREQ)))
@@ -1111,7 +1071,7 @@ class PlutoApp(QtWidgets.QMainWindow):
         rec_btn_row.addWidget(grab_btn)
         vbox.addLayout(rec_btn_row)
         self._update_record_btn_style(False)
-        self._on_record_kind("device")     # sync field enable-state + hint text
+        self._on_record_kind("device")     # enable the correct fields
 
         vbox.addSpacing(8)
         apply_btn = QtWidgets.QPushButton("⟳  Apply Settings")
@@ -1120,7 +1080,7 @@ class PlutoApp(QtWidgets.QMainWindow):
         vbox.addWidget(apply_btn)
 
         section("Status")
-        _ss = "color: #cccccc; font-size: 11px;"   # one unified style for all rows
+        _ss = "color: #cccccc; font-size: 11px;"   # one style for all the rows
         self.model_info_lbl = QtWidgets.QLabel("")
         self.model_info_lbl.setWordWrap(True)
         self.model_info_lbl.setStyleSheet(_ss)
@@ -1155,7 +1115,7 @@ class PlutoApp(QtWidgets.QMainWindow):
         vbox.addWidget(self.prog_bar)
         vbox.addStretch()
 
-        # Drop the tiny up/down arrows on every spin box — type or scroll instead.
+        # Remove the small arrows from each spin box. Type or scroll to set a value.
         for _sb in panel.findChildren(QtWidgets.QAbstractSpinBox):
             _sb.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
 
@@ -1166,7 +1126,7 @@ class PlutoApp(QtWidgets.QMainWindow):
         panel_scroll.setWidget(panel)
         root.addWidget(panel_scroll, stretch=0)
 
-    # ── ML: badge styling ─────────────────────────────────────────────────────
+    # ── The badge ─────────────────────────────────────────────────────────────
 
     _BADGE_STYLES = {
         "none"  : ("background: #3a3a3a; color: #ffffff;"
@@ -1183,7 +1143,7 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.det_badge.setStyleSheet(
             self._BADGE_STYLES.get(kind, self._BADGE_STYLES["other"]))
 
-    # ── ML: confidence bar grid rebuild ──────────────────────────────────────
+    # ── The bars of the probabilities ─────────────────────────────────────────
 
     def _rebuild_conf_bars(self, classes: list):
         layout = self._conf_container.layout()
@@ -1220,7 +1180,7 @@ class PlutoApp(QtWidgets.QMainWindow):
             self._conf_bars[cls]   = bar
             self._conf_labels[cls] = pct_lbl
 
-    # ── ML: model load ────────────────────────────────────────────────────────
+    # ── The model ─────────────────────────────────────────────────────────────
 
     def _browse_model(self):
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
@@ -1271,12 +1231,12 @@ class PlutoApp(QtWidgets.QMainWindow):
             self._set_badge_style("error")
 
     def _on_ml_toggle(self, checked: bool):
-        """Flip the worker's live inference gate. Reads through self.cfg (shared with
-        the worker), so it takes effect on the next loop without a restart."""
+        """Set the switch of the classifier. The worker reads self.cfg. Thus the
+        change is effective at the next loop, and no restart is necessary."""
         self.cfg["ml_enabled"] = checked
         self.w_ml_toggle.setText(f"ML Inference: {'ON' if checked else 'OFF'}")
         if not checked:
-            # Park the readouts so a stale prediction doesn't look live.
+            # Clear the values. Thus an old result does not look like a new result.
             self.det_badge.setText("ML OFF")
             self._set_badge_style("none")
             for cls, bar in self._conf_bars.items():
@@ -1286,22 +1246,21 @@ class PlutoApp(QtWidgets.QMainWindow):
         elif self._engine is not None:
             self.det_badge.setText("MODEL LOADED — SCANNING")
 
-    # ── ML: result + zoom handlers (inference runs in the worker) ──────────────
+    # ── The results of the classifier ─────────────────────────────────────────
 
     def _on_fingerprint_ready(self, result):
         label = result["label"]
         conf  = result["confidence"]
         probs = result["probs"]
-        # "Is anything transmitting?" is answered by everything that ISN'T noise,
-        # not by the winning class — a 67% noise verdict is a clear channel, not an
-        # "unknown". Only once a device is likely does "which one?" mean anything,
-        # and that's unknown only when no single device class carries the mass.
-        # ponytail: one threshold for both, split them if presence/naming diverge
+        # The sum of all the device classes tells you if a device transmits. The
+        # strongest class alone does not. A result of 67% noise is a clear channel
+        # and not an unknown device. The name is unknown only if a device is
+        # probable, but no single device class has a sufficient probability.
         p_dev = 1.0 - probs.get("noise", 0.0)
         best, p_best = max(((c, p) for c, p in probs.items() if c != "noise"),
                            key=lambda cp: cp[1], default=(label, conf))
-        # Two or more transmitters sharing the buffer (per-segment vote) trumps the
-        # single averaged verdict — that average would smear into "unknown".
+        # The votes of the segments have precedence. The mean of two transmitters
+        # in one buffer becomes "unknown", but the votes give the two names.
         dets = [d for d in result.get("detections", []) if d["label"] != "noise"]
         if len(dets) >= 2:
             self.det_badge.setText(" + ".join(f"{d['label']} {d['share']:.0%}"
@@ -1325,15 +1284,14 @@ class PlutoApp(QtWidgets.QMainWindow):
     def _on_zoom_ready(self, freqs, psd, held_freq):
         self.zoom_curve.setData(freqs, psd)
         sr = self.cfg["sample_rate"]
-        # Recenter the view only when the hold jumps to a new frequency, so manual
-        # pan/zoom on the zoom plots isn't overridden every frame.
+        # Move the view only for a new lock. Thus the program does not cancel the
+        # movements of the user at each frame.
         if (getattr(self, "_zoom_center", None) is None
                 or abs(held_freq - self._zoom_center) > sr / 4):
             self.p_zoom.setXRange(held_freq - sr / 2, held_freq + sr / 2, padding=0)
             self._zoom_center = held_freq
-            self.zoom_wf_data[:] = -200.0      # wipe stale history on a NEW lock
+            self.zoom_wf_data[:] = -200.0      # remove the data of the last lock
         self.p_zoom.setTitle(f"Narrowband Spectrum ({held_freq / 1e6:.3f} MHz)")
-        # scroll the held-signal spectrum into the zoom waterfall
         self.zoom_wf_data = np.roll(self.zoom_wf_data, -1, axis=1)
         self.zoom_wf_data[:, -1] = psd
         self.zoom_wf_img.setImage(self.zoom_wf_data, autoLevels=False)
@@ -1341,12 +1299,12 @@ class PlutoApp(QtWidgets.QMainWindow):
         self._last_zoom = (freqs, psd)
         self._update_signal_markers(freqs, psd)
 
-    # ── narrowband signal markers ─────────────────────────────────────────────
+    # ── The markers of the narrowband signal ──────────────────────────────────
 
     def _on_marker_toggle(self, _checked=False):
-        """A marker checkbox flipped — hide what's now off, then refresh against
-        the last spectrum so turning one on shows it immediately (even in SCAN,
-        where no fresh zoom frame is arriving)."""
+        """Hide the markers that the user set to off. Then draw the other markers
+        with the last spectrum. Thus a marker is immediately visible, also in the
+        SCAN mode where there is no new narrowband data."""
         if not self.w_show_mid.isChecked():
             self.mid_line.setVisible(False)
         if not self.w_show_borders.isChecked():
@@ -1356,14 +1314,15 @@ class PlutoApp(QtWidgets.QMainWindow):
             self._update_signal_markers(*self._last_zoom)
 
     def _update_signal_markers(self, freqs, psd):
-        """Place the red middle/edge lines from the live PSD (see signal_extent).
-        Hidden checkboxes draw nothing; a signal below the floor hides them too."""
+        """Put the red lines at the middle and the edges of the signal. The function
+        signal_extent gives the positions. If the signal is below the noise floor,
+        the program hides the lines."""
         show_mid  = self.w_show_mid.isChecked()
         show_edge = self.w_show_borders.isChecked()
         if not (show_mid or show_edge):
             return
         extent = signal_extent(freqs, psd)
-        if extent is None:                         # nothing above the noise floor
+        if extent is None:                         # there is no signal
             self.mid_line.setVisible(False)
             for ln in self.edge_lines:
                 ln.setVisible(False)
@@ -1390,18 +1349,16 @@ class PlutoApp(QtWidgets.QMainWindow):
             self.caught_lbl.setText(f"Caught: {_hl(vals + ' MHz')}")
         else:
             self.caught_lbl.setText("Caught: —")
-        # mirror the caught list into the Jump-to dropdown
         self.w_jump_combo.clear()
         for f in freqs:
             self.w_jump_combo.addItem(f"{f / 1e6:.3f} MHz", int(f))
 
-    # ── waterfall helpers ─────────────────────────────────────────────────────
+    # ── The waterfall ─────────────────────────────────────────────────────────
 
     def _update_waterfall_rect(self):
         span = self.f_global_max - self.f_global_min
         self.img.setRect(QtCore.QRectF(self.f_global_min, 0, span, WATERFALL_ROWS))
-        # Pin p2's view to the data so the image can't render wider/taller than
-        # the axis. x is XLinked to p1; y is fixed to the sweep-row count.
+        # Keep the view on the data. Thus the image is not larger than the axis.
         self.p2.setYRange(0, WATERFALL_ROWS, padding=0)
 
     def _apply_wf_scale(self):
@@ -1409,7 +1366,7 @@ class PlutoApp(QtWidgets.QMainWindow):
             v_min = float(self.w_wf_min.currentText())
             v_max = float(self.w_wf_max.currentText())
         except (ValueError, AttributeError):
-            return                       # mid-edit / non-numeric text — ignore
+            return                       # the text is not a number yet
         if v_max <= v_min:
             return
         self.img.setLevels([v_min, v_max])
@@ -1436,12 +1393,12 @@ class PlutoApp(QtWidgets.QMainWindow):
             f"{_hl(self.n_hops)} hops · {_hl(f'{span_mhz:.1f} MHz')} total · "
             f"~{_hl(f'{sweep_ms} ms')}/sweep")
 
-    # ── recording controls ────────────────────────────────────────────────────
+    # ── The controls of the record ────────────────────────────────────────────
 
     def _switch_mode(self, key: str):
-        """Apply op_mode `key` and restart the worker. Leaves recording state alone."""
+        """Set op_mode to `key` and start the worker again. The record does not change."""
         self.cfg["op_mode"] = key
-        is_lock = key in ("locking", "auto")    # both run the lock state-machine
+        is_lock = key in ("locking", "auto")    # the two modes that lock
         self.w_skip_btn.setEnabled(is_lock)
         self.w_jump_btn.setEnabled(is_lock)
         self.w_jump_combo.setEnabled(is_lock)
@@ -1459,7 +1416,7 @@ class PlutoApp(QtWidgets.QMainWindow):
             return
         if self.cfg.get("op_mode") == key:
             return
-        # Switching the view mode by hand stops recording (what gets saved differs).
+        # A manual change of the mode stops the record. Each mode saves other data.
         self.cfg["record"] = False
         self.w_rec_btn.setChecked(False)
         self._update_record_btn_style(False)
@@ -1467,19 +1424,19 @@ class PlutoApp(QtWidgets.QMainWindow):
         self._switch_mode(key)
 
     def _on_skip_lock(self):
-        self.cfg["skip_lock"] = True        # Locking/Auto mode reads this live
+        self.cfg["skip_lock"] = True
 
     def _on_jump_to(self):
         f = self.w_jump_combo.currentData()
         if f:
-            self.cfg["jump_to"] = int(f)    # Locking/Auto mode reads this live
+            self.cfg["jump_to"] = int(f)
 
     def _on_auto_params(self, _v=0):
-        self.cfg["auto_dwell_ms"]  = self.w_auto_dwell.value()   # Auto reads these live
+        self.cfg["auto_dwell_ms"]  = self.w_auto_dwell.value()
         self.cfg["auto_noise_pct"] = self.w_auto_noise.value()
 
     def _on_record_toggle(self, checked: bool):
-        if self.sdr is None:                 # no worker exists — nothing to record
+        if self.sdr is None:                 # there is no worker
             self.w_rec_btn.setChecked(False)
             self.status_lbl.setText("SDR not connected.")
             return
@@ -1488,26 +1445,26 @@ class PlutoApp(QtWidgets.QMainWindow):
             self.cfg["record"] = False
             self._update_record_btn_style(False)
             return
-        # Route to the acquisition that matches what we're recording:
-        #   device -> parked Focus capture; noise -> band-swept Wideband capture.
+        # Start the mode that gives the correct data. A device or the noise at one
+        # frequency needs the Narrowband mode. The noise of the band needs Wideband.
         kind   = self.cfg.get("record_kind", "device")
         target = "wideband" if kind == "noise_band" else "focus"
-        self.cfg["record"] = True             # read live by the worker loops
+        self.cfg["record"] = True
         self.w_rec_btn.setChecked(True)
         self._update_record_btn_style(True)
         if self.cfg.get("op_mode") != target:
             self._switch_mode(target)
 
     def _on_record_kind(self, kind: str):
-        """Choose what Record saves: a Device fingerprint, band-swept Noise, or
-        narrowband Noise parked at the Focus freq (a frequency-matched negative)."""
+        """Set the kind of data that the Record button saves: a device, the noise of
+        the full band, or the noise at the focus frequency."""
         self.cfg["record_kind"] = kind
-        parked = kind in ("device", "noise_freq")     # parked capture vs band sweep
+        parked = kind in ("device", "noise_freq")     # one frequency, not a sweep
         self.w_rec_device.setEnabled(kind == "device")
         self.w_rec_freq.setEnabled(parked)
         if kind in self._rec_kind_btns:
             self._rec_kind_btns[kind].setChecked(True)
-        # If already recording, re-route into the matching acquisition mode now.
+        # If the record is on, change to the correct mode now.
         if self.cfg.get("record") and hasattr(self, "worker"):
             self._on_record_toggle(True)
 
@@ -1530,7 +1487,7 @@ class PlutoApp(QtWidgets.QMainWindow):
             )
         else:
             self.w_rec_btn.setText("●  Record")
-            self.w_rec_btn.setStyleSheet("")  # inherit panel default
+            self.w_rec_btn.setStyleSheet("")  # use the style of the panel
 
     def _on_grab_lock(self):
         f = getattr(self, "_last_held_freq", None)
@@ -1538,7 +1495,7 @@ class PlutoApp(QtWidgets.QMainWindow):
             self.w_rec_freq.setText(str(int(f)))
             self.cfg["focus_freq"] = int(f)
 
-    # ── settings apply ────────────────────────────────────────────────────────
+    # ── The settings ──────────────────────────────────────────────────────────
 
     def _apply_settings(self):
         if self.sdr is None:
@@ -1554,8 +1511,8 @@ class PlutoApp(QtWidgets.QMainWindow):
             self.cfg["dwell_ms"]           = self.w_dwell.value()
             self.cfg["settle_ms"]          = self.w_settle.value()
             self.cfg["overlap_pct"]        = int(self.w_olap_pct.currentText())
-            self._sync_record_cfg()        # apply Focus/Narrowband freq + device/session
-            self.cfg["record"]             = False     # stop recording on settings change
+            self._sync_record_cfg()
+            self.cfg["record"]             = False     # a change stops the record
             self.w_rec_btn.setChecked(False)
             self._update_record_btn_style(False)
             self._recompute_hops()
@@ -1576,9 +1533,9 @@ class PlutoApp(QtWidgets.QMainWindow):
         self._start_worker()
 
     def _start_worker(self):
-        self._zoom_center = None        # let the zoom view recenter on the next hold
+        self._zoom_center = None        # the next lock moves the narrowband view
         self.cfg["skip_lock"] = False
-        self.caught_lbl.setText("Caught: —")     # fresh memory each (re)start
+        self.caught_lbl.setText("Caught: —")     # each start clears the memory
         self.w_jump_combo.clear()
         self.worker = SweepWorker(self.sdr, self.cfg, engine=self._engine)
         self.worker.sweep_ready.connect(self._on_sweep_ready)
@@ -1591,7 +1548,7 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.worker.files_changed.connect(self._on_files_changed)
         self.worker.start()
 
-    # ── signal handlers ───────────────────────────────────────────────────────
+    # ── The handlers of the Qt signals ────────────────────────────────────────
 
     def _on_sweep_ready(self, composite: np.ndarray, hop_bufs: dict):
         if len(composite) != self.total_bins:
@@ -1626,19 +1583,16 @@ class PlutoApp(QtWidgets.QMainWindow):
         event.accept()
 
 
-# ==========================================
-# ENTRY POINT
-# ==========================================
+# ── Entry point ───────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    # High-DPI / multi-monitor: must be set BEFORE the QApplication exists.
-    # PassThrough rounding keeps fractional scale factors (125%, 150%) exact so
-    # axis-label widths and the waterfall ImageItem stay pixel-aligned when the
-    # window is moved to a monitor with different scaling.
+    # You must set the scale policy before the QApplication exists. PassThrough
+    # keeps a fractional scale correct, for example 125%. Thus the plots stay
+    # aligned when the user moves the window to a monitor with a different scale.
     try:
         QtGui.QGuiApplication.setHighDpiScaleFactorRoundingPolicy(
             QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
     except AttributeError:
-        pass  # Qt < 5.14
+        pass  # the policy is not available before Qt 5.14
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
 

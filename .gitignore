@@ -6,6 +6,6 @@ fingerprint_data/
 *.pt
 *.meta.json
 
-test_*.py
+NOTES.md
 
 .claude/settings.local.json

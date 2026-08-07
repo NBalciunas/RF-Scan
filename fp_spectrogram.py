@@ -1,19 +1,10 @@
-"""
-fp_spectrogram.py — shared spectrogram front-end + model for v2 fingerprinting.
+"""The shared spectrogram front end and the model.
 
-Both train_model.py (training) and terminal_v2.py (live inference) import from here,
-so preprocessing can never drift between the two — the same lesson the original
-pipeline learned with instance_norm.
+train_model.py and terminal_v2.py import this module. Thus the two programs
+always prepare the data in the same way.
 
-Representation follows the RFUAV paper (arXiv:2503.09033): a 256-point STFT
-spectrogram of the captured IQ.  Two deliberate adaptations for our scale:
-
-  * Single-channel log-magnitude image, NOT the paper's RGB 'Hot' colormap.  The
-    colormap only matters when feeding an ImageNet-pretrained RGB net (ViT/ResNet)
-    — which is why the paper tuned it.  A compact CNN trained from scratch reads
-    the raw dB values directly, so the colormap would be a cosmetic no-op.
-  * Magnitude (not complex) discards phase, exactly as the paper does.  Fine for
-    model/type-level ID; a known limit for same-unit SEI.
+The representation is a 256-point STFT spectrogram of the IQ data. The image has
+one channel of log magnitude. The phase is not kept.
 """
 
 import os
@@ -23,43 +14,42 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-N_FFT    = 256          # paper's STFT sweet spot (STFTP=256)
-STFT_HOP = 64           # hop between STFT frames within a spectrogram
-SEG_LEN  = 4096         # IQ samples per spectrogram (~0.4 ms @ 10 Msps)
-SEG_HOP  = 2048         # hop between successive spectrogram segments
-INFER_MAX_SEGS = 24     # live inference: cap segments per buffer (evenly subsampled).
-                        # Averaging softmax over a representative subset is as good as
-                        # all ~240 and ~10x cheaper. 0 = use every segment.
-MIN_SEG_SHARE  = 0.2    # per-segment vote: a class counts as detected when it wins at
-                        # least this fraction of the buffer's segments (confidently).
+N_FFT    = 256
+STFT_HOP = 64           # samples between two STFT frames
+SEG_LEN  = 4096         # IQ samples for one spectrogram (0.4 ms at 10 Msps)
+SEG_HOP  = 2048         # samples between two spectrogram segments
+INFER_MAX_SEGS = 24     # live inference: maximum segments for one buffer (0 = all)
+MIN_SEG_SHARE  = 0.2    # a class is present when it wins this part of the segments
 
 _WINDOW = np.hanning(N_FFT).astype(np.float32)
 
 
 def iq_to_spectrogram(iq, n_fft=N_FFT, hop=STFT_HOP):
-    """complex IQ -> (1, n_fft, n_frames) per-image-standardised log-mag (dB)."""
+    """Make one log-magnitude spectrogram (1, n_fft, n_frames) from complex IQ data.
+
+    The function normalizes each image with its own mean and standard deviation."""
     iq = np.asarray(iq, dtype=np.complex64)
     if len(iq) < n_fft:
         iq = np.pad(iq, (0, n_fft - len(iq)))
     n   = (len(iq) - n_fft) // hop + 1
     idx = np.arange(n_fft)[None, :] + hop * np.arange(n)[:, None]
-    frames = iq[idx] * _WINDOW                              # (n, n_fft)
+    frames = iq[idx] * _WINDOW
     S   = np.fft.fftshift(np.fft.fft(frames, axis=1), axes=1)
-    mag = 20.0 * np.log10(np.abs(S) / n_fft + 1e-10)        # dB
-    spec = mag.T.astype(np.float32)                         # (n_fft, n)
-    spec = (spec - spec.mean()) / (spec.std() + 1e-6)       # per-image standardise
-    return spec[None]                                       # (1, n_fft, n)
+    mag = 20.0 * np.log10(np.abs(S) / n_fft + 1e-10)
+    spec = mag.T.astype(np.float32)
+    spec = (spec - spec.mean()) / (spec.std() + 1e-6)
+    return spec[None]
 
 
 def iq_segments_to_specs(iq, seg_len=SEG_LEN, seg_hop=SEG_HOP,
                          n_fft=N_FFT, hop=STFT_HOP, max_segs=0):
-    """Slice an IQ buffer into seg_len chunks -> (k, 1, n_fft, frames).
+    """Cut an IQ buffer into segments -> (k, 1, n_fft, frames).
 
-    max_segs > 0 evenly subsamples to at most that many segments (keeps the temporal
-    spread) — the live-inference speed lever, mirroring the trainer's max_segs_per_file."""
+    If max_segs is more than 0, the function keeps that many segments at equal
+    distances. Thus the segments still cover the full time of the buffer."""
     iq = np.asarray(iq, dtype=np.complex64)
     if len(iq) < seg_len:
-        return iq_to_spectrogram(iq, n_fft, hop)[None]      # single (1,1,nfft,fr)
+        return iq_to_spectrogram(iq, n_fft, hop)[None]
     k = (len(iq) - seg_len) // seg_hop + 1
     idx = np.arange(k)
     if max_segs and k > max_segs:
@@ -69,7 +59,7 @@ def iq_segments_to_specs(iq, seg_len=SEG_LEN, seg_hop=SEG_HOP,
 
 
 class SpecCNN(nn.Module):
-    """Compact 2-D CNN over single-channel STFT spectrograms."""
+    """A small 2-D CNN for the single-channel STFT spectrograms."""
 
     def __init__(self, n_classes, base=16, dropout=0.3):
         super().__init__()
@@ -78,7 +68,7 @@ class SpecCNN(nn.Module):
             return nn.Sequential(
                 nn.Conv2d(ci, co, 3, padding=1, bias=False),
                 nn.BatchNorm2d(co), nn.GELU(),
-                # ceil_mode so a small time axis never pools down to length 0.
+                # ceil_mode: a short time axis must not become length 0
                 nn.MaxPool2d(2, ceil_mode=True),
             )
 
@@ -96,13 +86,14 @@ class SpecCNN(nn.Module):
 
 
 def segment_vote(seg_probs, classes, thresh, min_share):
-    """Per-segment vote -> every class present in the buffer, not just the winner.
+    """Find each class that is present in the buffer, and not only the strongest one.
 
-    A segment votes for its argmax class when that softmax is confident (>= thresh);
-    a class is detected when it collects >= min_share of all segments. Catches
-    multiple time-interleaved (bursty) transmitters in one capture — it can NOT
-    separate two signals overlapping in the same segment (that needs multi-label).
-    Returns [{label, share, confidence}, …] sorted by share, strongest first.
+    A segment votes for its best class if the probability is thresh or more. A class
+    is present if it wins min_share of all the segments. Thus the function finds two
+    or more transmitters that send at different times in one capture. The function
+    can not divide two signals that are in the same segment.
+
+    The function gives [{label, share, confidence}, ...]. The strongest is first.
     """
     win, wconf = seg_probs.argmax(1), seg_probs.max(1)
     k = len(seg_probs)
@@ -116,12 +107,11 @@ def segment_vote(seg_probs, classes, thresh, min_share):
 
 
 class FingerprintModel:
-    """Qt/SDR-free inference wrapper used by the v2 GUI.
+    """The inference wrapper that the GUI uses. It does not use Qt or the SDR.
 
-    Give it a captured IQ buffer; it spectrograms every segment, averages the
-    softmax across segments, and returns the device verdict — or 'unknown' when
-    the top class is below `unknown_thresh` (an A/B classifier has no native
-    "none of the above", so the threshold supplies one).
+    The wrapper makes a spectrogram of each segment of an IQ buffer. Then it
+    calculates the mean of the probabilities. If the best class is below
+    unknown_thresh, the label is 'unknown'.
     """
 
     def __init__(self, model_path, unknown_thresh=0.8, infer_max_segs=INFER_MAX_SEGS):
@@ -147,7 +137,7 @@ class FingerprintModel:
                                      max_segs=self.infer_max_segs)
         x = torch.from_numpy(specs.astype(np.float32))
         with torch.no_grad():
-            seg_probs = torch.softmax(self.net(x), dim=1).numpy()   # (k, n_classes)
+            seg_probs = torch.softmax(self.net(x), dim=1).numpy()
         probs = seg_probs.mean(0)
         idx   = int(probs.argmax())
         conf  = float(probs[idx])
@@ -163,13 +153,13 @@ class FingerprintModel:
 
 
 if __name__ == "__main__":
-    # self-check: two bursty transmitters interleaved in one buffer both surface
+    # self-check: segment_vote must find the two transmitters in one buffer
     cls = ["deviceA", "droneB", "noise"]
-    p = np.array([[0.95, 0.03, 0.02]] * 5      # 5 segs deviceA
-                 + [[0.05, 0.90, 0.05]] * 4    # 4 segs droneB
-                 + [[0.40, 0.35, 0.25]] * 1)   # 1 unconfident seg -> no vote
+    p = np.array([[0.95, 0.03, 0.02]] * 5      # 5 segments of deviceA
+                 + [[0.05, 0.90, 0.05]] * 4    # 4 segments of droneB
+                 + [[0.40, 0.35, 0.25]] * 1)   # 1 segment with a low probability
     dets = segment_vote(p, cls, thresh=0.8, min_share=0.2)
     assert [d["label"] for d in dets] == ["deviceA", "droneB"], dets
     assert abs(dets[0]["share"] - 0.5) < 1e-9 and abs(dets[1]["share"] - 0.4) < 1e-9
-    assert segment_vote(p[-1:], cls, 0.8, 0.2) == []   # all-unconfident -> nothing
+    assert segment_vote(p[-1:], cls, 0.8, 0.2) == []
     print("segment_vote self-check OK:", dets)

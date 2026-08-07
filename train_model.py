@@ -1,25 +1,18 @@
-"""
-train_model.py — spectrogram fingerprint trainer (RFUAV-style).
+"""The trainer for the spectrogram fingerprint classifier.
 
-Folder-driven: every top-level folder under --data_dir is one class, and session_*
-subfolders drive a session-held-out split (train on early sessions, validate on a
-session never seen in training; the only honest number). Representation and model:
+Each top-level folder in --data_dir is one class. The session_* subfolders give the
+split: the program trains on the early sessions and measures the accuracy with the
+last session. A session that the program did not train on gives the only correct
+accuracy.
 
-  * representation: the paper's 256-point STFT spectrogram (fp_spectrogram.py)
-  * model: SpecCNN, a compact from-scratch 2-D CNN — the right-sized stand-in for
-    the paper's ViT-L-16, which needs ImageNet pretraining + huge data.
+The program reads the raw IQ captures from terminal_v2.py. It writes a .pt file and
+a .meta.json file. The GUI reads the two files with the same module.
 
-Reads the raw-IQ captures recorded by terminal_v2.py (Device / Noise recordings),
-so nothing needs re-recording. The GUI loads the resulting model via the SAME module.
-
-    python train_model.py                              # balanced (default)
-    python train_model.py --preset fast                # ~1 min sanity check
+    python train_model.py                              # the PRESET constant below
+    python train_model.py --preset fast                # a quick check
     python train_model.py --preset best                # slow, most accurate
-    python train_model.py --preset best --epochs 15    # explicit flags beat the preset
-    python train_model.py --max_segs_per_class 4000    # cap RAM / balance noise
-
-Memory/time is bounded by the --max_* caps and --store_dtype (float16 by default);
---quick is the "is this going the right way?" preset.
+    python train_model.py --preset best --epochs 15    # a flag has precedence
+    python train_model.py --max_segs_per_class 4000    # less memory
 """
 
 import re
@@ -47,73 +40,58 @@ BASE_CH    = 16
 UNKNOWN_THRESH = 0.8
 SEED       = 42
 
-# ── resource / time budget — edit here, or override on the CLI ────────────────
-PRESET              = "fast"     # "fast" | "balanced" | "best" — the tier used when
-                                 # run without --preset (e.g. straight from the IDE)
-QUICK               = False      # True = fast sanity run (alias for --preset fast)
-MAX_FILES_PER_CLASS = 5000       # 0 = all; cap .iq files per class per session
-MAX_SEGS_PER_FILE   = 150        # 0 = all; cap spectrogram segments per file
-MAX_SEGS_PER_CLASS  = 20000      # 0 = all; cap segments per class per split (reins in noise / RAM)
-STORE_DTYPE         = "float16"  # in-RAM cache: "float16" (half the RAM) or "float32"
-FORCE_CPU           = False      # True = force CPU even if CUDA is available
+# ── the budget for memory and time. A CLI flag has precedence. ────────────────
+PRESET              = "fast"     # the preset for a run without --preset (from the IDE)
+QUICK               = False      # True = the same as --preset fast
+MAX_FILES_PER_CLASS = 5000       # 0 = all; .iq files for each class and session
+MAX_SEGS_PER_FILE   = 150        # 0 = all; segments for each file
+MAX_SEGS_PER_CLASS  = 20000      # 0 = all; segments for each class and split
+STORE_DTYPE         = "float16"  # the cache in memory: "float16" or "float32"
+FORCE_CPU           = False      # True = use the CPU although CUDA is available
 
-# ── speed/quality presets (--preset). Each sets the knobs below; any flag given
-# explicitly on the CLI still wins over the preset. Times are CPU ballparks and
-# scale with how much you've recorded. ─────────────────────────────────────────
+# ── the presets for --preset. The times are for a CPU. ────────────────────────
 PRESETS = {
-    # sanity check (~1-2 min): tiny data caps, few epochs. Val number NOT final.
+    # a quick check (1-2 min). The accuracy is not the final value.
     "fast":     dict(epochs=5,  max_files_per_class=15, max_segs_per_file=40,
                      max_segs_per_class=8000,  base_ch=16),
-    # the everyday run (~minutes-tens of minutes): all files, capped per class.
+    # the usual run (minutes)
     "balanced": dict(epochs=EPOCHS, max_files_per_class=MAX_FILES_PER_CLASS,
                      max_segs_per_file=MAX_SEGS_PER_FILE,
                      max_segs_per_class=MAX_SEGS_PER_CLASS, base_ch=BASE_CH),
-    # squeeze the most out of the data (hours on CPU): more data, bigger net,
-    # long cosine schedule — best-epoch checkpointing means extra epochs only
-    # cost time, never accuracy.
+    # the most accurate run (hours on a CPU): more data and a larger network
     "best":     dict(epochs=30, max_files_per_class=0, max_segs_per_file=0,
                      max_segs_per_class=40000, base_ch=24),
 }
 
-# ── energy gate: drop silent (noise-level) segments from non-noise classes ────
-GATE_DEVICE_SEGS = True          # True = keep only device segments above the noise floor
-GATE_MARGIN_DB   = 3.0           # a device segment must beat the noise 95th-pct by this
-NOISE_CLASS      = "noise"       # class treated as the noise floor / kept un-gated
+# ── the energy gate: it removes the quiet segments from the device classes ────
+GATE_DEVICE_SEGS = True          # True = keep only the segments above the noise floor
+GATE_MARGIN_DB   = 3.0           # dB that a device segment must be above the floor
+NOISE_CLASS      = "noise"       # the class that gives the floor. The gate ignores it.
 
-# ── weak-signal SNR augmentation: captures are recorded strong (close/high SNR),
-# so the model never sees the faint version of the same device and misses it live.
-# Fix: re-embed a fraction of train device segments into REAL recorded noise at a
-# random SNR, teaching the fingerprint across the whole strong->faint range. ─────
-SNR_AUG_P      = 0.5             # fraction of train device segments re-embedded (0 = off)
-SNR_AUG_DB     = (0.0, 20.0)     # target SNR range in dB above the added noise's power
-NOISE_POOL_MAX = 2000            # noise segments cached for mixing (~64 MB at seg 4096)
+# ── the SNR augmentation: it puts the device segments into recorded noise ─────
+SNR_AUG_P      = 0.5             # the part of the train device segments to mix (0 = off)
+SNR_AUG_DB     = (0.0, 20.0)     # the range of the target signal-to-noise ratio in dB
+NOISE_POOL_MAX = 2000            # the noise segments in the cache (64 MB at 4096)
 
-# ── frequency-shift augmentation: recordings park the LO on the drone's channel,
-# so its energy always sits at the SAME spectrogram bins — the CNN learns position
-# instead of fingerprint. Live locks center differently and drone links channel-hop,
-# so train device segments get randomly retuned. ───────────────────────────────
-FREQ_SHIFT_FRAC = 0.10           # random retune of ± this fraction of fs (0 = off)
+# ── the frequency-shift augmentation: it moves the device segments in frequency ─
+FREQ_SHIFT_FRAC = 0.10           # the maximum shift as a part of the sample rate (0 = off)
 
-# ── weak-signal val metric: the val split only holds the strong segments that were
-# recorded, so plain ValAcc can't show whether faint drones are still recognised.
-# Val device segments are ALSO re-embedded in noise at low SNR and scored separately.
-WEAK_VAL_DB = (0.0, 10.0)        # SNR range for the weak-val copies
+# ── the weak-signal accuracy: the same val segments, but at a low SNR ─────────
+WEAK_VAL_DB = (0.0, 10.0)        # the SNR range for the weak copies
 
-# ── SpecAugment-lite: 2.4 GHz is shared with WiFi/BT, so live spectrograms carry
-# foreign bursts over the drone. Masking a random freq band + time stripe per train
-# batch teaches classification from partial evidence. ──────────────────────────
-SPEC_MASK_P    = 0.5             # probability a train batch gets masked (0 = off)
-SPEC_MASK_FREQ = 32              # max masked frequency bins (of N_FFT=256)
-SPEC_MASK_TIME = 12              # max masked time frames (of ~61)
+# ── SpecAugment-lite: it hides a part of each spectrogram during the training ──
+SPEC_MASK_P    = 0.5             # the probability that a batch has a mask (0 = off)
+SPEC_MASK_FREQ = 32              # the maximum masked frequency bins (of 256)
+SPEC_MASK_TIME = 12              # the maximum masked time frames (of 61)
 
 
 def _natkey(s):
-    """Natural sort key so session_10 sorts after session_9, not after session_1."""
+    """Give a sort key that puts session_10 after session_9, and not after session_1."""
     return [int(t) if t.isdigit() else t for t in re.split(r"(\d+)", s)]
 
 
 def _seg_powers_db(raw, seg_len, seg_hop):
-    """Per-segment mean power (dB) across one IQ buffer."""
+    """Give the mean power in dB of each segment of one IQ buffer."""
     k = (len(raw) - seg_len) // seg_hop + 1
     if k <= 0:
         return np.empty(0, np.float64)
@@ -123,12 +101,11 @@ def _seg_powers_db(raw, seg_len, seg_hop):
 
 
 def _mix_noise(seg, noise_pool, rng, snr_lo, snr_hi):
-    """Re-embed a device segment in real recorded noise at a random SNR (dB).
+    """Put a device segment into recorded noise at a random signal-to-noise ratio.
 
-    Scales the (strong) capture so its power sits `snr` dB above a random noise
-    segment's, then adds that noise — a physically honest weak-signal simulation
-    (the capture's own residual floor scales down with it, the added noise becomes
-    the new floor)."""
+    The function decreases the power of the strong capture to snr dB above the power
+    of a noise segment. Then it adds that noise. The added noise becomes the new
+    floor. Thus the result is a correct simulation of a weak signal."""
     noise = noise_pool[rng.randint(len(noise_pool))]
     ps = float(np.mean(np.abs(seg) ** 2))
     pn = float(np.mean(np.abs(noise) ** 2))
@@ -139,13 +116,12 @@ def _mix_noise(seg, noise_pool, rng, snr_lo, snr_hi):
 
 
 def _freq_shift(seg, rng, max_frac):
-    """Retune a segment by a random frequency offset, ± max_frac of the sample rate.
+    """Move a segment in frequency by a random part of the sample rate.
 
-    An exact IQ-domain shift (multiply by a complex ramp). Teaches the model the
-    fingerprint is the same wherever the signal sits in the band — otherwise it
-    keys on 'energy at these exact bins', which breaks the moment a live lock
-    centers differently than the recordings or the drone changes channel."""
-    nu = rng.uniform(-max_frac, max_frac)               # cycles/sample
+    The recordings always put the signal at the same spectrogram bins. Thus the
+    network can learn the position and not the fingerprint. A random shift prevents
+    this. A live lock and a channel change also move the signal."""
+    nu = rng.uniform(-max_frac, max_frac)               # cycles for each sample
     ramp = np.exp((2j * np.pi * nu) * np.arange(len(seg)))
     return (seg * ramp).astype(np.complex64, copy=False)
 
@@ -154,19 +130,16 @@ def file_to_specs(path: Path, seg_len: int, seg_hop: int, max_segs: int = 0,
                   store_dtype=np.float32, min_power_db=None,
                   noise_pool=None, aug_p=SNR_AUG_P, snr_db=SNR_AUG_DB,
                   f_shift=0.0, rng=None) -> np.ndarray:
-    """One .iq file -> (k, 1, N_FFT, frames) spectrograms (None if nothing kept).
+    """Make the spectrograms (k, 1, N_FFT, frames) of one .iq file. None if there are none.
 
-    max_segs > 0 evenly subsamples to at most that many segments per file (less RAM
-    and time, keeps the temporal spread); store_dtype=float16 halves the cache;
-    min_power_db drops segments quieter than that — the energy gate that removes the
-    silent gaps between bursts in a parked device capture (those are really noise).
-
-    noise_pool + rng turn on SNR augmentation: each kept segment is, with
-    probability aug_p, re-embedded in real noise at a random snr_db level.
-    f_shift > 0 first retunes every kept segment by a random ±f_shift × fs
-    (shift THEN mix, so the added noise floor stays where a real one would).
-    The gate runs on ORIGINAL powers first, so only genuine device bursts get
-    attenuated — never near-silence relabelled as device."""
+    min_power_db removes the segments that are more quiet than that value. These
+    quiet segments are the gaps between the bursts, thus they are noise.
+    max_segs keeps that many segments at equal distances.
+    noise_pool and rng start the SNR augmentation: the function puts each segment
+    into noise with the probability aug_p.
+    The function does the shift first and the mix after it. Thus the added noise
+    floor stays at the correct level. The gate uses the original power. Thus only
+    a true burst becomes weak, and a quiet segment does not become a device."""
     raw = np.fromfile(str(path), dtype=np.complex64)
     if len(raw) < seg_len:
         return None
@@ -193,32 +166,27 @@ def load_split(data_dir: Path, seg_len: int, seg_hop: int, rng, *,
                store_dtype=np.float32, gate: bool = False, gate_margin_db: float = 3.0,
                noise_class: str = "noise", snr_aug_p: float = 0.0,
                f_shift: float = 0.0):
-    """Build train/val spectrogram tensors. Class = folder; split by session.
+    """Make the train tensors and the val tensors. A folder is a class. A session
+    gives the split.
 
-    Works for any class folder, `noise` included. Optional caps bound memory/time:
-      * max_files      — .iq files kept per class per session
-      * max_segs_file  — segments per file
-      * max_segs_class — segments per class per split (also reins in a huge `noise`
-                         class so it can't dominate RAM or the loss)
-    store_dtype=float16 halves the cache footprint.
+    The caps max_files, max_segs_file and max_segs_class limit the memory and the
+    time. max_segs_class also prevents a large noise class in the loss.
 
-    gate=True drops, from every NON-noise class, segments quieter than the noise
-    floor (`noise` 95th-pct power + gate_margin_db). A parked device capture is mostly
-    noise between bursts; without this those silent segments are mislabelled as the
-    device and the classifier collapses.
+    gate=True removes from each device class the segments that are below the noise
+    floor. The floor is the 95th percentile of the noise class plus gate_margin_db.
+    A parked capture of a device is mostly noise between the bursts. Without the gate
+    these segments have the label of the device, and the classifier fails.
 
-    snr_aug_p > 0 re-embeds that fraction of TRAIN device segments into real noise
-    at a random SNR (SNR_AUG_DB), and f_shift > 0 randomly retunes them, so a device
-    recorded strong on one channel is still recognised weak on another. Val segments
-    and the noise class itself are never augmented — but device val segments get a
-    SEPARATE weak copy (re-embedded at WEAK_VAL_DB) returned as (Xwk, ywk) so the
-    faint-signal case is measured, not assumed."""
+    snr_aug_p and f_shift augment the train device segments only. The val segments
+    and the noise class stay unchanged. The function also makes a weak copy of the
+    device val segments at WEAK_VAL_DB and gives it as (Xwk, ywk). Thus the program
+    measures the accuracy for a weak signal."""
     classes = sorted(d.name for d in data_dir.iterdir() if d.is_dir())
     if not classes:
         raise RuntimeError(f"No class folders found under {data_dir}.")
 
-    # One pass over the noise class's TRAIN sessions feeds both the energy-gate
-    # threshold and the SNR-augmentation pool (val-session noise stays out of both).
+    # One pass on the train sessions of the noise class gives the gate threshold and
+    # the pool for the augmentation. The noise of the val session stays out of both.
     gate_thr, noise_pool = None, []
     if noise_class in classes and (gate or snr_aug_p > 0):
         nfiles = defaultdict(list)
@@ -276,12 +244,12 @@ def load_split(data_dir: Path, seg_len: int, seg_hop: int, rng, *,
                   f"using a RANDOM split — that val accuracy is optimistic.")
 
         min_pdb = None if (gate_thr is None or cls == noise_class) else gate_thr
-        # Augment only non-noise TRAIN sessions; a random split can't separate the
-        # two before conversion, so single-session classes stay un-augmented.
+        # A random split does not divide the train data and the val data before the
+        # conversion. Thus a class with one session stays without augmentation.
         aug_dev = cls != noise_class and not random_val
         tr_parts, va_parts, wk_parts = [], [], []
         for sess, files in files_by_sess.items():
-            if max_files and len(files) > max_files:        # random subset of files
+            if max_files and len(files) > max_files:        # keep a random subset
                 files = [files[i] for i in rng.permutation(len(files))[:max_files]]
             is_train = aug_dev and sess not in val_sessions
             pool  = noise_pool if (is_train and noise_pool) else None
@@ -301,9 +269,8 @@ def load_split(data_dir: Path, seg_len: int, seg_hop: int, rng, *,
                 va_parts.append(specs[perm[:n_va]]); tr_parts.append(specs[perm[n_va:]])
             elif sess in val_sessions:
                 va_parts.append(specs)
-                # Weak-val twin: same val files re-embedded at low SNR. The noise
-                # comes from the TRAIN pool — a leak in the hard direction only
-                # (it can't inflate device recognition), so the number stays honest.
+                # The weak copy uses the noise of the train pool. This makes the task
+                # more difficult only. Thus the accuracy stays correct.
                 if aug_dev and noise_pool:
                     wk = [file_to_specs(f, seg_len, seg_hop, max_segs_file,
                                         store_dtype, min_pdb, noise_pool=noise_pool,
@@ -430,11 +397,10 @@ def train(args):
         for xb, yb in tr_loader:
             xb, yb = xb.to(device).float(), yb.to(device)
             if SPEC_MASK_P and torch.rand(()).item() < SPEC_MASK_P:
-                # SpecAugment-lite: zero a random freq band + time stripe (0 = the
-                # per-image mean, since specs are standardised) so the model learns
-                # from partial evidence — WiFi/BT bursts will sit over live drones.
-                # Multiply (not in-place) — xb may share storage with the cache.
-                # ponytail: one mask per batch; go per-sample if gains stall.
+                # Hide a frequency band and a time stripe. The value 0 is the mean of
+                # the image. Thus the network learns from a part of the evidence.
+                # Use a multiplication and not an in-place operation. The tensor xb
+                # can use the same memory as the cache.
                 m = torch.ones(1, 1, xb.shape[2], xb.shape[3], device=xb.device)
                 fw = int(torch.randint(1, SPEC_MASK_FREQ + 1, ()).item())
                 fs = int(torch.randint(0, xb.shape[2] - fw + 1, ()).item())
@@ -470,12 +436,12 @@ def train(args):
             best_acc = va_acc
             best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
 
-    if best_state is not None:              # val acc can stay 0.0 on a broken run
+    if best_state is not None:              # the accuracy can stay 0.0 after a failure
         model.load_state_dict(best_state)
     print_confusion(model, va_loader, classes, device)
 
-    # Weak-signal val: the same held-out device segments, re-embedded at low SNR.
-    # This is the number that moves when faint-drone recognition regresses.
+    # The weak-signal accuracy: the same val segments, but at a low SNR. This value
+    # decreases if the program becomes worse for a weak signal.
     weak_acc = None
     if Xwk is not None:
         wk_loader = DataLoader(TensorDataset(torch.from_numpy(Xwk),
@@ -514,8 +480,8 @@ def train(args):
         "freq_shift_frac": args.freq_shift_frac,
         "weak_val_acc"  : weak_acc,
     }
-    # with_suffix (not str.replace) so this always matches how FingerprintModel
-    # derives the meta path (splitext), whatever --out is called.
+    # Use with_suffix. Thus the path is always the same as the path that
+    # FingerprintModel calculates with splitext.
     with open(Path(args.out).with_suffix(".meta.json"), "w") as f:
         json.dump(meta, f, indent=2)
 
@@ -534,38 +500,37 @@ def parse_args():
     p.add_argument("--lr",             type=float, default=LR)
     p.add_argument("--unknown_thresh", type=float, default=UNKNOWN_THRESH)
     p.add_argument("--seed",           type=int,   default=SEED)
-    # ── speed/quality preset. The flags below default to None so an explicitly
-    # given value can be told apart from "let the preset decide". ───────────────
+    # The default of these flags is None. Thus the program can find a value that
+    # the user gives, and use the preset for the other values.
     p.add_argument("--preset", choices=sorted(PRESETS), default=None,
-                   help="fast = ~1-2 min sanity check | balanced = everyday run "
-                        "(default) | best = slowest, most accurate")
+                   help="fast = a quick check | balanced = the usual run "
+                        "(default) | best = the slowest and the most accurate")
     p.add_argument("--epochs",  type=int, default=None)
     p.add_argument("--base_ch", type=int, default=None)
     p.add_argument("--max_files_per_class", type=int, default=None,
-                   help="cap .iq files loaded per class per session (0 = all)")
+                   help="the maximum .iq files for each class and session (0 = all)")
     p.add_argument("--max_segs_per_file",   type=int, default=None,
-                   help="cap spectrogram segments per file (0 = all)")
+                   help="the maximum segments for each file (0 = all)")
     p.add_argument("--max_segs_per_class",  type=int, default=None,
-                   help="cap segments per class per split (0 = all; reins in noise)")
+                   help="the maximum segments for each class and split (0 = all)")
     p.add_argument("--store_dtype", choices=["float16", "float32"], default=STORE_DTYPE,
-                   help="in-RAM spectrogram cache dtype (float16 halves memory)")
+                   help="the data type of the cache in memory (float16 uses one half)")
     p.add_argument("--gate_margin_db", type=float, default=GATE_MARGIN_DB,
-                   help="dB a device segment must beat the noise floor by to be kept "
-                        "(energy gate; toggle with GATE_DEVICE_SEGS in code)")
+                   help="the dB that a device segment must be above the noise floor. "
+                        "To stop the gate, set GATE_DEVICE_SEGS to False in the code.")
     p.add_argument("--snr_aug_p", type=float, default=SNR_AUG_P,
-                   help="fraction of train device segments re-embedded in real noise "
-                        "at a random SNR so weak signals are recognised (0 = off; "
-                        "range set by SNR_AUG_DB in code)")
+                   help="the part of the train device segments to put into recorded "
+                        "noise at a random signal-to-noise ratio (0 = off). "
+                        "SNR_AUG_DB in the code gives the range.")
     p.add_argument("--freq_shift_frac", type=float, default=FREQ_SHIFT_FRAC,
-                   help="randomly retune train device segments by ± this fraction of "
-                        "the sample rate so off-center / channel-hopped signals are "
-                        "recognised (0 = off)")
+                   help="move the train device segments in frequency by this part of "
+                        "the sample rate (0 = off)")
     p.add_argument("--quick", action="store_true", default=QUICK,
-                   help="alias for --preset fast")
+                   help="the same as --preset fast")
     p.add_argument("--cpu", action="store_true", default=FORCE_CPU,
-                   help="force CPU even if CUDA is available")
+                   help="use the CPU although CUDA is available")
     args = p.parse_args()
-    # resolve: explicit CLI flag > preset > the PRESET constant up top (IDE runs)
+    # the order of precedence: a CLI flag, then --preset, then the PRESET constant
     if args.preset is None:
         args.preset = "fast" if args.quick else PRESET
     for k, v in PRESETS[args.preset].items():

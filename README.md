@@ -36,10 +36,10 @@ file and a `.meta.json` file. The GUI reads these two files.
 - **`fp_spectrogram.py`** - the STFT front end and the SpecCNN model. The GUI and the
   trainer import this code. Thus, the two programs always prepare the data in the
   same way.
-- **`test_geometry.py`** - a self-check for the sweep geometry. To do the check, type
-  `python test_geometry.py`.
-- **`test_snr_aug.py`** - a self-check for the training data augmentation. To do the
-  check, type `python test_snr_aug.py`.
+- **`tests/test_geometry.py`** - a self-check for the sweep geometry. To do the check,
+  type `python tests/test_geometry.py`.
+- **`tests/test_snr_aug.py`** - a self-check for the training data augmentation. To do
+  the check, type `python tests/test_snr_aug.py`.
 
 ## How to train
 
