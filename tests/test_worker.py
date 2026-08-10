@@ -10,8 +10,10 @@ reads, thus the loop ends by itself.
 """
 
 import os
+import sys
 import json
 import shutil
+import subprocess
 import tempfile
 from pathlib import Path
 
@@ -19,7 +21,10 @@ import numpy as np
 
 from _support import Checks, run, stub_hardware
 
-stub_hardware()          # this must run before the import of terminal_v2
+# This must run before the import of terminal_v2. The Qt stubs are forced, because
+# these checks read `signal.log` and they call `start()` in one thread, and the real
+# Qt gives neither. See stub_hardware().
+stub_hardware(force=("pyqtgraph", "PyQt5"))
 
 import terminal_v2
 from terminal_v2 import (SweepWorker, compute_hop_freqs, composite_geometry,
@@ -353,6 +358,50 @@ def main():
             c.note(f"stop budgets for 50/1000/5000 ms dwell: {budgets} ms")
             assert budgets[0] >= 50 and budgets == sorted(budgets)
             assert budgets[-1] > 5000, budgets
+
+        # ── The order of the imports ──────────────────────────────────────────
+        # On Windows, Qt before torch makes c10.dll fail with OSError 1114 and the
+        # program stops at the start. This check reads the source, thus it holds on
+        # a machine with no Qt, which is what the CI has.
+        src = Path(terminal_v2.__file__).read_text(encoding="utf-8")
+
+        @c.check("terminal_v2 imports torch before Qt")
+        def _():
+            i_torch = src.index("import torch")
+            for name in ("import pyqtgraph", "from PyQt5"):
+                assert i_torch < src.index(name), \
+                    f"'{name}' comes before torch, thus torch fails on Windows"
+
+        @c.check("the torch import catches more than ImportError")
+        def _():
+            head = src[:src.index("import pyqtgraph")]
+            assert "except Exception:" in head, \
+                "the fallback of torch must catch OSError, not ImportError alone"
+
+        # The check above reads the source. This one proves the result, but it needs
+        # a machine that holds the real Qt and the real torch, thus it gives a note
+        # and stops where they are absent. A new process is necessary, because this
+        # one holds the stubs.
+        # torch comes first in the probe too. Qt first is the failure that this
+        # check exists to find, thus a probe in that order reports "no Qt" on
+        # exactly the machine where the check matters.
+        have_qt = subprocess.run(
+            [sys.executable, "-c", "import torch, PyQt5, pyqtgraph"],
+            capture_output=True).returncode == 0
+        if not have_qt:
+            c.note("the real Qt and torch are not both installed, "
+                   "thus the import order is checked in the source only")
+        else:
+            @c.check("terminal_v2 imports with the real Qt, and torch survives it")
+            def _():
+                r = subprocess.run(
+                    [sys.executable, "-c",
+                     "import terminal_v2 as t; print(int(t._TORCH_OK))"],
+                    capture_output=True, text=True,
+                    cwd=str(Path(terminal_v2.__file__).parent))
+                assert r.returncode == 0, r.stderr.strip()[-200:]
+                assert r.stdout.strip().endswith("1"), \
+                    "torch did not survive the import of Qt"
 
         return c.report()
     finally:

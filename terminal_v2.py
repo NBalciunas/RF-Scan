@@ -24,14 +24,20 @@ from pathlib import Path
 
 import numpy as np
 import adi
-import pyqtgraph as pg
-from PyQt5 import QtCore, QtWidgets, QtGui
 
+# Import torch before Qt. On Windows the Qt libraries and the torch libraries share
+# dependencies, and Qt first makes c10.dll fail with OSError 1114. The program then
+# stops at the start. Do not move this block below the two imports that follow it.
+# The except catches Exception, because that failure is an OSError and not an
+# ImportError, thus a narrow except does not give the fallback either.
 try:
     import torch  # a check only — fp_spectrogram does the import of the model
     _TORCH_OK = True
-except ImportError:
+except Exception:
     _TORCH_OK = False
+
+import pyqtgraph as pg
+from PyQt5 import QtCore, QtWidgets, QtGui
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 

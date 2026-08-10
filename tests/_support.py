@@ -37,34 +37,46 @@ def _stub_module(name, **attrs):
     return m
 
 
-def stub_hardware():
+def stub_hardware(force=()):
     """Replace adi, pyqtgraph and PyQt5 if they are absent.
 
     terminal_v2 imports the three at the top of the file, but it uses them in the
     methods only. The stubs give the names that the class definitions need. Thus a
     test of the mathematics does not need libiio, and it does not need Qt.
 
-    A real module always has precedence. The function replaces nothing that is
-    installed."""
+    A real module has precedence, unless its name is in `force`. Force the stub when
+    a check needs the behaviour of the stub itself: `_Signal` records what a worker
+    emitted and `_QThread.start()` calls `run()` in the same thread, and the real Qt
+    gives neither. Without `force` the result of a check would depend on the packages
+    that the machine happens to hold, which is not a property a suite may have.
+
+    Force `pyqtgraph` together with `PyQt5`. pyqtgraph imports Qt itself, thus a real
+    pyqtgraph beside a stubbed PyQt5 gives two different Qt in one process."""
     stubbed = []
 
-    try:
-        import adi                                              # noqa: F401
-    except Exception:
+    def _absent(name):
+        if name in force:
+            sys.modules.pop(name, None)
+            for k in [k for k in sys.modules if k.startswith(name + ".")]:
+                del sys.modules[k]
+            return True
+        try:
+            __import__(name)
+            return False
+        except Exception:
+            return True
+
+    if _absent("adi"):
         _stub_module("adi", Pluto=object)
         stubbed.append("adi")
 
-    try:
-        import pyqtgraph                                        # noqa: F401
-    except Exception:
+    if _absent("pyqtgraph"):
         _stub_module("pyqtgraph", mkPen=lambda *a, **k: None,
                      InfiniteLine=object, ImageItem=object,
                      GraphicsLayoutWidget=object, colormap=None)
         stubbed.append("pyqtgraph")
 
-    try:
-        from PyQt5 import QtCore                                # noqa: F401
-    except Exception:
+    if _absent("PyQt5"):
         class _Signal:
             """A signal that records what was emitted, so a check can read it.
 
