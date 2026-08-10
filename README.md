@@ -231,6 +231,49 @@ of the folder only. It does not read the JSON file.
 The step 4 is necessary. The trainer holds one full session out of the training data.
 With one session only, the accuracy value has no meaning.
 
+### How the drone classes of this project are recorded
+
+The drone classes here do not come from a drone in flight. They come from the RFUAV
+dataset, which a **USRP B210** replays and the PlutoSDR receives.
+
+RFUAV is a benchmark dataset of raw RF recordings of 35 drone types, made with USRP
+equipment and stored as float32 raw IQ. Its authors document it for replay.
+
+- Source: `https://github.com/kitoweeknd/RFUAV`
+- Licence: Apache 2.0. Give the attribution if you use it.
+
+The method:
+
+1. Choose the drone types, and divide the clips of each type into a set for the
+   training and a set for the test **before any recording**. The two sets never hold
+   the same clip. A held-out session of the same clip is the same signal with other
+   noise, thus it proves nothing.
+2. Extract one channel from the source, because the source is at 100 Msps, the B210
+   gives 61.44 Msps at the maximum and this program receives 10 Msps in a 4 MHz
+   filter.
+3. Connect the B210 TX to the PlutoSDR RX with a cable and a fixed attenuator. A
+   conducted path repeats, it makes the signal-to-noise ratio a setting and not an
+   estimate, and it keeps the WiFi and the Bluetooth of the building out of the
+   captures.
+4. Record each drone type from the training clips, at three or more TX gains. The TX
+   gain gives the signal-to-noise ratio directly, thus the accuracy for a weak signal
+   is a measured value.
+5. Record the class `noise` with the B210 **on and transmitting zeros**, at the same
+   centre frequency and the same gain. A `noise` class recorded with the transmitter
+   off teaches the model to answer the question "is the USRP on".
+6. Keep the TX centre frequency the same for every class, and put the frequency of
+   each drone in the baseband. A centre frequency that follows the class is a perfect
+   cue for the classifier.
+7. Record the classes `wifi` and `bluetooth` separately, with a real antenna and with
+   the B210 off.
+8. Record the test set from the test clips only. Do not train on it and do not use it
+   to choose a threshold.
+
+One consequence to state in a report: each class leaves the same B210, thus the
+hardware signature of the transmitter is identical in all of them. The model
+identifies the **type of the drone** from the waveform. It does not identify one
+individual unit.
+
 ## Training ML
 
 ```bash
@@ -651,6 +694,9 @@ of them transmits.
   device`, or the class that is the most similar.
 - The program does not keep the phase. Thus it cannot separate two identical units of
   the same model.
+- The classes of this project are recorded by replay through one USRP B210, thus every
+  class carries the same transmitter. The result is the identification of the type of
+  the drone and not of one individual unit. See the section **Recording**.
 - The votes of the segments separate two transmitters in time only. Two signals in one
   segment stay together.
 - The votes of the segments use the limit `vote_thresh`, which is 50% for each
