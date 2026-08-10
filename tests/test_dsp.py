@@ -1,6 +1,6 @@
 """Self-check for the DSP and the badge rule. Type `python tests/test_dsp.py`.
 
-The checks cover the functions of terminal_v2 that need no radio and no Qt:
+The checks cover the functions of terminal that need no radio and no Qt:
 
   * _peak_hold_psd  - does a short burst stay visible?
   * signal_extent   - are the middle and the edges of a signal correct?
@@ -8,7 +8,7 @@ The checks cover the functions of terminal_v2 that need no radio and no Qt:
   * badge_for       - does the user read the correct name?
 
 The functions need no radio. The stubs in _support replace adi, pyqtgraph and PyQt5
-if they are absent, because terminal_v2 imports the three at the top of the file.
+if they are absent, because terminal imports the three at the top of the file.
 """
 
 import time
@@ -17,12 +17,12 @@ import numpy as np
 
 from _support import Checks, run, stub_hardware
 
-stub_hardware()          # this must run before the import of terminal_v2
+stub_hardware()          # this must run before the import of terminal
 
-import terminal_v2
-from terminal_v2 import (SweepWorker, signal_extent, compute_hop_freqs,
-                         composite_geometry, badge_for, peak_hold_bias_db,
-                         FFT_BINS, MARK_MIN_SNR_DB, EMPTY_SLOT_DBFS)
+import terminal
+from terminal import (SweepWorker, signal_extent, compute_hop_freqs,
+                      composite_geometry, badge_for, peak_hold_bias_db,
+                      FFT_BINS, MARK_MIN_SNR_DB, EMPTY_SLOT_DB)
 
 APP_CFG = dict(sample_rate=10_000_000, rx_bw=4_000_000, overlap_pct=30,
                fp_memory_guard_hz=3_000_000)
@@ -75,7 +75,7 @@ def _snr(psd):
 
 
 def main():
-    c = Checks("DSP and badge rule (terminal_v2.py)")
+    c = Checks("DSP and badge rule (terminal.py)")
 
     # ── Peak hold ─────────────────────────────────────────────────────────────
 
@@ -125,12 +125,12 @@ def main():
         # A running maximum over blocks must equal one maximum over everything.
         iq = _add_burst(_noise_buf(2500), window_i=2400)
         got = _peak_hold(iq)
-        old = terminal_v2.PSD_CHUNK_WINS
-        terminal_v2.PSD_CHUNK_WINS = 97          # an awkward size on purpose
+        old = terminal.PSD_CHUNK_WINS
+        terminal.PSD_CHUNK_WINS = 97          # an awkward size on purpose
         try:
             other = _peak_hold(iq)
         finally:
-            terminal_v2.PSD_CHUNK_WINS = old
+            terminal.PSD_CHUNK_WINS = old
         worst = float(np.abs(got - other).max())
         assert worst < 1e-4, f"the blocks disagree by {worst:.6f} dB"
 
@@ -304,13 +304,13 @@ def main():
 
     @c.check("a hop that failed does not poison the noise floor")
     def _():
-        # _sweep_once leaves EMPTY_SLOT_DBFS in the slot of a hop whose tune or rx
+        # _sweep_once leaves EMPTY_SLOT_DB in the slot of a hop whose tune or rx
         # raised. Those slots must stay out of the median, or the floor falls and
         # every real bin looks like a large peak.
         cfg = _app_cfg()
         comp = _composite(cfg)
         n_keep, _f0, _f1 = composite_geometry(cfg)
-        comp[:5 * n_keep] = EMPTY_SLOT_DBFS   # 5 of the 8 hops failed
+        comp[:5 * n_keep] = EMPTY_SLOT_DB   # 5 of the 8 hops failed
         comp[1500] = -55.0                    # a real signal, 15 dB above the floor
         _f, db = _worker(cfg)._detect_new_peak(comp)
         c.note(f"with 5 of 8 hops empty the signal still reads {db:.0f} dB")
@@ -319,7 +319,7 @@ def main():
     @c.check("a sweep where every hop failed gives no peak")
     def _():
         cfg = _app_cfg()
-        comp = _composite(cfg, fill=EMPTY_SLOT_DBFS)
+        comp = _composite(cfg, fill=EMPTY_SLOT_DB)
         f, _db = _worker(cfg)._detect_new_peak(comp)
         assert f is None, f"it locked on {f}"
 

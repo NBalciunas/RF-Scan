@@ -8,7 +8,7 @@ checks hold the geometry, the normalization and the frequency axis of that image
 import numpy as np
 
 from _support import Checks, run
-from fp_spectrogram import (iq_to_spectrogram, iq_segments_to_specs,
+from fp_spectrogram import (iq_to_spectrogram, iq_segments_to_specs, remove_dc,
                             N_FFT, STFT_HOP, SEG_LEN, SEG_HOP)
 
 
@@ -137,6 +137,69 @@ def main():
               ).astype(np.complex64)
         rows = iq_to_spectrogram(iq)[0].mean(axis=1)
         assert int(rows.argmax()) == N_FFT // 2 + 5, int(rows.argmax())
+
+    # ── The artifact that the radio really makes ──────────────────────────────
+    # The two checks above use a constant. The PlutoSDR does not make a constant.
+    # Measured on 2026-08-10 with a 50 ohm load: |mean| / rms is -55 to -87 dB, and
+    # the 0 Hz bin still stands 9 to 39 dB above the median. The artifact is a narrow
+    # band of energy around 0 Hz. A check that uses a constant passes against an
+    # artifact that no radio produces, and that is why §8 #1 stayed open while the
+    # suite was green.
+
+    # ART_WIN and ART_STRENGTH are calibrated against the radio, not chosen. On a
+    # 4096-sample segment of the 24 real captures the artifact gives |mean| / rms
+    # -24.6 dB and a 0 Hz bin 10.5 dB above the median, and a mean takes 1.1 dB of
+    # that away. The model below gives -24.3 dB, 10.5 dB and 0.1 dB.
+    ART_WIN, ART_STRENGTH = 32, 0.05
+
+    def _lo_artifact(n, strength=ART_STRENGTH, win=ART_WIN, seed=7):
+        """A model of the artifact of the receiver: noise held near 0 Hz."""
+        r = np.random.RandomState(seed)
+        w = (r.randn(n + win) + 1j * r.randn(n + win)) / np.sqrt(2)
+        cs = np.cumsum(np.concatenate([[0.0 + 0.0j], w]))
+        ma = (cs[win:] - cs[:-win]) / win
+        return (ma[:n] * strength * np.sqrt(win)).astype(np.complex64)
+
+    def _dc_bin_db(x):
+        fr = np.asarray(x).reshape(-1, N_FFT) * np.hanning(N_FFT)
+        p = np.abs(np.fft.fft(fr, axis=1)).mean(axis=0) ** 2
+        return float(10 * np.log10(p[0] / np.median(p[1:]) + 1e-30))
+
+    @c.check("the model of the artifact matches the radio that was measured")
+    def _():
+        # If this fails, the model stopped being realistic. Fix the model, not the
+        # code, and do not weaken the two checks that follow.
+        iq = (_noise(SEG_LEN, 0.1) + _lo_artifact(SEG_LEN)).astype(np.complex64)
+        ratio = 20 * np.log10(abs(complex(iq.mean()))
+                              / np.sqrt(np.mean(np.abs(iq) ** 2)) + 1e-30)
+        raw = _dc_bin_db(iq)
+        c.note(f"model: |mean|/rms {ratio:.1f} dB, 0 Hz bin {raw:+.2f} dB "
+               f"(the radio gave -24.6 dB and +10.5 dB)")
+        assert -28.0 < ratio < -21.0, ratio
+        assert 8.0 < raw < 13.0, raw
+
+    @c.check("remove_dc suppresses the real artifact, and a mean does not")
+    def _():
+        iq = (_noise(SEG_LEN, 0.1) + _lo_artifact(SEG_LEN)).astype(np.complex64)
+        raw = _dc_bin_db(iq)
+        by_mean = _dc_bin_db(iq - iq.mean())         # what the code did before
+        by_hp = _dc_bin_db(remove_dc(iq))            # what it does now
+        c.note(f"0 Hz bin: {raw:+.2f} dB raw, {by_mean:+.2f} dB after a mean, "
+               f"{by_hp:+.2f} dB after remove_dc")
+        assert by_mean > raw - 1.5, "a mean achieves nothing here, and it must not"
+        assert by_hp < raw - 6.0, f"remove_dc left {by_hp:.2f} dB"
+
+    @c.check("the 0 Hz row of the image carries nothing, whatever the input")
+    def _():
+        # iq_to_spectrogram replaces that row. Thus no class can be told by it.
+        for name, iq in (
+                ("quiet",    _noise(SEG_LEN, 0.1)),
+                ("artifact", _noise(SEG_LEN, 0.1) + _lo_artifact(SEG_LEN)),
+                ("constant", _noise(SEG_LEN, 0.1) + 10.0),
+                ("tone",     _noise(SEG_LEN, 0.1) + _tone(SEG_LEN, 0.02, 5.0))):
+            rows = iq_to_spectrogram(np.asarray(iq, np.complex64))[0].mean(axis=1)
+            excess = float(rows[N_FFT // 2] - np.median(rows))
+            assert abs(excess) < 0.35, f"{name}: {excess:+.2f} sigma"
 
     return c.report()
 

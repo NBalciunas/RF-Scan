@@ -351,6 +351,38 @@ def main():
             finally:
                 shutil.rmtree(solo, ignore_errors=True)
 
+        @c.check("dataset_info finds a capture that the disk truncated")
+        def _():
+            # §8 #20. tofile on a full disk writes a short file and np.fromfile reads
+            # it without a complaint. The sidecar holds the count that was intended,
+            # thus the two can be compared.
+            solo = Path(tempfile.mkdtemp(prefix="rfscan_inv4_"))
+            try:
+                d = solo / "fingerprint_data"
+                build_tree(d)
+                files = sorted(d.rglob("*.iq"))
+                for f in files:
+                    f.with_suffix(".json").write_text(json.dumps(
+                        {"sample_rate": 10e6, "gain_db": 10, "center_freq": 2.44e9,
+                         "n_samples": FILE_LEN}))
+                buf = io.StringIO()
+                with contextlib.redirect_stdout(buf):
+                    dataset_info.report(d)
+                assert "truncated" not in buf.getvalue(), "a warning with no cause"
+
+                # Cut one file in half, as a disk that filled would.
+                victim = files[0]
+                half = np.fromfile(str(victim), dtype=np.complex64)[:FILE_LEN // 2]
+                half.tofile(str(victim))
+                buf = io.StringIO()
+                with contextlib.redirect_stdout(buf):
+                    dataset_info.report(d)
+                out = buf.getvalue()
+                assert "truncated" in out, out
+                assert victim.name in out, out
+            finally:
+                shutil.rmtree(solo, ignore_errors=True)
+
         @c.check("dataset_info refuses a folder that does not exist")
         def _():
             buf = io.StringIO()

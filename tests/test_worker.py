@@ -21,14 +21,14 @@ import numpy as np
 
 from _support import Checks, run, stub_hardware
 
-# This must run before the import of terminal_v2. The Qt stubs are forced, because
+# This must run before the import of terminal. The Qt stubs are forced, because
 # these checks read `signal.log` and they call `start()` in one thread, and the real
 # Qt gives neither. See stub_hardware().
 stub_hardware(force=("pyqtgraph", "PyQt5"))
 
-import terminal_v2
-from terminal_v2 import (SweepWorker, compute_hop_freqs, composite_geometry,
-                         FFT_BINS, RECORD_EVERY_N)
+import terminal
+from terminal import (SweepWorker, compute_hop_freqs, composite_geometry,
+                      bin_freqs, FFT_BINS, RECORD_EVERY_N)
 
 SR, BW, CENTER, SPAN, OLAP = 10_000_000, 4_000_000, 2_400_000_000, 20_000_000, 30
 SIGNAL_HZ = 2_402_000_000          # the tone that the worker must find
@@ -119,11 +119,11 @@ def _make(cfg, stop_after=8, **sdr_kw):
 
 def _hz_of_bin(cfg, idx, total):
     _n, f0, f1 = composite_geometry(cfg)
-    return f0 + (idx / total) * (f1 - f0)
+    return float(bin_freqs(f0, f1, total)[idx])
 
 
 def main():
-    c = Checks("Sweep worker against a fake radio (terminal_v2.py)")
+    c = Checks("Sweep worker against a fake radio (terminal.py)")
     tmp = Path(tempfile.mkdtemp(prefix="rfscan_worker_"))
     cwd = os.getcwd()
     os.chdir(tmp)                    # the record path is relative to the directory
@@ -139,7 +139,7 @@ def main():
             assert len(comp) == len(cfg["hop_freqs"]) * n_keep, len(comp)
             assert sdr.lo_log == [int(f) for f in cfg["hop_freqs"]], sdr.lo_log
             assert set(bufs) == set(range(len(cfg["hop_freqs"]))), sorted(bufs)
-            assert (comp > terminal_v2.EMPTY_SLOT_DBFS + 1).all(), "a slot stayed empty"
+            assert (comp > terminal.EMPTY_SLOT_DB + 1).all(), "a slot stayed empty"
 
         @c.check("the tone appears in the composite at its true frequency")
         def _():
@@ -156,7 +156,7 @@ def main():
             w, _sdr = _make(cfg, stop_after=10_000, fail_tune_at=(2,))
             comp, bufs = w._sweep_once()
             n_keep, _f0, _f1 = composite_geometry(cfg)
-            empty = int((comp <= terminal_v2.EMPTY_SLOT_DBFS + 1).sum())
+            empty = int((comp <= terminal.EMPTY_SLOT_DB + 1).sum())
             assert empty == n_keep, f"{empty} empty bins, expected {n_keep}"
             assert 2 not in bufs and len(bufs) == len(cfg["hop_freqs"]) - 1
             assert any("Tune error hop 2" in m for m in w.status_msg.log), \
@@ -363,9 +363,9 @@ def main():
         # On Windows, Qt before torch makes c10.dll fail with OSError 1114 and the
         # program stops at the start. This check reads the source, thus it holds on
         # a machine with no Qt, which is what the CI has.
-        src = Path(terminal_v2.__file__).read_text(encoding="utf-8")
+        src = Path(terminal.__file__).read_text(encoding="utf-8")
 
-        @c.check("terminal_v2 imports torch before Qt")
+        @c.check("terminal imports torch before Qt")
         def _():
             i_torch = src.index("import torch")
             for name in ("import pyqtgraph", "from PyQt5"):
@@ -392,13 +392,13 @@ def main():
             c.note("the real Qt and torch are not both installed, "
                    "thus the import order is checked in the source only")
         else:
-            @c.check("terminal_v2 imports with the real Qt, and torch survives it")
+            @c.check("terminal imports with the real Qt, and torch survives it")
             def _():
                 r = subprocess.run(
                     [sys.executable, "-c",
-                     "import terminal_v2 as t; print(int(t._TORCH_OK))"],
+                     "import terminal as t; print(int(t._TORCH_OK))"],
                     capture_output=True, text=True,
-                    cwd=str(Path(terminal_v2.__file__).parent))
+                    cwd=str(Path(terminal.__file__).parent))
                 assert r.returncode == 0, r.stderr.strip()[-200:]
                 assert r.stdout.strip().endswith("1"), \
                     "torch did not survive the import of Qt"

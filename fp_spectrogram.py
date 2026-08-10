@@ -1,6 +1,6 @@
 """The shared spectrogram front end and the model.
 
-train_model.py and terminal_v2.py import this module. Thus the two programs
+train_model.py and terminal.py import this module. Thus the two programs
 always prepare the data in the same way.
 
 The representation is a 256-point STFT spectrogram of the IQ data. The image has
@@ -18,6 +18,7 @@ import torch.nn as nn
 N_FFT    = 256
 STFT_HOP = 64           # samples between two STFT frames
 SEG_LEN  = 4096         # IQ samples for one spectrogram (0.4 ms at 10 Msps)
+DC_HP_WIN = 256         # moving average of remove_dc. About +-20 kHz at 10 Msps.
 SEG_HOP  = 2048         # samples between two spectrogram segments
 INFER_MAX_SEGS = 24     # live inference: maximum segments for one buffer (0 = all)
 MIN_SEG_SHARE  = 0.2    # a class is present when it wins this part of the segments
@@ -29,25 +30,53 @@ def _window(n_fft):
     return np.hanning(n_fft).astype(np.float32)
 
 
-def remove_dc(iq):
-    """Remove the constant offset of the receiver from an IQ buffer.
+def remove_dc(iq, win=DC_HP_WIN):
+    """Remove the artifact of the receiver near 0 Hz from an IQ buffer.
 
-    The LO leakage of the radio is a constant. It makes a line at 0 Hz in every
-    capture of every class, because the radio always parks on the signal. Two things
-    then go wrong. The scanner locks on that line, and an augmentation that moves a
-    segment in frequency moves the line with it. Thus the position of the line
-    becomes a class cue that has nothing to do with a drone.
+    The artifact is not a constant. Measured on the PlutoSDR on 2026-08-10, with a
+    50 ohm load, at 4 frequencies and 6 gains: `|mean(iq)| / rms(iq)` is -55 to
+    -87 dB, thus there is almost no constant, and the 0 Hz bin still stands 9 to
+    39 dB above the median bin. A mean therefore removes nothing. The earlier version
+    of this function subtracted a mean and it had no effect on any real capture.
 
-    Call this function before any frequency shift. After a shift the offset is no
-    longer at 0 Hz, and a mean can not find it."""
+    The function subtracts a moving average of `win` samples, which is a high pass.
+    At 10 Msps and win = 256 the notch is about +-20 kHz: a tone 39 kHz from 0 Hz
+    loses 0.12 dB, one at 20 kHz loses 8.5 dB, one at 10 kHz loses 19.6 dB. A carrier
+    exactly on the LO is lost, and no method that removes the artifact can keep it.
+
+    Do not make `win` smaller to remove more. Measured over 24 real captures, the
+    height of the DC row of the spectrogram is +1.209 sigma with a mean, -0.073 sigma
+    at win = 256, and -2.766 sigma at win = 64. A hole is a class cue in the same way
+    that a line is.
+
+    Call this function before any frequency shift. After a shift the artifact is no
+    longer at 0 Hz and a high pass at 0 Hz can not find it."""
     iq = np.asarray(iq, dtype=np.complex64)
-    return iq - iq.mean() if len(iq) else iq
+    n = len(iq)
+    if n == 0:
+        return iq
+    if win < 2 or n <= win:
+        return (iq - iq.mean()).astype(np.complex64)
+    # Hold the edge value, thus the ends do not bend towards zero.
+    pad = np.concatenate([np.full(win // 2, iq[0]), iq,
+                          np.full(win - win // 2 - 1, iq[-1])])
+    # complex128 for the sum. A complex64 cumsum drifts over a long capture.
+    c = np.cumsum(np.concatenate([[0.0 + 0.0j], pad]), dtype=np.complex128)
+    return (iq - (c[win:] - c[:-win]) / win).astype(np.complex64)
 
 
 def iq_to_spectrogram(iq, n_fft=N_FFT, hop=STFT_HOP):
     """Make one log-magnitude spectrogram (1, n_fft, n_frames) from complex IQ data.
 
-    The function normalizes each image with its own mean and standard deviation."""
+    The function normalizes each image with its own mean and standard deviation.
+
+    The 0 Hz row is replaced by the median row. `remove_dc` takes the artifact of the
+    receiver out of the signal, but it can not make the row identical for every class:
+    it runs before the frequency shift, thus the notch that it leaves moves away from
+    0 Hz for a segment that the augmentation shifts, and stays at 0 Hz for one that it
+    does not. The device classes are shifted and the noise class is not, so the depth
+    of the row at 0 Hz followed the class. Measured: -0.89 sigma against -1.16 sigma.
+    The replacement makes the row carry nothing, for every class and every path."""
     iq = remove_dc(iq)
     if len(iq) < n_fft:
         iq = np.pad(iq, (0, n_fft - len(iq)))
@@ -57,6 +86,7 @@ def iq_to_spectrogram(iq, n_fft=N_FFT, hop=STFT_HOP):
     S   = np.fft.fftshift(np.fft.fft(frames, axis=1), axes=1)
     mag = 20.0 * np.log10(np.abs(S) / n_fft + 1e-10)
     spec = mag.T.astype(np.float32)
+    spec[n_fft // 2] = np.median(spec, axis=0)
     spec = (spec - spec.mean()) / (spec.std() + 1e-6)
     return spec[None]
 

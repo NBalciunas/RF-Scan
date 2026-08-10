@@ -5,7 +5,7 @@ split: the program trains on the early sessions and measures the accuracy with t
 last session. A session that the program did not train on gives the only correct
 accuracy.
 
-The program reads the raw IQ captures from terminal_v2.py. It writes a .pt file and
+The program reads the raw IQ captures from terminal.py. It writes a .pt file and
 a .meta.json file. The GUI reads the two files with the same module.
 
     python train_model.py                              # balanced, the PRESET below
@@ -33,7 +33,7 @@ from fp_spectrogram import (iq_to_spectrogram, remove_dc, SpecCNN, VOTE_THRESH,
                             N_FFT, STFT_HOP, SEG_LEN, SEG_HOP)
 
 DATA_DIR   = "./fingerprint_data"
-OUTPUT     = "./trained_model.pt"   # the name that terminal_v2.py loads at the start
+OUTPUT     = "./trained_model.pt"   # the name that terminal.py loads at the start
 BATCH_SIZE = 512
 EPOCHS     = 8
 LR         = 1e-3

@@ -54,10 +54,10 @@ HOP_OVERLAP_PCT = 30
 
 FFT_BINS           = 1024
 PSD_CHUNK_WINS     = 1024     # FFT windows for each block of the peak hold. Memory only.
-EMPTY_SLOT_DBFS    = -300.0   # a hop that gave no data. _peak_hold_psd stops at -200.
+EMPTY_SLOT_DB    = -300.0   # a hop that gave no data. _peak_hold_psd stops at -200.
 WATERFALL_ROWS     = 200
-WF_SCALE_MIN_DBFS  = -10.0
-WF_SCALE_MAX_DBFS  = 10.0
+WF_SCALE_MIN_DB  = -10.0
+WF_SCALE_MAX_DB  = 10.0
 
 _SCRIPT_DIR        = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_MODEL_PATH = os.path.join(_SCRIPT_DIR, "trained_model.pt")
@@ -198,6 +198,26 @@ def composite_geometry(cfg):
     return n_keep, hops[0] - half, hops[-1] + half
 
 
+def bin_freqs(f0, f1, n):
+    """Give the centre frequency of each of `n` bins that tile [f0, f1].
+
+    A bin covers (f1 - f0) / n Hz and the value of the bin belongs at its middle.
+    `np.linspace(f0, f1, n)` gives the wrong answer twice: it spaces the points by
+    (f1 - f0) / (n - 1), and it puts the first point at the edge of the band and not
+    at the middle of the first bin. The error is half a bin, about 10 kHz at the
+    defaults. It is below the resolution of the detector, but it is a bias in every
+    frequency that the program reports, thus it is in every number the paper prints.
+    """
+    width = (f1 - f0) / float(n)
+    return f0 + (np.arange(n) + 0.5) * width
+
+
+def hz_to_bin(hz, f0, f1, n):
+    """The inverse of bin_freqs: the bin index whose middle is nearest to `hz`."""
+    width = (f1 - f0) / float(n)
+    return int(round((hz - f0) / width - 0.5))
+
+
 def signal_extent(freqs, psd, min_snr_db=MARK_MIN_SNR_DB,
                   edge_margin_db=MARK_EDGE_MARGIN_DB, smooth_bins=MARK_SMOOTH_BINS):
     """Find the middle and the edges of the strongest signal in a spectrum.
@@ -218,7 +238,7 @@ def signal_extent(freqs, psd, min_snr_db=MARK_MIN_SNR_DB,
         L   = int(smooth_bins)
         k   = np.ones(L) / float(L)
         pad = L // 2
-        # Use the edge value and not zero. The dBFS values are near -80. Thus a zero
+        # Use the edge value and not zero. The dB values are near -80. Thus a zero
         # increases the last bins and makes a false peak at the ends.
         sm  = np.convolve(np.pad(sm, pad, mode="edge"), k, mode="valid")[:n]
     floor = float(np.median(sm))
@@ -353,7 +373,7 @@ class SweepWorker(QtCore.QThread):
         n_hops     = len(hop_freqs)
         n_keep, _f0, _f1 = composite_geometry(self.cfg)
         b0         = (FFT_BINS - n_keep) // 2       # the central part of each hop
-        composite  = np.full(n_hops * n_keep, EMPTY_SLOT_DBFS, dtype=np.float32)
+        composite  = np.full(n_hops * n_keep, EMPTY_SLOT_DB, dtype=np.float32)
         hop_bufs   = {}
         for i, freq in enumerate(hop_freqs):
             if self._stop:
@@ -378,7 +398,14 @@ class SweepWorker(QtCore.QThread):
         return composite, hop_bufs
 
     def _peak_hold_psd(self, iq):
-        """Make a 1024-bin dBFS spectrum and keep the maximum of all the windows.
+        """Make a 1024-bin dB spectrum and keep the maximum of all the windows.
+
+        The unit is dB and not dBFS. The value is 20*log10(|FFT(x*w)| / N) on the
+        scale that pyadi-iio gives, with no correction for the coherent gain of the
+        Blackman window, which is about -7.5 dB. Thus the number has no reference to
+        the full scale of the converter. Nothing in the program is wrong because of
+        it, because every decision compares two such numbers and the offset cancels.
+        A report that prints the axis must say this, or must calibrate first.
 
         The windows touch each other and they cover the full buffer, at every dwell
         time. Thus a short burst at any time in the buffer is visible at its true
@@ -392,13 +419,16 @@ class SweepWorker(QtCore.QThread):
             iq = np.pad(iq, (0, FFT_BINS - n)); n = FFT_BINS
         nwin = n // FFT_BINS
         self._psd_bias_db = peak_hold_bias_db(nwin)
-        # Remove the mean. The LO leakage is a constant offset, thus it makes a false
-        # peak at the middle of every hop slot, and the scanner locks on it.
-        dc = iq[:nwin * FFT_BINS].mean()
+        # Remove a mean for each window, not one mean for the buffer. The artifact of
+        # the receiver near 0 Hz is not a constant, thus one mean removes nothing:
+        # measured on 2026-08-10, the 0 Hz bin stood 9 to 39 dB above the median with
+        # the old code and the value did not move by 0.05 dB when it ran. A mean for
+        # each window takes 2437 MHz at gain 0 from 9.46 dB to 0.71 dB.
         peak = None
         for a in range(0, nwin, PSD_CHUNK_WINS):
             b   = min(a + PSD_CHUNK_WINS, nwin)
-            seg = (iq[a * FFT_BINS:b * FFT_BINS].reshape(b - a, FFT_BINS) - dc)
+            seg = iq[a * FFT_BINS:b * FFT_BINS].reshape(b - a, FFT_BINS)
+            seg = seg - seg.mean(axis=1, keepdims=True)
             mag = np.abs(np.fft.fftshift(np.fft.fft(seg * self._BLACKMAN, axis=1),
                                          axes=1)).max(axis=0)
             peak = mag if peak is None else np.maximum(peak, mag)
@@ -408,7 +438,7 @@ class SweepWorker(QtCore.QThread):
         """Give the spectrum of a held capture on an absolute frequency axis."""
         psd = self._peak_hold_psd(iq)
         sr = self.cfg["sample_rate"]
-        freqs = np.linspace(center - sr / 2, center + sr / 2, FFT_BINS)
+        freqs = bin_freqs(center - sr / 2, center + sr / 2, FFT_BINS)
         return freqs, psd
 
     def _composite_with_hold(self, held_freq, psd):
@@ -417,7 +447,7 @@ class SweepWorker(QtCore.QThread):
         base = self._last_composite
         if base is None:                       # there is no sweep yet: make a floor
             n_keep, _f0, _f1 = composite_geometry(self.cfg)
-            base = np.full(len(self.cfg["hop_freqs"]) * n_keep, EMPTY_SLOT_DBFS,
+            base = np.full(len(self.cfg["hop_freqs"]) * n_keep, EMPTY_SLOT_DB,
                            dtype=np.float32)
         comp = base.copy()
         f_min, f_max = self._band_edges()
@@ -426,8 +456,8 @@ class SweepWorker(QtCore.QThread):
             return comp
         total = len(comp)
         sr = self.cfg["sample_rate"]
-        s = int(round((held_freq - sr / 2 - f_min) / span * total))
-        e = int(round((held_freq + sr / 2 - f_min) / span * total))
+        s = hz_to_bin(held_freq - sr / 2, f_min, f_max, total)
+        e = hz_to_bin(held_freq + sr / 2, f_min, f_max, total) + 1
         s = max(0, min(total, s)); e = max(0, min(total, e))
         if e - s >= 2:
             comp[s:e] = np.interp(np.linspace(0.0, 1.0, e - s),
@@ -439,7 +469,7 @@ class SweepWorker(QtCore.QThread):
         """Find the strongest peak that is not in the memory of the caught signals.
 
         The floor is the median of the slots that received data. A hop that failed
-        keeps EMPTY_SLOT_DBFS. If those slots stay in the median, the floor falls,
+        keeps EMPTY_SLOT_DB. If those slots stay in the median, the floor falls,
         and each real bin then looks like a large peak.
 
         peak_hold_bias_db corrects the median. Thus the value that comes back is a
@@ -447,22 +477,22 @@ class SweepWorker(QtCore.QThread):
         f_min, f_max = self._band_edges()
         span  = f_max - f_min
         total = len(composite)
-        filled = composite > EMPTY_SLOT_DBFS + 1.0
+        filled = composite > EMPTY_SLOT_DB + 1.0
         if not filled.any():
             return None, -999.0
         med   = float(np.median(composite[filled])) - self._psd_bias_db
         masked = composite.copy()
         guard = float(self.cfg.get("fp_memory_guard_hz", FP_MEMORY_GUARD_HZ))
         for cf, _t in self._caught:
-            s = int(round((cf - guard - f_min) / span * total))
-            e = int(round((cf + guard - f_min) / span * total))
+            s = hz_to_bin(cf - guard, f_min, f_max, total)
+            e = hz_to_bin(cf + guard, f_min, f_max, total) + 1
             s = max(0, min(total, s)); e = max(0, min(total, e))
             if e > s:
                 masked[s:e] = -1e9
         idx = int(np.argmax(masked))
         if masked[idx] <= -1e8:                     # all the band is in the memory
             return None, -999.0
-        return f_min + (idx / total) * span, float(composite[idx]) - med
+        return float(bin_freqs(f_min, f_max, total)[idx]), float(composite[idx]) - med
 
     def _remember(self, freq):
         """Put a caught frequency in the memory. Remove the near duplicates first."""
@@ -848,7 +878,7 @@ class PlutoApp(QtWidgets.QMainWindow):
 
     def _make_waterfall_buf(self):
         return np.full((self.total_bins, WATERFALL_ROWS),
-                       WF_SCALE_MIN_DBFS, dtype=np.float32)
+                       WF_SCALE_MIN_DB, dtype=np.float32)
 
     # ── The user interface ────────────────────────────────────────────────────
 
@@ -866,11 +896,11 @@ class PlutoApp(QtWidgets.QMainWindow):
         # ── The wideband spectrum ───────────────────────────────────────────────
         self.p1 = self.win.addPlot(row=0, col=0, title="Wideband Spectrum")
         self.p1.setLabel("bottom", "Frequency", units="Hz")
-        self.p1.setLabel("left",   "Power",     units="dBFS")
+        self.p1.setLabel("left",   "Power",     units="dB")
         # Stop the automatic range. If not, each sweep changes the view.
         self.p1.enableAutoRange(x=False, y=False)
         self.p1.setXRange(self.f_global_min, self.f_global_max, padding=0)
-        self.p1.setYRange(WF_SCALE_MIN_DBFS, WF_SCALE_MAX_DBFS, padding=0)
+        self.p1.setYRange(WF_SCALE_MIN_DB, WF_SCALE_MAX_DB, padding=0)
         self.p1.setMouseEnabled(x=True, y=True)
         self.p1.setMenuEnabled(False)
         self.p1.showGrid(x=True, y=True, alpha=0.25)
@@ -893,16 +923,16 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.p2.addItem(self.img)
         cmap = pg.colormap.get("viridis")
         self.img.setLookupTable(cmap.getLookupTable())
-        self.img.setLevels([WF_SCALE_MIN_DBFS, WF_SCALE_MAX_DBFS])
+        self.img.setLevels([WF_SCALE_MIN_DB, WF_SCALE_MAX_DB])
 
         # ── The narrowband spectrum of the held signal ──────────────────────────
         self.p_zoom = self.win.addPlot(row=0, col=1, title="Narrowband Spectrum")
         self.p_zoom.setLabel("bottom", "Frequency", units="Hz")
-        self.p_zoom.setLabel("left",   "Power",     units="dBFS")
+        self.p_zoom.setLabel("left",   "Power",     units="dB")
         self.p_zoom.setMouseEnabled(x=True, y=True)
         self.p_zoom.setMenuEnabled(True)
         self.p_zoom.showGrid(x=True, y=True, alpha=0.25)
-        self.p_zoom.setYRange(WF_SCALE_MIN_DBFS, WF_SCALE_MAX_DBFS, padding=0)
+        self.p_zoom.setYRange(WF_SCALE_MIN_DB, WF_SCALE_MAX_DB, padding=0)
         self.p_zoom.getAxis("left").setWidth(_axis_w)
         self.zoom_curve = self.p_zoom.plot(pen=pg.mkPen("c", width=1))
 
@@ -932,9 +962,9 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.zoom_wf_img = pg.ImageItem(axisOrder="col-major")
         self.p_zoom_wf.addItem(self.zoom_wf_img)
         self.zoom_wf_img.setLookupTable(cmap.getLookupTable())
-        self.zoom_wf_img.setLevels([WF_SCALE_MIN_DBFS, WF_SCALE_MAX_DBFS])
+        self.zoom_wf_img.setLevels([WF_SCALE_MIN_DB, WF_SCALE_MAX_DB])
         self.zoom_wf_data = np.full((FFT_BINS, WATERFALL_ROWS),
-                                    WF_SCALE_MIN_DBFS, dtype=np.float32)
+                                    WF_SCALE_MIN_DB, dtype=np.float32)
         self.zoom_wf_img.setImage(self.zoom_wf_data, autoLevels=False)
         _zc, _zsr = self.cfg["center_freq"], self.cfg["sample_rate"]
         self.zoom_wf_img.setRect(QtCore.QRectF(_zc - _zsr / 2, 0, _zsr, WATERFALL_ROWS))
@@ -1119,17 +1149,17 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.w_settle.setValue(HOP_SETTLE_MS)
         vbox.addLayout(grid)
 
-        section("Waterfall Scale  (dBFS)")
+        section("Waterfall Scale  (dB)")
         scale_row = QtWidgets.QHBoxLayout()
         scale_row.setSpacing(4)
         min_lbl = QtWidgets.QLabel("min:")
         min_lbl.setStyleSheet("color:#cccccc; font-size:11px;")
         self.w_wf_min = hz_combo([-120, -110, -100, -90, -80, -70, -60, -50, -40,
-                                  -30, -20, -10, 0], int(WF_SCALE_MIN_DBFS))
+                                  -30, -20, -10, 0], int(WF_SCALE_MIN_DB))
         self.w_wf_min.setFixedWidth(64)
         max_lbl = QtWidgets.QLabel("max:")
         max_lbl.setStyleSheet("color:#cccccc; font-size:11px;")
-        self.w_wf_max = hz_combo([-20, -10, 0, 10, 20, 30, 40], int(WF_SCALE_MAX_DBFS))
+        self.w_wf_max = hz_combo([-20, -10, 0, 10, 20, 30, 40], int(WF_SCALE_MAX_DB))
         self.w_wf_max.setFixedWidth(64)
         scale_row.addWidget(min_lbl)
         scale_row.addWidget(self.w_wf_min)
@@ -1674,13 +1704,19 @@ class PlutoApp(QtWidgets.QMainWindow):
             self._rebuild_hop_lines()
             self._update_hop_info_label()
             self.p1.setXRange(self.f_global_min, self.f_global_max, padding=0)
-            self.p1.setYRange(WF_SCALE_MIN_DBFS, WF_SCALE_MAX_DBFS, padding=0)
+            self.p1.setYRange(WF_SCALE_MIN_DB, WF_SCALE_MAX_DB, padding=0)
             self._apply_wf_scale()
             self.status_lbl.setText(
                 f"Applied. {self.n_hops} hops · "
                 f"{self.cfg['center_freq'] / 1e6:.1f} MHz center")
         except Exception as e:
-            self.status_lbl.setText(f"Apply error: {e}")
+            # Do not start a worker on a configuration that was applied in part. The
+            # composite length would disagree with self.total_bins, _on_sweep_ready
+            # would drop every frame, and the plot would freeze with no message that
+            # says why. Correct the fields and press Apply Settings again.
+            self.status_lbl.setText(f"Apply error: {e}. The sweep is stopped. "
+                                    f"Correct the settings and apply again.")
+            return
         self._start_worker()
 
     def _start_worker(self):
@@ -1688,6 +1724,20 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.cfg["skip_lock"] = False
         self.caught_lbl.setText("Caught: —")     # each start clears the memory
         self.w_jump_combo.clear()
+        # Release the previous worker. It is stopped already, but its signals stay
+        # connected to these handlers and Qt keeps the object alive. A long session
+        # with many mode changes then holds every worker it ever made, and one sweep
+        # calls each handler once for every one of them.
+        old = getattr(self, "worker", None)
+        if old is not None:
+            for sig in (old.sweep_ready, old.zoom_ready, old.fingerprint_ready,
+                        old.mode_changed, old.caught_changed, old.hop_progress,
+                        old.status_msg, old.files_changed):
+                try:
+                    sig.disconnect()
+                except (TypeError, RuntimeError):
+                    pass                # nothing was connected, or Qt deleted it
+            old.deleteLater()
         self.worker = SweepWorker(self.sdr, self.cfg, engine=self._engine)
         self.worker.sweep_ready.connect(self._on_sweep_ready)
         self.worker.zoom_ready.connect(self._on_zoom_ready)
@@ -1704,7 +1754,7 @@ class PlutoApp(QtWidgets.QMainWindow):
     def _on_sweep_ready(self, composite: np.ndarray, hop_bufs: dict):
         if len(composite) != self.total_bins:
             return
-        freqs = np.linspace(self.f_global_min, self.f_global_max, self.total_bins)
+        freqs = bin_freqs(self.f_global_min, self.f_global_max, self.total_bins)
         self.curve.setData(freqs, composite)
 
         if (self.wf_data.shape[0] != self.total_bins or

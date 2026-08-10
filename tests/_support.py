@@ -22,6 +22,7 @@ you corrected.
 import sys
 import types
 import traceback
+import importlib.util
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -40,7 +41,7 @@ def _stub_module(name, **attrs):
 def stub_hardware(force=()):
     """Replace adi, pyqtgraph and PyQt5 if they are absent.
 
-    terminal_v2 imports the three at the top of the file, but it uses them in the
+    terminal imports the three at the top of the file, but it uses them in the
     methods only. The stubs give the names that the class definitions need. Thus a
     test of the mathematics does not need libiio, and it does not need Qt.
 
@@ -55,14 +56,18 @@ def stub_hardware(force=()):
     stubbed = []
 
     def _absent(name):
+        """Say whether a stub is necessary, and do not import anything to find out.
+
+        find_spec looks for the module and does not run it. An import would run it,
+        and importing Qt here would load the Qt libraries before terminal loads
+        torch, which is the failure of §8 #24. A probe must not have that effect."""
         if name in force:
             sys.modules.pop(name, None)
             for k in [k for k in sys.modules if k.startswith(name + ".")]:
                 del sys.modules[k]
             return True
         try:
-            __import__(name)
-            return False
+            return importlib.util.find_spec(name) is None
         except Exception:
             return True
 

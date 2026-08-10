@@ -21,12 +21,12 @@ The program has one signal chain. Each step gives its result to the next step.
 | Step | Operation |
 |---|---|
 | 1. Sweep | The program divides the span into hops. It tunes to each hop, it waits for the settle time, and it reads one buffer. |
-| 2. Spectrum | For each hop the program calculates 1024-bin FFTs across the full buffer. It keeps the maximum value of each bin. Thus a short burst stays visible. |
+| 2. Spectrum | For each hop the program calculates 1024-bin FFTs across the full buffer. It removes the mean of each window first, thus the artifact of the receiver at 0 Hz does not become a false peak. It keeps the maximum value of each bin, thus a short burst stays visible. |
 | 3. Composite | The program keeps the central bins of each hop and joins the parts end to end. One linear map gives the frequency of each bin. |
 | 4. Peak | The program finds the strongest peak that is not in the memory of the caught signals. A peak above the threshold causes a lock. |
 | 5. Lock | The radio holds that one frequency. The frequency does not move during the hold. |
 | 6. Segments | The program cuts the held IQ data into segments of 4096 samples, with a step of 2048 samples. |
-| 7. Spectrogram | Each segment becomes a 256-point STFT image of the log magnitude. The program normalizes each image with its own mean and standard deviation. Thus the result does not change with the gain. |
+| 7. Spectrogram | A high pass removes the artifact of the receiver near 0 Hz. Each segment then becomes a 256-point STFT image of the log magnitude. The program replaces the 0 Hz row with the median row, thus no class can be recognized by that row. The program normalizes each image with its own mean and standard deviation, thus the result does not change with the gain. |
 | 8. Classifier | A CNN gives a probability for each class and for each segment. The program calculates the mean, and it also counts the votes of the segments. |
 | 9. Result | The badge shows the name of the device, or `clear`, or two names. |
 
@@ -112,7 +112,7 @@ set PLUTO_URI=usb:1.5.5
 Start the graphical interface from the directory of the project:
 
 ```bash
-python terminal_v2.py
+python terminal.py
 ```
 
 The program writes the recordings to `./fingerprint_data/`. This path is relative to
@@ -146,7 +146,7 @@ The window shows four plots.
   power between the two edges, and not the highest bin. Thus the marker is stable.
 - **Narrowband Waterfall** - the last 200 held captures.
 
-The section **Waterfall Scale (dBFS)** sets the minimum and the maximum of the color
+The section **Waterfall Scale (dB)** sets the minimum and the maximum of the color
 scale of both waterfalls.
 
 The **Status** section shows the model, the last result of the classifier, the mode,
@@ -369,7 +369,7 @@ The terminal at the end of a run, with the confusion matrix and the per-class fi
 
 ### The self-checks
 
-The project has 132 self-checks in 9 scripts. One command runs all of them. The same
+The project has 140 self-checks in 9 scripts. One command runs all of them. The same
 command runs on each push, through `.github/workflows/tests.yml`.
 
 ```bash
@@ -378,16 +378,20 @@ python tests/run_all.py
 
 The checks do not need a PlutoSDR. They do not need Qt and they do not need the libiio
 library. They need numpy and torch only, because the support module replaces the three
-driver packages if they are absent. A package that is installed always has precedence
-over a replacement. A full run takes approximately 36 s.
+driver packages if they are absent. A package that is installed has precedence, except
+where a check asks for the replacement: `tests/test_worker.py` needs the false signal
+and the false thread, which the real Qt does not give. Thus the result of the suite
+does not change with the packages that your machine holds. A full run takes 1 to 2
+minutes. The end-to-end check trains a small model, thus its time changes with the
+load of your machine: measured between 32 s and 88 s on the same computer.
 
 ```bash
 python tests/run_all.py --fast
 ```
 
-The flag `--fast` removes the end-to-end check, which trains a small model. The other
-checks take approximately 12 s. Each script also operates alone, and from any
-directory.
+The flag `--fast` removes the end-to-end check. The other checks take approximately
+25 s and that time is stable. Use `--fast` while you work, and the full run before you
+push. Each script also operates alone, and from any directory.
 
 ```bash
 python tests/test_dsp.py
@@ -398,13 +402,13 @@ python tests/test_dsp.py
 | Script | Checks | Subject |
 |---|---|---|
 | `fp_spectrogram.py` | 1 | The function `segment_vote` must find two transmitters in one buffer, and it must give no name to a buffer with a low probability. |
-| `tests/test_geometry.py` | 6 | The frequency of a tone must return through the map of the composite. The parts must join without a gap. The band must be the band that you asked for. |
-| `tests/test_spectrogram.py` | 15 | The size of the image, the normalization, the frequency of each row, and the segment cutter. A gain of 60 dB must not move the image. The DC blocker must remove the leakage of the LO and keep a signal that is near it. |
-| `tests/test_dsp.py` | 30 | The peak hold must find a burst that is in 1 window of 100, and also a burst at the end of a long buffer. One window alone must miss it. A constant offset must not make a peak. The corrected noise floor must not change with the dwell time. The markers must give the correct middle and the correct edges of a signal of a known width. A hop that failed must not change the noise floor. The badge must give the correct name in each condition. |
+| `tests/test_geometry.py` | 9 | The frequency of a tone must return through the map of the composite. The parts must join without a gap. The band must be the band that you asked for. |
+| `tests/test_spectrogram.py` | 18 | The size of the image, the normalization, the frequency of each row, and the segment cutter. A gain of 60 dB must not move the image. The high pass must remove the artifact of the receiver and keep a signal that is near it, and the 0 Hz row of the image must carry nothing for any input. Three of the checks use an artifact that is calibrated against the PlutoSDR, because a constant offset is not what a radio makes. |
+| `tests/test_dsp.py` | 30 | The peak hold must find a burst that is in 1 window of 100, and also a burst at the end of a long buffer. One window alone must miss it. The artifact of the receiver must not make a peak at the middle of a hop. The corrected noise floor must not change with the dwell time. The markers must give the correct middle and the correct edges of a signal of a known width. A hop that failed must not change the noise floor. The badge must give the correct name in each condition. |
 | `tests/test_snr_aug.py` | 11 | The function `_mix_noise` must give the exact signal-to-noise ratio, with an error of less than 0.1 dB. The function `_freq_shift` must change the phase of each sample only. |
 | `tests/test_model.py` | 15 | The sizes and the parameter count of `SpecCNN`, the votes of the segments, and a write and read cycle of `FingerprintModel`. The trainer and the graphical interface must calculate the same path for the meta file. |
-| `tests/test_dataset.py` | 26 | The split by session, the energy gate, and the augmentation. A device segment must give a new image at each epoch, and a noise segment must never change. The val data must never change. A device class and the noise class must get the same DC treatment. The tool `dataset_info` must give each warning. |
-| `tests/test_worker.py` | 16 | A false radio replaces the PlutoSDR. The sweep must tune to each hop and find the tone at its true frequency. The lock must hold one frequency. Skip, Jump to and the memory of the caught signals must operate. The record must write the correct file and the correct metadata, and each name must be different. |
+| `tests/test_dataset.py` | 27 | The split by session, the energy gate, and the augmentation. A device segment must give a new image at each epoch, and a noise segment must never change. The val data must never change. A device class and the noise class must get the same DC treatment. The tool `dataset_info` must give each warning. |
+| `tests/test_worker.py` | 19 | A false radio replaces the PlutoSDR. The sweep must tune to each hop and find the tone at its true frequency. The lock must hold one frequency. Skip, Jump to and the memory of the caught signals must operate. The record must write the correct file and the correct metadata, and each name must be different. Three checks hold the order of the imports: `terminal.py` must import torch before Qt, because Qt first stops the program on Windows. |
 | `tests/test_end_to_end.py` | 11 | A synthetic dataset of two drones goes through the real trainer. Then the same `FingerprintModel` that the graphical interface loads must give the correct name to a capture of a session that it did not see, and it must report both drones when both transmit. |
 
 ### How to read the result
@@ -456,6 +460,14 @@ recording are almost identical.
   time.
 - The program does not verify the values that you type. The radio does not report an
   error for a span that it cannot receive.
+- The receiver makes an artifact near 0 Hz, which is the middle of each hop. The
+  program removes it with a high pass of about +-20 kHz. The cost is that a carrier
+  which sits exactly on the tuned frequency is lost with it. No method that removes
+  the artifact can keep such a carrier.
+- One radio was measured, and it makes a spur of its own at 2440 MHz. Measure your own
+  radio with a 50 ohm load before you decide the hop plan. A 50 ohm load does not
+  isolate the receiver above a gain of about 40 dB, so a strong signal in the room is
+  still visible through it.
 
 ### The detection
 

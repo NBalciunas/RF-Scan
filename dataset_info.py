@@ -49,7 +49,7 @@ def scan(data_dir: Path):
         sessions = defaultdict(lambda: {"files": 0, "bytes": 0, "segments": 0,
                                         "seconds": 0.0, "gain": set(),
                                         "sample_rate": set(), "freqs": set(),
-                                        "no_sidecar": 0})
+                                        "no_sidecar": 0, "short": []})
         for f in cls_dir.rglob("*.iq"):
             s = sessions[f.parent.name]
             try:
@@ -70,6 +70,12 @@ def scan(data_dir: Path):
                     s["gain"].add(int(meta["gain_db"]))
                 if "center_freq" in meta:
                     s["freqs"].add(round(float(meta["center_freq"]) / 1e6, 3))
+                # A short file means the write did not finish, and a full disk is the
+                # usual cause. numpy reads such a file without a complaint, thus the
+                # capture becomes shorter training data and nothing says so.
+                want = int(meta.get("n_samples", 0))
+                if want and n < want:
+                    s["short"].append((f.name, n, want))
             else:
                 s["no_sidecar"] += 1
         if sessions:
@@ -118,6 +124,12 @@ def report(data_dir: Path):
             if s["no_sidecar"]:
                 warnings.append(f"{cls}/{name} has {s['no_sidecar']} captures with "
                                 f"no .json sidecar")
+            if s["short"]:
+                worst = min(s["short"], key=lambda t: t[1] / max(1, t[2]))
+                warnings.append(
+                    f"{cls}/{name} has {len(s['short'])} truncated capture(s). The "
+                    f"worst is {worst[0]}, {worst[1]:,} of {worst[2]:,} samples. A "
+                    f"full disk during the record is the usual cause.")
         print(f"{cls:<12}{'TOTAL':<12}{c_files:>7,}{c_segs:>10,}"
               f"{c_secs:>9.1f}{_fmt_gb(c_bytes):>10}\n")
         tot_files += c_files; tot_segs += c_segs

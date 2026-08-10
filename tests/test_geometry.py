@@ -14,9 +14,10 @@ import numpy as np
 
 from _support import Checks, run, stub_hardware
 
-stub_hardware()          # this must run before the import of terminal_v2
+stub_hardware()          # this must run before the import of terminal
 
-from terminal_v2 import compute_hop_freqs, composite_geometry, FFT_BINS
+from terminal import (compute_hop_freqs, composite_geometry, bin_freqs,
+                      hz_to_bin, FFT_BINS)
 
 # sample_rate, rx_bw, center, span, overlap_pct
 CONFIGS = [
@@ -37,7 +38,7 @@ def _geometry(sample_rate, rx_bw, center, span, overlap_pct):
 
 
 def main():
-    c = Checks("Sweep geometry (terminal_v2.py)")
+    c = Checks("Sweep geometry (terminal.py)")
 
     @c.check("a tone maps back to its own frequency through the composite")
     def _():
@@ -124,6 +125,45 @@ def main():
     # in _peak_hold_psd instead, thus no slot geometry has to change. test_dsp.py
     # holds that behaviour.
     c.note("DC lands mid-slot by design. The DC blocker in _peak_hold_psd handles it.")
+
+    # ── The bin-to-Hz map, §8 #15 ─────────────────────────────────────────────
+
+    @c.check("bin_freqs gives the middle of each bin, not the edge")
+    def _():
+        f0, f1, n = 2_390_000_000.0, 2_410_000_000.0, 8
+        got = bin_freqs(f0, f1, n)
+        width = (f1 - f0) / n
+        assert len(got) == n, len(got)
+        # The first point sits half a bin inside the band, and the last one likewise.
+        assert abs(got[0] - (f0 + width / 2)) < 1e-6, got[0]
+        assert abs(got[-1] - (f1 - width / 2)) < 1e-6, got[-1]
+        # Every step is one bin. np.linspace(f0, f1, n) would step by (f1-f0)/(n-1).
+        steps = np.diff(got)
+        assert np.allclose(steps, width), steps
+
+    @c.check("bin_freqs and hz_to_bin are inverse")
+    def _():
+        for name, sr, bw, center, span, olap in CONFIGS:
+            cfg, n_keep, f0, f1 = _geometry(sr, bw, center, span, olap)
+            total = len(cfg["hop_freqs"]) * n_keep
+            freqs = bin_freqs(f0, f1, total)
+            for idx in (0, 1, total // 3, total // 2, total - 1):
+                back = hz_to_bin(float(freqs[idx]), f0, f1, total)
+                assert back == idx, f"{name}: bin {idx} came back as {back}"
+
+    @c.check("the old map was biased by half a bin, and the new one is not")
+    def _():
+        # The size of the defect, so a later session knows what changed and why.
+        for name, sr, bw, center, span, olap in CONFIGS:
+            cfg, n_keep, f0, f1 = _geometry(sr, bw, center, span, olap)
+            total = len(cfg["hop_freqs"]) * n_keep
+            width = (f1 - f0) / total
+            old = f0 + (np.arange(total) / total) * (f1 - f0)
+            bias = float(np.mean(bin_freqs(f0, f1, total) - old))
+            assert abs(bias - width / 2) < 1e-6, f"{name}: {bias}"
+            if name == "the app defaults":
+                c.note(f"the app defaults: one bin is {width/1e3:.1f} kHz, thus the "
+                       f"old map read {bias/1e3:.1f} kHz low in every frequency")
 
     return c.report()
 
