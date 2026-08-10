@@ -447,6 +447,178 @@ If a class has one session only, the trainer uses a random split and gives a `[w
 message. That accuracy value is not correct, because the adjacent segments of one
 recording are almost identical.
 
+## Measuring your radio
+
+The folder `measurements/` holds the programs that measure the PlutoSDR itself, and
+the results that my own radio gave on 2026-08-10. Nothing in that folder is part of
+the application, and the application does not import it.
+
+You need this section only if you use your own PlutoSDR. The program operates without
+it, with my values.
+
+### These are my results, and they are not yours
+
+Everything in `measurements/` came from one PlutoSDR, in one room, on one afternoon.
+Read the numbers as an example of the method and of the size of the effects. Do not
+read them as a specification of your own radio.
+
+| The radio that gave these numbers | |
+| --- | --- |
+| Hardware | PlutoSDR Rev.C, Z7010 |
+| Chip it reports | AD9361, while its own `config.txt` says AD9363. That is the AD9363-to-AD9361 modification. |
+| Connection | USB, `ip:192.168.2.1`, libiio 0.26, pyadi-iio 0.0.21 |
+| Sample rate and RX bandwidth | 10 Msps, 4 MHz |
+| Gains | 0, 10, 20, 40, 60 and 70 dB, manual, AGC off |
+| Place | An ordinary room with WiFi and Bluetooth in the air |
+
+My values, so that you can compare yours against them:
+
+| What | My radio | Where it came from |
+| --- | --- | --- |
+| Centre artifact, gain 10, whole band, with a load | 3.7 to 5.4 dB, median 4.4 | `spur_survey_load.json`, 311 frequencies |
+| The constant part of one 4096-sample segment, as `abs(mean) / rms` | -24.3 dB | `seg_stats.py` on `iq_load/` |
+| 0 Hz bin above the median, one segment | 8.6 dB | the same |
+| Of which a mean removes | 0.95 dB | the same, and this is why a mean is not sufficient |
+| Best `DC_HP_WIN`, by the flattest DC row | 256, at -0.099 sigma | `pick_w.py` on `iq_load/` |
+| The same row with a mean | +1.119 sigma | the same |
+| The same row at a window of 64 | -2.815 sigma | the same, and this is why a smaller window is not better |
+| Sweep path after the correction | 4.52 dB mean above the median bin | `verify_psd.py` on `iq_load/` |
+
+What is probably true for any PlutoSDR:
+
+- A zero-IF receiver puts an artifact at 0 Hz, which is the middle of the tuned band,
+  at every frequency. The size does not change much with the tuning.
+- The artifact is not a constant. Thus a mean does not remove it.
+- A moving-average high pass does remove it. A window that is too narrow makes a hole,
+  and a hole is a cue for the classifier in the same way that a line is.
+
+What you must measure again for yourself:
+
+- The height of the artifact, and thus the correct value of `DC_HP_WIN`.
+- Every strong signal in your band. The feature at 2440 MHz in my results is a
+  transmitter in my building. It is not a fault of the radio and it is not in yours.
+- The tune latency, which also depends on the USB or the network path.
+
+### What you need
+
+- A PlutoSDR and a USB data cable. A charge-only cable enumerates nothing.
+- A 50 ohm SMA load. This part decides whether the measurement means anything. Without
+  it you measure your building.
+- An antenna, for the second half of each pair.
+- Python 3.10 or later, in a virtual environment at a short path. A deep path fails on
+  Windows during the installation of torch.
+
+### Install, in this order
+
+1. libiio for your operating system. On Windows use the installer of Analog Devices,
+   release v0.26 or a later one. It puts `libiio.dll` and `iio_info.exe` into
+   `System32`, thus nothing has to be added to `PATH`.
+2. The USB drivers, if you connect over USB. `PlutoSDR-M2k-USB-Drivers.exe` v0.9 from
+   Analog Devices. Without them the RNDIS interface and the IIO interface stay in an
+   error condition and no libiio backend can attach. The disk of the radio appears
+   correctly even then, which makes the radio look healthy.
+3. The Python packages, which `requirements.txt` gives.
+
+Confirm that the radio answers before you measure anything:
+
+```bash
+iio_info -s
+```
+
+You must see a context. Over USB the radio also appears as a disk, and `config.txt` on
+that disk gives its address, which is `192.168.2.1` from the factory.
+
+### Take the measurements, twice
+
+Attach the 50 ohm load first. The two programs below do not operate without `antenna`
+or `load` as the first argument, and they write that word into the result file,
+because no program can see which connector is attached. A signal that never stops is
+identical to a fault of the receiver until the load is on.
+
+```bash
+python measurements/spur_survey.py load ip:192.168.2.1 measurements/spur_survey_load.json
+```
+
+```bash
+python measurements/spur_vs_air.py load ip:192.168.2.1 measurements/spur_vs_air_load.json
+```
+
+```bash
+python measurements/capture_iq.py ip:192.168.2.1 measurements/iq_load
+```
+
+The last command reads the environment variable `RFSCAN_TERMINATION`. Set it to `load`
+for this half and to `antenna` for the next one.
+
+Then attach the antenna and run the same three commands, with `antenna` in place of
+`load`, and `measurements/iq` as the folder. The pair takes approximately 20 minutes,
+with the change of the connector.
+
+### Read the result
+
+```bash
+python measurements/pick_w.py measurements/iq_load
+```
+
+This gives the height of the DC row of the spectrogram for each candidate width. Use
+the width whose value is nearest to zero, and put it in `DC_HP_WIN` in
+`fp_spectrogram.py`.
+
+```bash
+python measurements/seg_stats.py measurements/iq_load
+```
+
+This gives the values that the classifier meets, for one segment. If they are more
+than one or two dB from -24.3 dB and 8.6 dB, correct the artifact model in
+`tests/test_spectrogram.py`, where `ART_STRENGTH` sets the height.
+
+```bash
+python measurements/verify_psd.py measurements/iq_load
+```
+
+This calls the `_peak_hold_psd` function of the application and not a copy of it. Thus
+it gives what the program really does.
+
+Subtract the antenna result from the load result. The part that disappears with the
+load is your room. The part that stays belongs to your radio. The program
+`spur_vs_air.py` separates a constant signal from a signal that comes in bursts, and
+that is all that it does. It can not say where a constant signal comes from.
+
+### The programs and the results
+
+| File | Function |
+| --- | --- |
+| `capture_iq.py` | Writes raw IQ at 4 frequencies and 6 gains, with an index file. |
+| `spur_survey.py` | Steps the LO across 2380 to 2500 MHz and measures the middle of each hop. |
+| `spur_vs_air.py` | Separates a constant signal from one that comes in bursts, at 12 frequencies. |
+| `measure_lo.py` | The first measurement. Kept because it holds the retune timing. |
+| `analyse_dc.py` | Runs both paths of the application across a folder of captures. |
+| `pick_w.py` | Gives `DC_HP_WIN` from the DC row of the image, for each candidate width. |
+| `seg_stats.py` | The values of one segment, which are what the classifier meets. |
+| `verify_psd.py` | Calls the real `_peak_hold_psd` on the captures. |
+
+The files `cal.py`, `mathcheck.py`, `shape.py` and `fullspan.py` are one-time working
+programs. They stay because they show how the values were calculated.
+
+| Result | Content |
+| --- | --- |
+| `iq/` | 24 captures with the antenna. Your room is in these. |
+| `iq_load/` | 24 captures with the 50 ohm load. Each DC value of the project comes from here. |
+| `spur_survey_load.json` | 311 tune frequencies with the load. |
+| `spur_survey.json` | The same sweep with the antenna, for the difference. |
+| `spur_vs_air_load.json`, `spur_vs_air.json` | The pair at 12 frequencies. |
+| `lo_leakage.json` | The first measurement, with the retune timing. |
+| `gui.png` | The first screen capture of the program with the radio. |
+
+The `.npy` captures are approximately 184 MB and `.gitignore` excludes them. The
+programs and the `.json` results stay in git. Thus a clone can read each value and
+repeat each calculation, but it must record the raw IQ again to repeat a capture.
+
+The analysis programs `analyse_dc.py`, `pick_w.py`, `seg_stats.py` and `verify_psd.py`
+need no radio, because they read a folder of captures. Only `capture_iq.py`,
+`spur_survey.py`, `spur_vs_air.py` and `measure_lo.py` operate the PlutoSDR, and none
+of them transmits.
+
 ## Limitations
 
 ### The PlutoSDR
@@ -469,10 +641,9 @@ recording are almost identical.
   the tuned frequency. With a 50 ohm load and the default gain it stays between 3.7
   and 5.4 dB across 311 frequencies from 2380 to 2500 MHz. Thus no hop plan has to
   avoid a frequency.
-- Measure your own radio twice if you doubt it, once with the antenna and once with a
-  50 ohm load. The difference between the two runs is the signals in your room, and
-  only the part that stays with the load belongs to the radio. A signal that never
-  stops looks exactly like a fault of the receiver until you fit the load.
+- Those numbers are from one radio, in one room, on one day. They are an example of
+  the size of the effect and not a specification of your radio. The section
+  **Measuring your radio** gives the procedure that produces your own values.
 
 ### The detection
 

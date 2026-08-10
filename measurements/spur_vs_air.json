@@ -1,0 +1,218 @@
+[
+  {
+    "freq_hz": 2390000000,
+    "gain_db": 40,
+    "hold_db": 0.6012864112854004,
+    "mean_db": 1.5994277000427246,
+    "hold_minus_mean": -0.9981412887573242,
+    "repeat_delta": 1.807961106300354,
+    "verdict": "quiet"
+  },
+  {
+    "freq_hz": 2390000000,
+    "gain_db": 60,
+    "hold_db": -1.7218940258026123,
+    "mean_db": 0.28815579414367676,
+    "hold_minus_mean": -2.010049819946289,
+    "repeat_delta": 1.7224898799322546,
+    "verdict": "quiet"
+  },
+  {
+    "freq_hz": 2400000000,
+    "gain_db": 40,
+    "hold_db": 0.5441201329231262,
+    "mean_db": 3.701324701309204,
+    "hold_minus_mean": -3.157204568386078,
+    "repeat_delta": 5.546642005443573,
+    "verdict": "quiet"
+  },
+  {
+    "freq_hz": 2400000000,
+    "gain_db": 60,
+    "hold_db": 1.9773080348968506,
+    "mean_db": 4.168616771697998,
+    "hold_minus_mean": -2.1913087368011475,
+    "repeat_delta": 0.30879271030426025,
+    "verdict": "quiet"
+  },
+  {
+    "freq_hz": 2410000000,
+    "gain_db": 40,
+    "hold_db": 25.944110870361328,
+    "mean_db": 14.391823768615723,
+    "hold_minus_mean": 11.552287101745605,
+    "repeat_delta": 4.008913040161133,
+    "verdict": "signal in the air"
+  },
+  {
+    "freq_hz": 2410000000,
+    "gain_db": 60,
+    "hold_db": 6.433015823364258,
+    "mean_db": 5.2045769691467285,
+    "hold_minus_mean": 1.2284388542175293,
+    "repeat_delta": 6.177648544311523,
+    "verdict": "signal in the air"
+  },
+  {
+    "freq_hz": 2437000000,
+    "gain_db": 40,
+    "hold_db": -4.0663628578186035,
+    "mean_db": 1.4406847953796387,
+    "hold_minus_mean": -5.507047653198242,
+    "repeat_delta": 11.36624813079834,
+    "verdict": "quiet"
+  },
+  {
+    "freq_hz": 2437000000,
+    "gain_db": 60,
+    "hold_db": 1.384508728981018,
+    "mean_db": 4.380683422088623,
+    "hold_minus_mean": -2.996174693107605,
+    "repeat_delta": 0.5774677991867065,
+    "verdict": "quiet"
+  },
+  {
+    "freq_hz": 2440000000,
+    "gain_db": 40,
+    "hold_db": 13.472572326660156,
+    "mean_db": 19.312185287475586,
+    "hold_minus_mean": -5.83961296081543,
+    "repeat_delta": 0.649022102355957,
+    "verdict": "SPUR of the radio"
+  },
+  {
+    "freq_hz": 2440000000,
+    "gain_db": 60,
+    "hold_db": 16.048688888549805,
+    "mean_db": 23.784971237182617,
+    "hold_minus_mean": -7.7362823486328125,
+    "repeat_delta": 2.0368871688842773,
+    "verdict": "SPUR of the radio"
+  },
+  {
+    "freq_hz": 2450000000,
+    "gain_db": 40,
+    "hold_db": 10.897377014160156,
+    "mean_db": 4.445852279663086,
+    "hold_minus_mean": 6.45152473449707,
+    "repeat_delta": 16.946210861206055,
+    "verdict": "signal in the air"
+  },
+  {
+    "freq_hz": 2450000000,
+    "gain_db": 60,
+    "hold_db": 20.552104949951172,
+    "mean_db": 10.468805313110352,
+    "hold_minus_mean": 10.08329963684082,
+    "repeat_delta": 13.943180084228516,
+    "verdict": "signal in the air"
+  },
+  {
+    "freq_hz": 2460000000,
+    "gain_db": 40,
+    "hold_db": 8.462581634521484,
+    "mean_db": 6.640765190124512,
+    "hold_minus_mean": 1.8218164443969727,
+    "repeat_delta": 3.060751438140869,
+    "verdict": "unclear"
+  },
+  {
+    "freq_hz": 2460000000,
+    "gain_db": 60,
+    "hold_db": 5.937132835388184,
+    "mean_db": 7.009796619415283,
+    "hold_minus_mean": -1.0726637840270996,
+    "repeat_delta": 5.465488433837891,
+    "verdict": "quiet"
+  },
+  {
+    "freq_hz": 2470000000,
+    "gain_db": 40,
+    "hold_db": 4.707036972045898,
+    "mean_db": 5.783041954040527,
+    "hold_minus_mean": -1.076004981994629,
+    "repeat_delta": 16.042871475219727,
+    "verdict": "quiet"
+  },
+  {
+    "freq_hz": 2470000000,
+    "gain_db": 60,
+    "hold_db": 4.993444442749023,
+    "mean_db": 5.219477653503418,
+    "hold_minus_mean": -0.22603321075439453,
+    "repeat_delta": 0.6140913963317871,
+    "verdict": "quiet"
+  },
+  {
+    "freq_hz": 2475000000,
+    "gain_db": 40,
+    "hold_db": 18.594497680664062,
+    "mean_db": 12.006815910339355,
+    "hold_minus_mean": 6.587681770324707,
+    "repeat_delta": 15.601330757141113,
+    "verdict": "signal in the air"
+  },
+  {
+    "freq_hz": 2475000000,
+    "gain_db": 60,
+    "hold_db": 25.229660034179688,
+    "mean_db": 13.021865844726562,
+    "hold_minus_mean": 12.207794189453125,
+    "repeat_delta": 22.334496021270752,
+    "verdict": "signal in the air"
+  },
+  {
+    "freq_hz": 2480000000,
+    "gain_db": 40,
+    "hold_db": 10.534666061401367,
+    "mean_db": 6.709460258483887,
+    "hold_minus_mean": 3.8252058029174805,
+    "repeat_delta": 13.836185455322266,
+    "verdict": "signal in the air"
+  },
+  {
+    "freq_hz": 2480000000,
+    "gain_db": 60,
+    "hold_db": 43.43895721435547,
+    "mean_db": 32.60599136352539,
+    "hold_minus_mean": 10.832965850830078,
+    "repeat_delta": 20.173383712768555,
+    "verdict": "signal in the air"
+  },
+  {
+    "freq_hz": 2485000000,
+    "gain_db": 40,
+    "hold_db": 4.6422953605651855,
+    "mean_db": 4.99854850769043,
+    "hold_minus_mean": -0.35625314712524414,
+    "repeat_delta": 1.3405523300170898,
+    "verdict": "quiet"
+  },
+  {
+    "freq_hz": 2485000000,
+    "gain_db": 60,
+    "hold_db": 4.959941387176514,
+    "mean_db": 5.67879581451416,
+    "hold_minus_mean": -0.7188544273376465,
+    "repeat_delta": 2.113551616668701,
+    "verdict": "quiet"
+  },
+  {
+    "freq_hz": 2490000000,
+    "gain_db": 40,
+    "hold_db": 5.699982166290283,
+    "mean_db": 5.63247013092041,
+    "hold_minus_mean": 0.06751203536987305,
+    "repeat_delta": 0.17742109298706055,
+    "verdict": "quiet"
+  },
+  {
+    "freq_hz": 2490000000,
+    "gain_db": 60,
+    "hold_db": 4.468630790710449,
+    "mean_db": 3.093334674835205,
+    "hold_minus_mean": 1.3752961158752441,
+    "repeat_delta": 1.3806931972503662,
+    "verdict": "quiet"
+  }
+]

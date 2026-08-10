@@ -1,0 +1,153 @@
+{
+  "uri": "ip:192.168.2.1",
+  "sample_rate": 10000000,
+  "rx_bw": 4000000,
+  "buffer": 500000,
+  "termination": "ANTENNA connected (corrected 2026-08-10). The index first said '50 ohm load, no antenna', which was wrong. These captures hold the air as well as the receiver.",
+  "captures": [
+    {
+      "file": "f1000_g0.npy",
+      "freq_hz": 1000000000,
+      "gain_db": 0,
+      "n": 500000
+    },
+    {
+      "file": "f1000_g10.npy",
+      "freq_hz": 1000000000,
+      "gain_db": 10,
+      "n": 500000
+    },
+    {
+      "file": "f1000_g20.npy",
+      "freq_hz": 1000000000,
+      "gain_db": 20,
+      "n": 500000
+    },
+    {
+      "file": "f1000_g40.npy",
+      "freq_hz": 1000000000,
+      "gain_db": 40,
+      "n": 500000
+    },
+    {
+      "file": "f1000_g60.npy",
+      "freq_hz": 1000000000,
+      "gain_db": 60,
+      "n": 500000
+    },
+    {
+      "file": "f1000_g70.npy",
+      "freq_hz": 1000000000,
+      "gain_db": 70,
+      "n": 500000
+    },
+    {
+      "file": "f2400_g0.npy",
+      "freq_hz": 2400000000,
+      "gain_db": 0,
+      "n": 500000
+    },
+    {
+      "file": "f2400_g10.npy",
+      "freq_hz": 2400000000,
+      "gain_db": 10,
+      "n": 500000
+    },
+    {
+      "file": "f2400_g20.npy",
+      "freq_hz": 2400000000,
+      "gain_db": 20,
+      "n": 500000
+    },
+    {
+      "file": "f2400_g40.npy",
+      "freq_hz": 2400000000,
+      "gain_db": 40,
+      "n": 500000
+    },
+    {
+      "file": "f2400_g60.npy",
+      "freq_hz": 2400000000,
+      "gain_db": 60,
+      "n": 500000
+    },
+    {
+      "file": "f2400_g70.npy",
+      "freq_hz": 2400000000,
+      "gain_db": 70,
+      "n": 500000
+    },
+    {
+      "file": "f2437_g0.npy",
+      "freq_hz": 2437000000,
+      "gain_db": 0,
+      "n": 500000
+    },
+    {
+      "file": "f2437_g10.npy",
+      "freq_hz": 2437000000,
+      "gain_db": 10,
+      "n": 500000
+    },
+    {
+      "file": "f2437_g20.npy",
+      "freq_hz": 2437000000,
+      "gain_db": 20,
+      "n": 500000
+    },
+    {
+      "file": "f2437_g40.npy",
+      "freq_hz": 2437000000,
+      "gain_db": 40,
+      "n": 500000
+    },
+    {
+      "file": "f2437_g60.npy",
+      "freq_hz": 2437000000,
+      "gain_db": 60,
+      "n": 500000
+    },
+    {
+      "file": "f2437_g70.npy",
+      "freq_hz": 2437000000,
+      "gain_db": 70,
+      "n": 500000
+    },
+    {
+      "file": "f2480_g0.npy",
+      "freq_hz": 2480000000,
+      "gain_db": 0,
+      "n": 500000
+    },
+    {
+      "file": "f2480_g10.npy",
+      "freq_hz": 2480000000,
+      "gain_db": 10,
+      "n": 500000
+    },
+    {
+      "file": "f2480_g20.npy",
+      "freq_hz": 2480000000,
+      "gain_db": 20,
+      "n": 500000
+    },
+    {
+      "file": "f2480_g40.npy",
+      "freq_hz": 2480000000,
+      "gain_db": 40,
+      "n": 500000
+    },
+    {
+      "file": "f2480_g60.npy",
+      "freq_hz": 2480000000,
+      "gain_db": 60,
+      "n": 500000
+    },
+    {
+      "file": "f2480_g70.npy",
+      "freq_hz": 2480000000,
+      "gain_db": 70,
+      "n": 500000
+    }
+  ]
+}
