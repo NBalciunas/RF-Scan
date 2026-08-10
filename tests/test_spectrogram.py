@@ -146,11 +146,16 @@ def main():
     # artifact that no radio produces, and that is why §8 #1 stayed open while the
     # suite was green.
 
-    # ART_WIN and ART_STRENGTH are calibrated against the radio, not chosen. On a
-    # 4096-sample segment of the 24 real captures the artifact gives |mean| / rms
-    # -24.6 dB and a 0 Hz bin 10.5 dB above the median, and a mean takes 1.1 dB of
-    # that away. The model below gives -24.3 dB, 10.5 dB and 0.1 dB.
-    ART_WIN, ART_STRENGTH = 32, 0.05
+    # ART_WIN and ART_STRENGTH are calibrated against the radio, not chosen. The
+    # calibration uses 24 captures made with a **50 ohm load**, so that the numbers
+    # hold the receiver and not the room. On a 4096-sample segment those give
+    # `|mean| / rms` -24.3 dB and a 0 Hz bin 8.6 dB above the median, of which a mean
+    # takes 0.95 dB. The model below gives -25.1 dB, 9.1 dB and 0.2 dB.
+    #
+    # An earlier calibration used captures made with an antenna, which read 10.5 dB
+    # because the room was in them. Measure the receiver with a load. A model of the
+    # receiver must not be fitted to the traffic of one building.
+    ART_WIN, ART_STRENGTH = 32, 0.04
 
     def _lo_artifact(n, strength=ART_STRENGTH, win=ART_WIN, seed=7):
         """A model of the artifact of the receiver: noise held near 0 Hz."""
@@ -174,9 +179,9 @@ def main():
                               / np.sqrt(np.mean(np.abs(iq) ** 2)) + 1e-30)
         raw = _dc_bin_db(iq)
         c.note(f"model: |mean|/rms {ratio:.1f} dB, 0 Hz bin {raw:+.2f} dB "
-               f"(the radio gave -24.6 dB and +10.5 dB)")
+               f"(the radio on a 50 ohm load gave -24.3 dB and +8.6 dB)")
         assert -28.0 < ratio < -21.0, ratio
-        assert 8.0 < raw < 13.0, raw
+        assert 7.0 < raw < 12.0, raw
 
     @c.check("remove_dc suppresses the real artifact, and a mean does not")
     def _():

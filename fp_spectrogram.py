@@ -33,21 +33,22 @@ def _window(n_fft):
 def remove_dc(iq, win=DC_HP_WIN):
     """Remove the artifact of the receiver near 0 Hz from an IQ buffer.
 
-    The artifact is not a constant. Measured on the PlutoSDR on 2026-08-10, with a
-    50 ohm load, at 4 frequencies and 6 gains: `|mean(iq)| / rms(iq)` is -55 to
-    -87 dB, thus there is almost no constant, and the 0 Hz bin still stands 9 to
-    39 dB above the median bin. A mean therefore removes nothing. The earlier version
-    of this function subtracted a mean and it had no effect on any real capture.
+    The artifact is not a constant. Measured on the PlutoSDR on 2026-08-10 with a
+    50 ohm load, at 4 frequencies and 6 gains. On one segment of SEG_LEN samples,
+    which is what the classifier sees, `|mean(iq)| / rms(iq)` is -24.3 dB and the
+    0 Hz bin stands 8.6 dB above the median bin, of which a mean removes 0.95 dB.
+    A mean therefore removes almost nothing. The earlier version of this function
+    subtracted a mean and it had no measurable effect on any real capture.
 
     The function subtracts a moving average of `win` samples, which is a high pass.
     At 10 Msps and win = 256 the notch is about +-20 kHz: a tone 39 kHz from 0 Hz
     loses 0.12 dB, one at 20 kHz loses 8.5 dB, one at 10 kHz loses 19.6 dB. A carrier
     exactly on the LO is lost, and no method that removes the artifact can keep it.
 
-    Do not make `win` smaller to remove more. Measured over 24 real captures, the
-    height of the DC row of the spectrogram is +1.209 sigma with a mean, -0.073 sigma
-    at win = 256, and -2.766 sigma at win = 64. A hole is a class cue in the same way
-    that a line is.
+    Do not make `win` smaller to remove more. Measured over 24 real captures on a
+    50 ohm load, the height of the DC row of the spectrogram is +1.119 sigma with a
+    mean, **-0.099 sigma at win = 256**, -1.340 at win = 128 and -2.815 at win = 64.
+    A hole is a class cue in the same way that a line is.
 
     Call this function before any frequency shift. After a shift the artifact is no
     longer at 0 Hz and a high pass at 0 Hz can not find it."""

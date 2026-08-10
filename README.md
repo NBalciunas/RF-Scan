@@ -460,14 +460,19 @@ recording are almost identical.
   time.
 - The program does not verify the values that you type. The radio does not report an
   error for a span that it cannot receive.
-- The receiver makes an artifact near 0 Hz, which is the middle of each hop. The
-  program removes it with a high pass of about +-20 kHz. The cost is that a carrier
-  which sits exactly on the tuned frequency is lost with it. No method that removes
-  the artifact can keep such a carrier.
-- One radio was measured, and it makes a spur of its own at 2440 MHz. Measure your own
-  radio with a 50 ohm load before you decide the hop plan. A 50 ohm load does not
-  isolate the receiver above a gain of about 40 dB, so a strong signal in the room is
-  still visible through it.
+- The PlutoSDR is a zero-IF receiver. It puts an artifact at 0 Hz, which is the middle
+  of each hop, at every frequency that you tune to. The program removes it with a high
+  pass of about +-20 kHz. The cost is that a carrier which sits exactly on the tuned
+  frequency is lost with it. No method that removes the artifact can keep such a
+  carrier.
+- On the one radio that was measured, the size of that artifact does not change with
+  the tuned frequency. With a 50 ohm load and the default gain it stays between 3.7
+  and 5.4 dB across 311 frequencies from 2380 to 2500 MHz. Thus no hop plan has to
+  avoid a frequency.
+- Measure your own radio twice if you doubt it, once with the antenna and once with a
+  50 ohm load. The difference between the two runs is the signals in your room, and
+  only the part that stays with the load belongs to the radio. A signal that never
+  stops looks exactly like a fault of the receiver until you fit the load.
 
 ### The detection
 
