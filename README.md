@@ -337,23 +337,33 @@ and the panel gives a warning at the load of the model.
 
 ## Example
 
-The images are placeholders. Replace them with screen captures of your system.
+The images are placeholders. Replace them with screen captures of your system. They
+live in `docs/`, which holds the images of this file and nothing else. Keep the file
+names, because the links below use them. Use PNG, and capture the window alone.
 
 ### The main window during a sweep
 
-![The main window during a sweep](docs/img/main-window.png)
+The wideband spectrum, the waterfall and the hop boundary lines.
+
+![The main window during a sweep](docs/main-window.png)
 
 ### A lock on a drone control link, with the markers of the signal
 
-![A lock with the markers](docs/img/lock-markers.png)
+The middle marker and the two occupied-bandwidth edges.
+
+![A lock with the markers](docs/lock-markers.png)
 
 ### The recording panel during a device record
 
-![The recording panel](docs/img/recording.png)
+The **Recording** panel, with the file count and the **Write rate** field.
+
+![The recording panel](docs/recording.png)
 
 ### The output of the trainer with the confusion matrix
 
-![The output of the trainer](docs/img/training-output.png)
+The terminal at the end of a run, with the confusion matrix and the per-class figures.
+
+![The output of the trainer](docs/training-output.png)
 
 ## Validation
 
