@@ -125,7 +125,7 @@ blocks:
       class clips of the same length, or the period of that transient becomes a
 
       class cue.'
-    file: C:\Users\Nojus\PycharmProjects\RF-Scan\transmitting\clips\at9s_pack1_7-8s.iq
+    file: C:\Users\Nojus\PycharmProjects\RF-Scan\transmitting\clips\at9s_0-1s.iq
     length: '0'
     maxoutbuf: '0'
     minoutbuf: '0'

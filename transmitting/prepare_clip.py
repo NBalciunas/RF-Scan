@@ -41,9 +41,11 @@ IN_RATE   = 100_000_000.0   # RFUAV. The .xml of the pack has precedence.
 OUT_RATE  = 10_000_000.0    # the rate of terminal.py, thus the rate of the replay
 N_TAPS    = 301
 PEAK_PCT  = 99.9            # the percentile of |iq| that the level refers to
-PEAK_TGT  = 0.6             # where that percentile goes, in the scale of UHD fc32
-MIN_SIGNAL_DB = 10.0        # the slice must hold a transmitter. Noise gives 0.3 dB.
+PEAK_TGT  = 0.5             # where that percentile goes, in the scale of UHD fc32
+PEAK_MAX  = 0.95            # the true peak may not pass this. See the note in prepare.
+MIN_SIGNAL_DB = 15.0        # the slice must hold a transmitter. Empty gives 4 to 6 dB.
 CHUNK_POW = 21              # the FFT of the overlap-save filter is 2 to this power
+BAND_BINS = 4096            # the bins of the source-band spectrum that gives the floor
 
 # Beside the flow graph, and not in the current directory. The clips of a campaign
 # must stay together, and the command runs from anywhere.
@@ -106,7 +108,12 @@ def shift_filter_decimate(src, in_rate, out_rate, offset_hz, taps,
         result that has no edge effect.
 
     The decimation takes the samples whose absolute index divides by the factor. Thus
-    a block boundary does not move the phase of the decimation."""
+    a block boundary does not move the phase of the decimation.
+
+    Gives (iq, n_in, band_spec). `band_spec` is the mean spectrum of the whole source
+    band across the whole file, in BAND_BINS bins, with the slice at 0 Hz.
+    `slice_signal_db` needs it, and it needs the whole file and not a sample of it: a
+    control link hops, thus 80 ms of a second says nothing about the rest."""
     decim = int(round(in_rate / out_rate))
     if abs(decim * out_rate - in_rate) > 1.0:
         raise SystemExit(f"the rate {in_rate:.0f} is not a whole multiple of "
@@ -120,6 +127,7 @@ def shift_filter_decimate(src, in_rate, out_rate, offset_hz, taps,
     carry = np.zeros(L - 1, dtype=np.complex64)
     ratio = offset_hz / in_rate
     n_in, out = 0, []
+    acc, n_acc = np.zeros(BAND_BINS), 0
     with open(src, "rb") as f:
         while True:
             x = np.fromfile(f, dtype=np.complex64, count=step)
@@ -130,6 +138,16 @@ def shift_filter_decimate(src, in_rate, out_rate, offset_hz, taps,
                 # The modulo keeps the argument small. Thus the phase of a long file
                 # stays correct.
                 x = x * np.exp(-2j * np.pi * ((ratio * k) % 1.0)).astype(np.complex64)
+            # The band spectrum comes from the new samples only, in whole windows of
+            # BAND_BINS. It must not come from the FFT of the block: the last block is
+            # padded with zeros, and a file shorter than one block gives no full block
+            # at all, thus the reference would be empty and every slice would read
+            # 0 dB and be refused.
+            nw = x.size // BAND_BINS
+            if nw:
+                w = x[:nw * BAND_BINS].reshape(nw, BAND_BINS)
+                acc += (np.abs(np.fft.fft(w, axis=1)) ** 2).sum(axis=0)
+                n_acc += nw
             blk   = np.concatenate((carry, x))
             carry = blk[-(L - 1):].copy()
             if blk.size < nfft:
@@ -140,37 +158,41 @@ def shift_filter_decimate(src, in_rate, out_rate, offset_hz, taps,
             n_in += x.size
     if not out:
         raise SystemExit(f"{src} holds no complex64 sample.")
-    return np.concatenate(out), n_in
+    return np.concatenate(out), n_in, acc / max(1, n_acc)
 
 
-def slice_figures(iq, n_fft=1024):
-    """Say whether the slice holds a transmitter: (signal_db, duty_pct).
+def slice_signal_db(band_spec, in_rate, cutoff_hz):
+    """Say whether the slice holds a transmitter, in dB above the noise floor.
 
-    `signal_db` is the strongest bin of the mean spectrum above the median bin. It
-    finds a signal that never stops and a signal that comes in bursts, thus it suits
-    a video link and a hopping control link equally. The value does not change with
-    the level, thus it answers "is a transmitter here" and not "how strong is it".
+    `band_spec` is the mean spectrum of the **whole source band**, already moved so
+    that the slice sits at 0 Hz. The floor is the median bin of that band, and the
+    source is 100 MHz of which the greater part is empty, thus the median is the
+    noise of the recording. The answer is the strongest bin of the slice above that
+    floor.
 
-    Measured on this machine: noise alone 0.3 dB, the AT9S Pro in a slice that holds
-    its hops 12 to 21 dB, a continuous carrier more than 50 dB.
+    The reference must come from outside the slice. Two earlier versions failed
+    because they took it from inside:
 
-    An earlier version measured the 99.9 percentile of |iq| above its median instead.
-    That number is burstiness and not presence: it gives 39 dB for a hopping link and
-    **0 dB for a carrier that never stops**. The DJI video link is continuous, thus
-    that test would have refused every DJI clip. Do not go back to it.
+      1. The 99.9 percentile of |iq| above its median. That is burstiness, not
+         presence. A hopping link gives 39 dB and **a carrier that never stops gives
+         0 dB**, thus every DJI clip would have been refused.
+      2. The strongest bin of the slice above the median bin **of the slice**. A
+         signal that fills the slice is flat inside it, thus a 9 MHz video link in a
+         9 MHz slice reads like noise. All nine DJI clips were refused by it.
 
-    `duty_pct` is the part of the samples above 10 times the median magnitude. It is
-    a report and not a gate, because a continuous signal gives 0.000% and it is not
-    empty."""
-    n = len(iq) // n_fft
-    if n < 1:
-        return 0.0, 0.0
-    w = iq[:n * n_fft].reshape(n, n_fft)
-    p = 10.0 * np.log10((np.abs(np.fft.fft(w, axis=1)) ** 2).mean(axis=0) + 1e-30)
-    m   = np.abs(iq)
-    med = float(np.median(m))
-    duty = 100.0 * float((m > 10.0 * med).mean()) if med > 0.0 else 0.0
-    return float(p.max() - np.median(p)), duty
+    Measured with the floor outside: an empty slice 3.6 to 5.7 dB, the AT9S Pro where
+    its hops are 29.7 to 33.5 dB, the DJI video link 42.9 to 43.7 dB.
+
+    The whole file must feed this. A control link hops, thus one part of a second
+    says nothing about the rest: `pack1_4-5s` reads 2.1 dB over its first 80 ms and
+    it holds hops later."""
+    n    = len(band_spec)
+    freq = np.fft.fftshift(np.fft.fftfreq(n, 1.0 / in_rate))
+    p    = 10.0 * np.log10(np.fft.fftshift(band_spec) + 1e-30)
+    m    = np.abs(freq) <= cutoff_hz
+    if not m.any():
+        return 0.0
+    return float(p[m].max() - np.median(p))
 
 
 def level_scale(iq, pct, target):
@@ -211,12 +233,15 @@ def prepare(src, out, *, in_rate=IN_RATE, out_rate=OUT_RATE, offset_hz=0.0,
 
     t0   = time.time()
     taps = lowpass(n_taps, cutoff_hz / in_rate)
-    iq, n_in = shift_filter_decimate(src, in_rate, out_rate, offset_hz, taps,
-                                     chunk_pow=chunk_pow)
+    iq, n_in, band = shift_filter_decimate(src, in_rate, out_rate, offset_hz, taps,
+                                           chunk_pow=chunk_pow)
     raw_pct  = float(np.percentile(np.abs(iq), pct))
     raw_peak = float(np.abs(iq).max())
     raw_rms  = float(np.sqrt((np.abs(iq) ** 2).mean()))
-    signal_db, duty_pct = slice_figures(iq)
+    signal_db = slice_signal_db(band, in_rate, cutoff_hz)
+    m = np.abs(iq)
+    med = float(np.median(m))
+    duty_pct = 100.0 * float((m > 10.0 * med).mean()) if med > 0.0 else 0.0
     # A control link hops. Thus a slice of one second holds many hops, or none, and
     # the program can not see which. With none, the percentile sits in the noise and
     # the scale then raises that noise to the level of a drone. The clip looks
@@ -225,9 +250,8 @@ def prepare(src, out, *, in_rate=IN_RATE, out_rate=OUT_RATE, offset_hz=0.0,
         raise SystemExit(
             f"{src}\n"
             f"  The slice at {offset_hz/1e6:+.3f} MHz holds no transmitter: "
-            f"{signal_db:.1f} dB above the median bin.\n"
-            f"  Noise alone gives 0.3 dB and a drone in the slice gives 12 dB or "
-            f"more.\n"
+            f"{signal_db:.1f} dB above the floor of the band.\n"
+            f"  An empty slice gives 4 to 6 dB and a drone gives 29 dB or more.\n"
             f"  The level step would raise this noise to the target and write a clip\n"
             f"  that holds no drone under the name of one.\n"
             f"  Choose another --offset-hz, or another second of the pack. Use\n"
@@ -236,9 +260,22 @@ def prepare(src, out, *, in_rate=IN_RATE, out_rate=OUT_RATE, offset_hz=0.0,
     iq      *= np.complex64(scale)
     peak     = float(np.abs(iq).max())
     n_clip   = int((np.abs(iq) > 1.0).sum())
-    if n_clip:
-        print(f"[warn] {n_clip} samples are above 1.0 and the transmitter cuts them. "
-              f"Lower --peak.")
+    # The peak, and not the percentile, decides whether the transmitter cuts the
+    # signal. The two classes do not have the same distance between them: the AT9S
+    # peak sits 0.5 to 1.4 dB above its 99.9 percentile and the DJI peak sits 4.4 dB
+    # above, because OFDM has a longer tail. Thus one percentile target gives one
+    # class a peak of 0.64 and the other a peak of 1.01.
+    #
+    # The program stops instead of lowering this clip alone. A clip that is quieter
+    # than the others is the class cue that the whole level step exists to remove.
+    # Lower --peak for EVERY class of the campaign, and prepare them all again.
+    if peak > PEAK_MAX:
+        raise SystemExit(
+            f"{out}\n"
+            f"  The peak is {peak:.3f} and the limit is {PEAK_MAX}. "
+            f"{n_clip} samples are above 1.0.\n"
+            f"  The transmitter would cut them, and it would cut this class only.\n"
+            f"  Lower --peak for every class of the campaign, not for this clip.")
 
     Path(out).parent.mkdir(parents=True, exist_ok=True)
     iq.tofile(out)
@@ -286,8 +323,8 @@ def prepare(src, out, *, in_rate=IN_RATE, out_rate=OUT_RATE, offset_hz=0.0,
         print(f"  filter        {n_taps} taps, cut at {cutoff_hz/1e6:.3f} MHz")
         print(f"  output        {iq.size:,} samples at {out_rate/1e6:.3f} Msps "
               f"({iq.size/out_rate:.3f} s)")
-        print(f"  signal        {signal_db:.1f} dB above the median bin, duty "
-              f"{duty_pct:.3f}%  (noise alone gives 0.3 dB)")
+        print(f"  signal        {signal_db:.1f} dB above the floor of the band, duty "
+              f"{duty_pct:.3f}%  (an empty slice gives 4 to 6 dB)")
         print(f"  level         p{pct} {raw_pct:.5f} -> {target}, "
               f"scale {scale:.2f}, peak now {peak:.3f}")
         print(f"  time          {time.time()-t0:.1f} s")
@@ -319,8 +356,8 @@ def main(argv=None):
                    help="where that percentile goes. Keep it below 1.0.")
     p.add_argument("--min-signal-db", type=float, default=MIN_SIGNAL_DB,
                    help="the strongest bin of the slice must stand this many dB above "
-                        "the median bin. Noise alone gives 0.3 dB. Use 0 to write "
-                        "anything.")
+                        "the floor of the source band. An empty slice gives 4 to 6 dB. "
+                        "Use 0 to write anything.")
     p.add_argument("--force", action="store_true",
                    help="write over an output that is there already")
     a = p.parse_args(argv)

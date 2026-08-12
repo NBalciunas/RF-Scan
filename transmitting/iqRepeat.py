@@ -125,7 +125,7 @@ class iqRepeat(gr.top_block, Qt.QWidget):
 
         self.top_layout.addWidget(self._qtgui_waterfall_sink_x_0_win)
         self.blocks_multiply_const_vxx_0 = blocks.multiply_const_cc(tx_on)
-        self.blocks_file_source_0 = blocks.file_source(gr.sizeof_gr_complex*1, 'C:\\Users\\Nojus\\PycharmProjects\\RF-Scan\\transmitting\\clips\\at9s_pack1_7-8s.iq', True, 0, 0)
+        self.blocks_file_source_0 = blocks.file_source(gr.sizeof_gr_complex*1, 'C:\\Users\\Nojus\\PycharmProjects\\RF-Scan\\transmitting\\clips\\dji_bw10_6-7s.iq', True, 0, 0)
         self.blocks_file_source_0.set_begin_tag(pmt.PMT_NIL)
 
 
