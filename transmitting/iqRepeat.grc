@@ -83,7 +83,7 @@ blocks:
       that somebody moved in the middle of a session spoils that session in
 
       silence. Write this number in the session notes.'
-    value: '40'
+    value: '70'
   states:
     bus_sink: false
     bus_source: false
@@ -125,7 +125,7 @@ blocks:
       class clips of the same length, or the period of that transient becomes a
 
       class cue.'
-    file: clips\pack1_1-2s.iq
+    file: C:\Users\Nojus\PycharmProjects\RF-Scan\transmitting\clips\at9s_pack1_7-8s.iq
     length: '0'
     maxoutbuf: '0'
     minoutbuf: '0'

@@ -8,6 +8,7 @@ The checks make a source at 100 Msps that holds tones at known frequencies, then
 put it through the real program and ask where the tones are.
 """
 
+import os
 import json
 import shutil
 import tempfile
@@ -19,7 +20,8 @@ from _support import Checks, run
 # transmitting/ has no __init__.py and it does not need one. _support puts the repo
 # root on sys.path, thus Python finds it as a namespace package.
 from transmitting.prepare_clip import (prepare, lowpass, shift_filter_decimate,
-                                       level_scale, read_pack_xml, CLIPS_DIR)
+                                       level_scale, read_pack_xml, slice_figures,
+                                       CLIPS_DIR)
 
 IN_RATE, OUT_RATE = 100e6, 10e6
 
@@ -160,6 +162,61 @@ def main():
             assert j["source_samples"] == N
             c.note(f"the source at 0.02 full scale needed a scale of "
                    f"{j['scale_applied']:.1f}")
+
+        @c.check("the signal test separates noise from a transmitter")
+        def _():
+            r = np.random.RandomState(0)
+            n = (r.randn(400_000) + 1j * r.randn(400_000)).astype(np.complex64)
+            db, _duty = slice_figures(n)
+            c.note(f"pure noise: {db:.1f} dB")
+            assert db < 3.0, db
+            # The burst must be a signal and not louder noise. Noise that is 30 dB up
+            # is still flat across the spectrum, thus this test gives 2.9 dB for it,
+            # and correctly: a hop of a drone occupies some bins and not all of them.
+            b = n.copy()
+            t = np.arange(20_000)              # a carrier in 5% of the samples
+            b[:20_000] += (30.0 * np.exp(2j * np.pi * 0.2 * t)).astype(np.complex64)
+            db2, duty2 = slice_figures(b)
+            c.note(f"5% burst of a carrier: {db2:.1f} dB, duty {duty2:.3f}%")
+            assert db2 > 10.0, db2
+
+        @c.check("a carrier that never stops is a signal, not an empty slice")
+        def _():
+            # The test that this replaced measured burstiness. A carrier that never
+            # stops has none, thus it read 0 dB and the program refused it. The DJI
+            # video link is continuous, and every DJI clip would have been refused.
+            r = np.random.RandomState(0)
+            n = (r.randn(400_000) + 1j * r.randn(400_000)).astype(np.complex64)
+            t = np.arange(400_000)
+            carrier = (0.02 * np.exp(2j * np.pi * 0.12 * t)).astype(np.complex64)
+            db, duty = slice_figures(carrier + n * 0.001)
+            c.note(f"continuous carrier: {db:.1f} dB, duty {duty:.3f}% "
+                   f"(the duty of a carrier is 0 and it means nothing)")
+            assert db > 30.0, db
+
+        @c.check("a slice that holds no transmitter is refused, not scaled up")
+        def _():
+            # The fault this catches: a hopping link puts nothing in the slice for a
+            # whole second. The percentile then sits in the noise, the level step
+            # raises that noise to the target, and the clip carries the label of a
+            # drone. Two of the eight real AT9S Pro clips did exactly this, at 4.9 and
+            # 6.8 dB, and were scaled by 489 and 380 to a peak of 0.95.
+            r = np.random.RandomState(1)
+            n = ((r.randn(N // 4) + 1j * r.randn(N // 4)) * 0.001).astype(np.complex64)
+            src = _write(tmp, "quiet.iq", n)
+            out = str(Path(tmp) / "quiet_slice.iq")
+            try:
+                prepare(src, out, in_rate=IN_RATE, out_rate=OUT_RATE, quiet=True)
+            except SystemExit as e:
+                assert "holds no transmitter" in str(e), str(e)
+            else:
+                raise AssertionError("it scaled a slice of pure noise")
+            assert not os.path.exists(out), "it wrote the file before it refused"
+            # The override must still work, and it must record why.
+            meta = prepare(src, out, in_rate=IN_RATE, out_rate=OUT_RATE,
+                           min_signal_db=0.0, quiet=True)
+            assert meta["signal_db"] < 10.0, meta["signal_db"]
+            assert meta["min_signal_db"] == 0.0
 
         @c.check("a second run does not write over a clip in silence")
         def _():

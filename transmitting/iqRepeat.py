@@ -7,15 +7,9 @@
 # GNU Radio Python Flow Graph
 # Title: IQ repeat
 # GNU Radio version: 3.10.12.0
-#
-# iqRepeat.grc makes this file. Open the .grc in GNU Radio Companion and
-# generate, and this file is written again. Thus edit the .grc and not this file.
-# The two names agree because GRC takes the name of this file from the `id` field
-# of the .grc, and that field is `iqRepeat`.
 
 from PyQt5 import Qt
 from gnuradio import qtgui
-from PyQt5 import QtCore
 from gnuradio import blocks
 import pmt
 from gnuradio import gr
@@ -71,7 +65,7 @@ class iqRepeat(gr.top_block, Qt.QWidget):
         # Variables
         ##################################################
         self.tx_on = tx_on = 1
-        self.tx_gain = tx_gain = 40
+        self.tx_gain = tx_gain = 70
         self.samp_rate = samp_rate = 10000000
         self.center_freq = center_freq = 2440000000
 
@@ -131,7 +125,7 @@ class iqRepeat(gr.top_block, Qt.QWidget):
 
         self.top_layout.addWidget(self._qtgui_waterfall_sink_x_0_win)
         self.blocks_multiply_const_vxx_0 = blocks.multiply_const_cc(tx_on)
-        self.blocks_file_source_0 = blocks.file_source(gr.sizeof_gr_complex*1, 'clips\\pack1_1-2s.iq', True, 0, 0)
+        self.blocks_file_source_0 = blocks.file_source(gr.sizeof_gr_complex*1, 'C:\\Users\\Nojus\\PycharmProjects\\RF-Scan\\transmitting\\clips\\at9s_pack1_7-8s.iq', True, 0, 0)
         self.blocks_file_source_0.set_begin_tag(pmt.PMT_NIL)
 
 

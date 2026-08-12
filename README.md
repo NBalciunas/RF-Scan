@@ -311,6 +311,15 @@ output yourself.
 | The slice | A control link hops across the whole band. One 10 MHz window holds a part of the hops and not all of them. Say which part in the report. |
 | The level | The clips of one dataset are not at the same level, and a difference of level between two classes is a class cue. The same level in every class makes the TX gain a control of the signal-to-noise ratio and not a second variable. |
 | The `.json` | It holds the rate, the offset, the filter, the level before and after, and the scale. Thus the extraction can be repeated and it can go in a report. |
+| The signal test | A hopping link puts nothing in one slice for a whole second. The level step would then raise that noise to the target and write a clip that holds no drone under the name of one. The program refuses instead. |
+
+The signal test measures the strongest bin of the slice above its median bin. Noise
+alone gives 0.3 dB, a hopping control link that is in the slice gives 12 to 21 dB, and
+a carrier that never stops gives more than 50 dB. The limit is 10 dB and
+`--min-signal-db 0` removes it.
+
+Do not replace that test with a measure of burstiness. A carrier that never stops has
+none, thus it would refuse every clip of a video link.
 
 Leave the packs where they are. The program reads any path, thus a pack does not go in
 the repository. One second of a source is 800 MB.
@@ -489,7 +498,7 @@ The terminal at the end of a run, with the confusion matrix and the per-class fi
 
 ### The self-checks
 
-The project has 160 self-checks in 10 scripts. One command runs all of them. The same
+The project has 163 self-checks in 10 scripts. One command runs all of them. The same
 command runs on each push, through `.github/workflows/tests.yml`.
 
 ```bash
@@ -529,7 +538,7 @@ python tests/test_dsp.py
 | `tests/test_model.py` | 17 | The sizes and the parameter count of `SpecCNN`, the votes of the segments, and a write and read cycle of `FingerprintModel`. The trainer and the graphical interface must calculate the same path for the meta file. The wrapper must read the sample rate of the training data from the meta, and a model that has none must give `None` and not 0 Hz. |
 | `tests/test_dataset.py` | 30 | The split by session, the energy gate, and the augmentation. A device segment must give a new image at each epoch, and a noise segment must never change. The val data must never change. A device class and the noise class must get the same DC treatment. The sample rate must come from the sidecars, and two rates in one dataset must give a warning. The tool `dataset_info` must give each warning. |
 | `tests/test_worker.py` | 19 | A false radio replaces the PlutoSDR. The sweep must tune to each hop and find the tone at its true frequency. The lock must hold one frequency. Skip, Jump to and the memory of the caught signals must operate. The record must write the correct file and the correct metadata, and each name must be different. Three checks hold the order of the imports: `terminal.py` must import torch before Qt, because Qt first stops the program on Windows. |
-| `tests/test_prepare_clip.py` | 15 | A source of 100 Msps holds tones at known frequencies. A tone at the middle of the slice must arrive at 0 Hz, and a tone beside it must keep its distance. A tone outside the slice must not fold into it, even when it is 40 dB stronger. The phase ramp must not restart at a block boundary. The level must reach the target. The `.xml` of the pack must give the rate, and it must win against the flag. A second run must not write over a clip. |
+| `tests/test_prepare_clip.py` | 18 | A source of 100 Msps holds tones at known frequencies. A slice that holds no transmitter must be refused and not scaled up, and a carrier that never stops must count as a transmitter. A tone at the middle of the slice must arrive at 0 Hz, and a tone beside it must keep its distance. A tone outside the slice must not fold into it, even when it is 40 dB stronger. The phase ramp must not restart at a block boundary. The level must reach the target. The `.xml` of the pack must give the rate, and it must win against the flag. A second run must not write over a clip. |
 | `tests/test_end_to_end.py` | 11 | A synthetic dataset of two drones goes through the real trainer. Then the same `FingerprintModel` that the graphical interface loads must give the correct name to a capture of a session that it did not see, and it must report both drones when both transmit. |
 
 ### How to read the result
