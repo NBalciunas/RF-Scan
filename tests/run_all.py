@@ -28,6 +28,7 @@ SCRIPTS = [
     HERE / "test_model.py",
     HERE / "test_dataset.py",
     HERE / "test_worker.py",
+    HERE / "test_prepare_clip.py",
 ]
 SLOW = [HERE / "test_end_to_end.py"]
 

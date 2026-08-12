@@ -3,14 +3,11 @@ __pycache__/
 output/
 
 fingerprint_data/
+measurements/**/*.npy
+transmitting/clips/
+
 *.pt
 *.meta.json
 
-# The raw IQ of measurements/ is about 184 MB. The scripts and the .json results
-# beside it are small and they stay in git, because they are the evidence for the
-# numbers in the README.
-measurements/**/*.npy
-
 NOTES.md
-
 .claude/settings.local.json

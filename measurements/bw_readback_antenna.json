@@ -1,0 +1,77 @@
+{
+  "termination": "antenna",
+  "uri": "ip:192.168.2.1",
+  "sample_rate": 10000000,
+  "gain": 10,
+  "center_freq": 2440000000,
+  "buffer": 262144,
+  "app_rx_bw_hz": 8000000,
+  "clean_baseline_row_sigma": 0.15240682661533356,
+  "rows": [
+    {
+      "wanted_hz": 1000000.0,
+      "readback_hz": 1000000,
+      "error_hz": 0.0,
+      "const_db": -42.19713652842998,
+      "dc_row_db": 16.264039993286133,
+      "row_sigma_after": 0.06726689636707306
+    },
+    {
+      "wanted_hz": 2000000.0,
+      "readback_hz": 2000000,
+      "error_hz": 0.0,
+      "const_db": -39.06052822284148,
+      "dc_row_db": 16.608787536621094,
+      "row_sigma_after": 0.06193289905786514
+    },
+    {
+      "wanted_hz": 4000000.0,
+      "readback_hz": 4000000,
+      "error_hz": 0.0,
+      "const_db": -41.57908974857345,
+      "dc_row_db": 15.125804901123047,
+      "row_sigma_after": 0.05630577355623245
+    },
+    {
+      "wanted_hz": 5000000.0,
+      "readback_hz": 5000000,
+      "error_hz": 0.0,
+      "const_db": -41.16743216087564,
+      "dc_row_db": 9.373851776123047,
+      "row_sigma_after": 0.11278931796550751
+    },
+    {
+      "wanted_hz": 8000000.0,
+      "readback_hz": 8000000,
+      "error_hz": 0.0,
+      "const_db": -37.86931745936212,
+      "dc_row_db": 8.991697311401367,
+      "row_sigma_after": 0.025403978303074837
+    },
+    {
+      "wanted_hz": 10000000.0,
+      "readback_hz": 10000000,
+      "error_hz": 0.0,
+      "const_db": -46.06600449288492,
+      "dc_row_db": 8.561767578125,
+      "row_sigma_after": 0.1559627205133438
+    },
+    {
+      "wanted_hz": 15000000.0,
+      "readback_hz": 15000000,
+      "error_hz": 0.0,
+      "const_db": -43.784352214520794,
+      "dc_row_db": 9.652381896972656,
+      "row_sigma_after": 0.1529712677001953
+    },
+    {
+      "wanted_hz": 20000000.0,
+      "readback_hz": 20000000,
+      "error_hz": 0.0,
+      "const_db": -41.63713119250343,
+      "dc_row_db": 9.295392990112305,
+      "row_sigma_after": 0.1596841961145401
+    }
+  ],
+  "measured_at": "2026-08-12T10:46:04"
+}

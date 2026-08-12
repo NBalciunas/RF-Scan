@@ -24,7 +24,7 @@ from terminal import (SweepWorker, signal_extent, compute_hop_freqs,
                       composite_geometry, badge_for, peak_hold_bias_db,
                       FFT_BINS, MARK_MIN_SNR_DB, EMPTY_SLOT_DB)
 
-APP_CFG = dict(sample_rate=10_000_000, rx_bw=4_000_000, overlap_pct=30,
+APP_CFG = dict(sample_rate=10_000_000, rx_bw=8_000_000, overlap_pct=30,
                fp_memory_guard_hz=3_000_000)
 
 
@@ -310,10 +310,13 @@ def main():
         cfg = _app_cfg()
         comp = _composite(cfg)
         n_keep, _f0, _f1 = composite_geometry(cfg)
-        comp[:5 * n_keep] = EMPTY_SLOT_DB   # 5 of the 8 hops failed
-        comp[1500] = -55.0                    # a real signal, 15 dB above the floor
+        sig    = 1500                       # the bin of the signal
+        failed = sig // n_keep              # every hop before that one failed
+        n_hops = len(cfg["hop_freqs"])
+        comp[:failed * n_keep] = EMPTY_SLOT_DB
+        comp[sig] = -55.0                   # a real signal, 15 dB above the floor
         _f, db = _worker(cfg)._detect_new_peak(comp)
-        c.note(f"with 5 of 8 hops empty the signal still reads {db:.0f} dB")
+        c.note(f"with {failed} of {n_hops} hops empty the signal still reads {db:.0f} dB")
         assert abs(db - 15.0) < 0.5, f"{db:.0f} dB, expected 15 dB"
 
     @c.check("a sweep where every hop failed gives no peak")

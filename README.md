@@ -70,6 +70,17 @@ An entry in the memory expires. Thus the program can find that signal again.
 - A limit on the number of files.
 - The Record button starts the mode that gives the correct data.
 
+### The replay
+
+- `transmitting/prepare_clip.py` takes one slice of an RFUAV clip, moves it to the
+  baseband, and gives it at the rate of the replay. A clip of 100 Msps that goes to a
+  transmitter at 10 Msps is 10 times too slow and 10 times too narrow, and nothing in
+  GNU Radio reports that.
+- The same level in every class, thus the TX gain controls the signal-to-noise ratio
+  and it is not a second variable.
+- A `.json` beside each clip, which holds every value that the extraction used.
+- `transmitting/iqRepeat.grc`, the flow graph that replays a clip through a USRP B210.
+
 ### The trainer
 
 - Three presets: fast, balanced and best.
@@ -173,7 +184,7 @@ freq** copies the frequency of the last lock into the Focus freq field.
 
 The Narrowband mode reads one buffer for each dwell time. At the default settings that
 is 4 MB every 50 ms, which is 80 MB each second. The field **Keep every Nth** saves 1
-buffer of N. The default value is 5. The same quantity of files then covers 5 times
+buffer of N. The default value is 10. The same quantity of files then covers 10 times
 more time, and it gives more different data. The field **Write rate** shows the rate
 and the total size of the limit **Max files**. Both values change while you type.
 
@@ -248,9 +259,10 @@ The method:
    training and a set for the test **before any recording**. The two sets never hold
    the same clip. A held-out session of the same clip is the same signal with other
    noise, thus it proves nothing.
-2. Extract one channel from the source, because the source is at 100 Msps, the B210
-   gives 61.44 Msps at the maximum and this program receives 10 Msps in a 4 MHz
-   filter.
+2. Extract one slice of the source band with `prepare_clip.py`, because the source is
+   at 100 Msps, the B210 gives 61.44 Msps at the maximum and this program receives
+   10 Msps in an 8 MHz filter. **Do not give the source file to GNU Radio.** See the
+   section below.
 3. Connect the B210 TX to the PlutoSDR RX with a cable and a fixed attenuator. A
    conducted path repeats, it makes the signal-to-noise ratio a setting and not an
    estimate, and it keeps the WiFi and the Bluetooth of the building out of the
@@ -274,6 +286,71 @@ hardware signature of the transmitter is identical in all of them. The model
 identifies the **type of the drone** from the waveform. It does not identify one
 individual unit.
 
+### Prepare a clip for the replay
+
+```bash
+python transmitting/prepare_clip.py "pack1_1-2s.iq" --offset-hz 5e6
+```
+
+A file source in GNU Radio does not know the rate of its file. It sends the samples at
+the rate that the sink takes. Thus a clip of 100 Msps that goes to a transmitter at
+10 Msps is 10 times too slow in time and 10 times too narrow in frequency. The replay
+runs, the waterfall looks correct, and the signal is not the drone. Nothing reports it.
+
+`prepare_clip.py` takes one slice of the source band, moves it to the baseband, and
+writes a file at the rate of the replay. It also puts the clip at a chosen level.
+
+The program lives in `transmitting/`, beside the flow graph that replays its output.
+The output goes to `transmitting/clips/`, and the name of the source gives the name of
+the clip. That directory is the one of the program and not the current directory, thus
+the command gives the same answer from any place. Give a second path to choose the
+output yourself.
+
+| Why each part is there | |
+| --- | --- |
+| The slice | A control link hops across the whole band. One 10 MHz window holds a part of the hops and not all of them. Say which part in the report. |
+| The level | The clips of one dataset are not at the same level, and a difference of level between two classes is a class cue. The same level in every class makes the TX gain a control of the signal-to-noise ratio and not a second variable. |
+| The `.json` | It holds the rate, the offset, the filter, the level before and after, and the scale. Thus the extraction can be repeated and it can go in a report. |
+
+Leave the packs where they are. The program reads any path, thus a pack does not go in
+the repository. One second of a source is 800 MB.
+
+The program reads the `.xml` of the RFUAV pack if it is beside the clip. The `.xml`
+gives the true sample rate and centre frequency, and it has precedence over the flags.
+
+Two traps that the layout of RFUAV makes:
+
+- **`--offset-hz` is from the middle of that pack, and each pack has its own middle.**
+  The Radiolink pack is at 2440 MHz and the DJI pack is at 2470 MHz, thus the same
+  offset gives two different frequencies. Read `slice_center` in the `.json` to see
+  where the slice really was.
+- **Two packs hold files with the same name.** The default output name comes from the
+  name of the source, thus `pack2_1-2s.iq` of one folder and `pack2_1-2s.iq` of
+  another give one name. The program stops instead of writing over the first clip.
+  Give a name that holds the class.
+
+Use the **same** `--peak` for every class. Use one TX centre frequency for the whole
+campaign, and let `--offset-hz` choose which part of the source band goes there.
+
+### The flow graph of the replay
+
+`transmitting/iqRepeat.grc` holds it. Open it in GNU Radio Companion, put the path of
+a prepared clip in the file source, and generate. `transmitting/clips/` is where the
+prepared clips go, and it is not in git: one second is 80 MB, and the `.json` beside
+each clip is enough to make it again.
+
+Three rules, and the flow graph follows all three:
+
+1. **No throttle block.** The USRP sink gives the rate of the flow graph. A throttle
+   keeps its own time against the clock of the computer, thus the two move apart and
+   the transmitter has an underrun. Use a throttle only when no hardware block is in
+   the flow graph.
+2. **The TX gain is a fixed value, not a slider.** The gain sets the signal-to-noise
+   ratio of the whole session, and nothing in the capture records it. Write the number
+   in the session notes.
+3. **A multiply block gives the `noise` class.** Set the constant to 0. The USRP stays
+   on, at the same frequency and the same gain, and it sends zeros.
+
 ## Training ML
 
 ```bash
@@ -286,7 +363,7 @@ captures into spectrograms, it trains the network, and it writes three files.
 | File | Content |
 |---|---|
 | `trained_model.pt` | The weights. |
-| `trained_model.meta.json` | The geometry, the class names, the two limits, the git commit, the time and every argument. The graphical interface reads this file. |
+| `trained_model.meta.json` | The geometry, the class names, the two limits, the sample rate of the captures, the git commit, the time and every argument. The graphical interface reads this file. |
 | `trained_model.metrics.json` | The confusion matrix, the precision, the recall, the F1 value and the support of each class, and the weak-signal figures. Use this file for a report. |
 
 ### The model
@@ -412,7 +489,7 @@ The terminal at the end of a run, with the confusion matrix and the per-class fi
 
 ### The self-checks
 
-The project has 140 self-checks in 9 scripts. One command runs all of them. The same
+The project has 160 self-checks in 10 scripts. One command runs all of them. The same
 command runs on each push, through `.github/workflows/tests.yml`.
 
 ```bash
@@ -449,9 +526,10 @@ python tests/test_dsp.py
 | `tests/test_spectrogram.py` | 18 | The size of the image, the normalization, the frequency of each row, and the segment cutter. A gain of 60 dB must not move the image. The high pass must remove the artifact of the receiver and keep a signal that is near it, and the 0 Hz row of the image must carry nothing for any input. Three of the checks use an artifact that is calibrated against the PlutoSDR, because a constant offset is not what a radio makes. |
 | `tests/test_dsp.py` | 30 | The peak hold must find a burst that is in 1 window of 100, and also a burst at the end of a long buffer. One window alone must miss it. The artifact of the receiver must not make a peak at the middle of a hop. The corrected noise floor must not change with the dwell time. The markers must give the correct middle and the correct edges of a signal of a known width. A hop that failed must not change the noise floor. The badge must give the correct name in each condition. |
 | `tests/test_snr_aug.py` | 11 | The function `_mix_noise` must give the exact signal-to-noise ratio, with an error of less than 0.1 dB. The function `_freq_shift` must change the phase of each sample only. |
-| `tests/test_model.py` | 15 | The sizes and the parameter count of `SpecCNN`, the votes of the segments, and a write and read cycle of `FingerprintModel`. The trainer and the graphical interface must calculate the same path for the meta file. |
-| `tests/test_dataset.py` | 27 | The split by session, the energy gate, and the augmentation. A device segment must give a new image at each epoch, and a noise segment must never change. The val data must never change. A device class and the noise class must get the same DC treatment. The tool `dataset_info` must give each warning. |
+| `tests/test_model.py` | 17 | The sizes and the parameter count of `SpecCNN`, the votes of the segments, and a write and read cycle of `FingerprintModel`. The trainer and the graphical interface must calculate the same path for the meta file. The wrapper must read the sample rate of the training data from the meta, and a model that has none must give `None` and not 0 Hz. |
+| `tests/test_dataset.py` | 30 | The split by session, the energy gate, and the augmentation. A device segment must give a new image at each epoch, and a noise segment must never change. The val data must never change. A device class and the noise class must get the same DC treatment. The sample rate must come from the sidecars, and two rates in one dataset must give a warning. The tool `dataset_info` must give each warning. |
 | `tests/test_worker.py` | 19 | A false radio replaces the PlutoSDR. The sweep must tune to each hop and find the tone at its true frequency. The lock must hold one frequency. Skip, Jump to and the memory of the caught signals must operate. The record must write the correct file and the correct metadata, and each name must be different. Three checks hold the order of the imports: `terminal.py` must import torch before Qt, because Qt first stops the program on Windows. |
+| `tests/test_prepare_clip.py` | 15 | A source of 100 Msps holds tones at known frequencies. A tone at the middle of the slice must arrive at 0 Hz, and a tone beside it must keep its distance. A tone outside the slice must not fold into it, even when it is 40 dB stronger. The phase ramp must not restart at a block boundary. The level must reach the target. The `.xml` of the pack must give the rate, and it must win against the flag. A second run must not write over a clip. |
 | `tests/test_end_to_end.py` | 11 | A synthetic dataset of two drones goes through the real trainer. Then the same `FingerprintModel` that the graphical interface loads must give the correct name to a capture of a session that it did not see, and it must report both drones when both transmit. |
 
 ### How to read the result
@@ -635,6 +713,7 @@ that is all that it does. It can not say where a constant signal comes from.
 | `spur_survey.py` | Steps the LO across 2380 to 2500 MHz and measures the middle of each hop. |
 | `spur_vs_air.py` | Separates a constant signal from one that comes in bursts, at 12 frequencies. |
 | `measure_lo.py` | The first measurement. Kept because it holds the retune timing. |
+| `bw_readback.py` | Asks the radio what it really does with each `rx_rf_bandwidth`, and gives the DC row at each one. |
 | `analyse_dc.py` | Runs both paths of the application across a folder of captures. |
 | `pick_w.py` | Gives `DC_HP_WIN` from the DC row of the image, for each candidate width. |
 | `seg_stats.py` | The values of one segment, which are what the classifier meets. |
@@ -651,6 +730,7 @@ programs. They stay because they show how the values were calculated.
 | `spur_survey.json` | The same sweep with the antenna, for the difference. |
 | `spur_vs_air_load.json`, `spur_vs_air.json` | The pair at 12 frequencies. |
 | `lo_leakage.json` | The first measurement, with the retune timing. |
+| `bw_readback_antenna.json` | 8 bandwidths, with the readback of each one. |
 | `gui.png` | The first screen capture of the program with the radio. |
 
 The `.npy` captures are approximately 184 MB and `.gitignore` excludes them. The
@@ -659,8 +739,8 @@ repeat each calculation, but it must record the raw IQ again to repeat a capture
 
 The analysis programs `analyse_dc.py`, `pick_w.py`, `seg_stats.py` and `verify_psd.py`
 need no radio, because they read a folder of captures. Only `capture_iq.py`,
-`spur_survey.py`, `spur_vs_air.py` and `measure_lo.py` operate the PlutoSDR, and none
-of them transmits.
+`spur_survey.py`, `spur_vs_air.py`, `measure_lo.py` and `bw_readback.py` operate the
+PlutoSDR, and none of them transmits.
 
 ## Limitations
 

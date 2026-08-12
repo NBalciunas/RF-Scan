@@ -463,6 +463,33 @@ def _git_commit():
         return None
 
 
+def _dataset_sample_rate(data_dir: Path):
+    """Give the one sample rate of the dataset, from the .json sidecars.
+
+    The trainer labels by the name of the folder and it reads no sidecar anywhere
+    else. This value goes in the meta only, thus the GUI can find a model that was
+    trained at another rate than the radio gives now. Two rates in one dataset give
+    None, because no single value is true."""
+    rates = set()
+    for j in Path(data_dir).rglob("*.json"):
+        try:
+            with open(j) as f:
+                sr = json.load(f).get("sample_rate")
+        except Exception:
+            continue
+        if sr:
+            rates.add(float(sr))
+    if not rates:
+        print("[warn] no sidecar gives a sample rate. The meta holds none, thus the "
+              "GUI can not compare it with the radio.")
+        return None
+    if len(rates) > 1:
+        print(f"[warn] the dataset mixes the sample rates {sorted(rates)}. The meta "
+              "holds none. Record every session at one rate.")
+        return None
+    return rates.pop()
+
+
 def train(args):
     rng = np.random.RandomState(args.seed)
     torch.manual_seed(args.seed)
@@ -603,6 +630,7 @@ def train(args):
         "n_classes"     : len(classes),
         "n_fft"         : N_FFT,
         "stft_hop"      : STFT_HOP,
+        "sample_rate"   : _dataset_sample_rate(Path(args.data_dir)),
         "seg_len"       : args.seg_len,
         "seg_hop"       : args.seg_hop,
         "base_ch"       : args.base_ch,

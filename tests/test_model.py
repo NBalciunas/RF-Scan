@@ -139,6 +139,19 @@ def main():
             assert abs(fm.unknown_thresh - 0.55) < 1e-9
             assert fm.classes == CLASSES
 
+        @c.check("the wrapper reads the sample rate of the training data")
+        def _():
+            fm = FingerprintModel(_write_model(tmp, name="sr.pt",
+                                               sample_rate=10_000_000))
+            assert fm.sample_rate == 10_000_000.0, fm.sample_rate
+
+        @c.check("a meta with no sample rate gives None, not a crash")
+        def _():
+            # Every model that was trained before the field exists is in this state.
+            # None must mean 'do not compare', and never 0 Hz.
+            fm = FingerprintModel(_write_model(tmp, name="nosr.pt"))
+            assert fm.sample_rate is None, fm.sample_rate
+
         @c.check("a confidence below unknown_thresh gives the label 'unknown'")
         def _():
             # Three untrained classes give about 1/3 each, which is below any

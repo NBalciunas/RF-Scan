@@ -182,6 +182,12 @@ class FingerprintModel:
         self.unknown_thresh = float(meta.get("unknown_thresh", unknown_thresh))
         self.vote_thresh    = float(meta.get("vote_thresh", VOTE_THRESH))
         self.infer_max_segs = int(infer_max_segs)
+        # The rate of the captures that trained the model. A spectrogram row is
+        # sample_rate / n_fft Hz, thus another rate makes every frequency in the
+        # image wrong. A model from before this field gives None, and the caller
+        # then makes no comparison.
+        _sr = meta.get("sample_rate")
+        self.sample_rate = float(_sr) if _sr else None
 
         self.net = SpecCNN(len(self.classes), base=base)
         self.net.load_state_dict(torch.load(model_path, map_location="cpu"))

@@ -43,7 +43,8 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 SDR_URI         = os.environ.get("PLUTO_URI", "ip:192.168.2.1")   # the factory address
 SAMPLE_RATE     = 10_000_000
-RX_BW_HZ        = 4_000_000
+RX_BW_HZ        = 8_000_000   # 0.8 of the sample rate. A lower value fills part of each
+                              # spectrogram with the skirt of the filter and not with signal.
 GAIN            = 10
 
 CENTER_FREQ     = 2_400_000_000
@@ -76,7 +77,7 @@ FP_DEVICE_THRESH     = 0.6       # the badge shows a device at this probability.
                                  # badge shows "clear". The votes use unknown_thresh.
 ML_INTERVAL_S        = 0.75      # the minimum time between two runs of the classifier
 RECORD_DIR           = "./fingerprint_data"   # relative to the current directory
-RECORD_EVERY_N       = 5         # the record keeps every Nth buffer, or every Nth sweep in
+RECORD_EVERY_N       = 10        # the record keeps every Nth buffer, or every Nth sweep in
                                  # Wideband. Thus the same quantity of files covers more time
                                  # and gives more different data. One buffer at the default
                                  # settings is 4 MB, and there are 20 of them each second.
@@ -186,6 +187,12 @@ def composite_geometry(cfg):
     Thus the program keeps only the central n_keep bins of each hop. The parts then
     join end to end, and one linear map gives the frequency of each bin. The worker
     and the GUI use the same map.
+
+    A slot is `step` Hz wide, and not n_keep bins wide. n_keep is a whole number of
+    bins, thus n_keep bins are usually a few kHz more or less than one step. If the
+    slot took that width, each hop boundary moved by that difference and the error
+    increased at each hop. A step is exact at every boundary, and the cost stays
+    inside one slot and below one bin.
     """
     sr   = float(cfg["sample_rate"])
     hops = cfg["hop_freqs"]
@@ -194,7 +201,7 @@ def composite_geometry(cfg):
     else:
         step = min(sr, float(cfg["rx_bw"])) * (1.0 - cfg["overlap_pct"] / 100.0)
     n_keep = max(2, min(FFT_BINS, int(round(FFT_BINS * step / sr))))
-    half   = n_keep * (sr / FFT_BINS) / 2.0
+    half   = step / 2.0
     return n_keep, hops[0] - half, hops[-1] + half
 
 
@@ -1130,7 +1137,7 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.w_sr   = cell(0, 0, "Sample Rate (Hz)",
                            hz_combo([2e6, 4e6, 5e6, 10e6, 15e6, 20e6, 30e6, 56e6], SAMPLE_RATE))
         self.w_bw   = cell(0, 1, "Bandwidth (Hz)",
-                           hz_combo([1e6, 2e6, 4e6, 5e6, 10e6, 20e6, 40e6], RX_BW_HZ))
+                           hz_combo([1e6, 2e6, 4e6, 5e6, 8e6, 10e6, 20e6, 40e6], RX_BW_HZ))
         self.w_gain = cell(0, 2, "RX Gain (dB)", QtWidgets.QSpinBox())
         self.w_gain.setRange(-3, 71)
         self.w_gain.setValue(GAIN)
@@ -1378,6 +1385,14 @@ class PlutoApp(QtWidgets.QMainWindow):
             self.w_model_path.setText(path)
         self._load_model(path)
 
+    def _sr_mismatch(self) -> bool:
+        """True if the model was trained at a different sample rate than the radio
+        gives now. One spectrogram row is sample_rate / n_fft Hz, thus the model
+        then reads the wrong frequency for each row. A model that has no rate in its
+        meta gives False, and the program says nothing about it."""
+        sr = getattr(self._engine, "sample_rate", None)
+        return bool(sr) and abs(sr - float(self.cfg["sample_rate"])) > 1.0
+
     def _load_model(self, path: str):
         if not _TORCH_OK:
             self.model_info_lbl.setText("⚠ PyTorch not installed.")
@@ -1404,6 +1419,10 @@ class PlutoApp(QtWidgets.QMainWindow):
             warn = ("<br>⚠ No 'noise' class — Auto mode's auto-skip will never "
                     "trigger, and the badge can never say 'clear'"
                     if self._no_noise_class else "")
+            if self._sr_mismatch():
+                warn += (f"<br>⚠ Trained at {engine.sample_rate/1e6:.3f} Msps, the "
+                         f"radio gives {float(self.cfg['sample_rate'])/1e6:.3f} Msps "
+                         "— every frequency in the spectrogram is wrong")
             self.model_info_lbl.setText(
                 f"{_hl(short)} loaded successfully<br>"
                 f"Model classes: {_hl(', '.join(engine.classes))}{warn}"
@@ -1439,6 +1458,9 @@ class PlutoApp(QtWidgets.QMainWindow):
         text, kind = badge_for(result, FP_DEVICE_THRESH)
         if getattr(self, "_no_noise_class", False):
             text += "  ⚠ no noise class"
+            kind = "error" if kind == "none" else kind
+        if self._sr_mismatch():
+            text += "  ⚠ sample rate"
             kind = "error" if kind == "none" else kind
         self.det_badge.setText(text)
         self._set_badge_style(kind)

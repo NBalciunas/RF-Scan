@@ -21,7 +21,7 @@ from terminal import (compute_hop_freqs, composite_geometry, bin_freqs,
 
 # sample_rate, rx_bw, center, span, overlap_pct
 CONFIGS = [
-    ("the app defaults",   10_000_000,  4_000_000, 2_400_000_000, 20_000_000, 30),
+    ("the app defaults",   10_000_000,  8_000_000, 2_400_000_000, 20_000_000, 30),
     ("bw = sr, no overlap", 10_000_000, 10_000_000, 2_400_000_000, 20_000_000, 0),
     ("a large overlap",      2_000_000,  4_000_000,   915_000_000,  5_000_000, 50),
     ("one hop only",        10_000_000,  4_000_000, 2_400_000_000,  4_000_000, 30),

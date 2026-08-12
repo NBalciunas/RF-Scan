@@ -21,7 +21,8 @@ import torch
 from _support import Checks, run
 import dataset_info
 from train_model import (load_split, file_to_specs, file_to_segments,
-                         SegmentDataset, _seg_powers_db, _natkey, WEAK_VAL_DB)
+                         SegmentDataset, _seg_powers_db, _natkey, WEAK_VAL_DB,
+                         _dataset_sample_rate)
 from fp_spectrogram import SEG_LEN, SEG_HOP, N_FFT
 
 NOISE_SIGMA = 0.01
@@ -348,6 +349,52 @@ def main():
                 out = buf.getvalue()
                 assert "mixes RX gains" in out, out
                 assert "seconds" in out and "2440.000" in out, out
+            finally:
+                shutil.rmtree(solo, ignore_errors=True)
+
+        @c.check("the meta takes the sample rate from the sidecars of the dataset")
+        def _():
+            # The rate is not in the code, thus it must come from the data. It goes
+            # in the meta, and the GUI compares it against the radio.
+            solo = Path(tempfile.mkdtemp(prefix="rfscan_sr1_"))
+            try:
+                d = solo / "fingerprint_data"
+                build_tree(d)
+                for f in sorted(d.rglob("*.iq")):
+                    f.with_suffix(".json").write_text(json.dumps(
+                        {"sample_rate": 10e6, "gain_db": 10}))
+                assert _dataset_sample_rate(d) == 10e6, _dataset_sample_rate(d)
+            finally:
+                shutil.rmtree(solo, ignore_errors=True)
+
+        @c.check("two sample rates in one dataset give None and a warning")
+        def _():
+            solo = Path(tempfile.mkdtemp(prefix="rfscan_sr2_"))
+            try:
+                d = solo / "fingerprint_data"
+                build_tree(d)
+                for i, f in enumerate(sorted(d.rglob("*.iq"))):
+                    f.with_suffix(".json").write_text(json.dumps(
+                        {"sample_rate": 10e6 if i % 2 else 5e6, "gain_db": 10}))
+                buf = io.StringIO()
+                with contextlib.redirect_stdout(buf):
+                    sr = _dataset_sample_rate(d)
+                assert sr is None, sr
+                assert "mixes the sample rates" in buf.getvalue(), buf.getvalue()
+            finally:
+                shutil.rmtree(solo, ignore_errors=True)
+
+        @c.check("a dataset with no sidecar gives None and says so")
+        def _():
+            solo = Path(tempfile.mkdtemp(prefix="rfscan_sr3_"))
+            try:
+                d = solo / "fingerprint_data"
+                build_tree(d)
+                buf = io.StringIO()
+                with contextlib.redirect_stdout(buf):
+                    sr = _dataset_sample_rate(d)
+                assert sr is None, sr
+                assert "no sidecar gives a sample rate" in buf.getvalue(), buf.getvalue()
             finally:
                 shutil.rmtree(solo, ignore_errors=True)
 
