@@ -40,7 +40,7 @@ options:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [48, 20.0]
+    coordinate: [88, 72.0]
     rotation: 0
     state: enabled
 
@@ -56,7 +56,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [504, 32.0]
+    coordinate: [568, 48.0]
     rotation: 0
     state: enabled
 - name: samp_rate
@@ -70,7 +70,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [240, 28.0]
+    coordinate: [976, 208.0]
     rotation: 0
     state: enabled
 - name: tx_gain
@@ -88,7 +88,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [368, 24.0]
+    coordinate: [568, 208.0]
     rotation: 0
     state: enabled
 - name: tx_on
@@ -106,7 +106,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [368, 96.0]
+    coordinate: [976, 48.0]
     rotation: 0
     state: enabled
 - name: blocks_file_source_0
@@ -137,7 +137,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [56, 176.0]
+    coordinate: [144, 456.0]
     rotation: 0
     state: enabled
 - name: blocks_multiply_const_vxx_0
@@ -164,7 +164,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [344, 220.0]
+    coordinate: [648, 520.0]
     rotation: 0
     state: enabled
 - name: qtgui_waterfall_sink_x_0
@@ -225,7 +225,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [656, 396.0]
+    coordinate: [1320, 592.0]
     rotation: 0
     state: enabled
 - name: uhd_usrp_sink_1
@@ -502,7 +502,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [720, 216.0]
+    coordinate: [1320, 416.0]
     rotation: 0
     state: enabled
 
