@@ -88,7 +88,10 @@ def _args(data_dir, out, **over):
              seed=0, preset="test",
              epochs=25, base_ch=8, max_files_per_class=0, max_segs_per_file=0,
              max_segs_per_class=0, store_dtype="float16", gate_margin_db=3.0,
-             snr_aug_p=0.5, freq_shift_frac=0.10, quick=False, cpu=True)
+             snr_aug_p=0.5, freq_shift_frac=0.10, quick=False, cpu=True,
+             # workers=0 keeps the check in one process. A worker on Windows is a
+             # spawn, and it costs more than this dataset takes to train.
+             workers=0, amp=False)
     a.update(over)
     return argparse.Namespace(**a)
 

@@ -16,9 +16,10 @@ makes the TX gain useless as a control of the signal-to-noise ratio.
 The program writes a `.json` beside the output. The file holds every value that the
 operation used, thus the extraction can be repeated and it can go in a report.
 
-The output goes to `transmitting/clips/`, beside the flow graph that replays it. The
-directory is that of this program and not the current directory. Thus the clips of a
-campaign stay in one place, whatever directory the command runs from.
+The output goes to `transmitting/clips/`. The flow graph that replays it is in
+`transmitting/gnuradio/`. The directory is that of this program and not the current
+directory. Thus the clips of a campaign stay in one place, whatever directory the
+command runs from.
 
 Example, for a 10 MHz slice 5 MHz above the middle of the source band:
 
@@ -47,8 +48,8 @@ MIN_SIGNAL_DB = 15.0        # the slice must hold a transmitter. Empty gives 4 t
 CHUNK_POW = 21              # the FFT of the overlap-save filter is 2 to this power
 BAND_BINS = 4096            # the bins of the source-band spectrum that gives the floor
 
-# Beside the flow graph, and not in the current directory. The clips of a campaign
-# must stay together, and the command runs from anywhere.
+# The directory of this program, and not the current directory. The clips of a
+# campaign must stay together, and the command runs from anywhere.
 _SCRIPT_DIR = Path(__file__).resolve().parent
 CLIPS_DIR   = _SCRIPT_DIR / "clips"
 

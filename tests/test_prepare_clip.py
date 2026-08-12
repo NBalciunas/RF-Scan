@@ -302,13 +302,13 @@ def main():
             assert meta["slice_center"] is None
             assert meta["source_rate"] == IN_RATE
 
-        @c.check("the default output goes to clips/, beside the flow graph")
+        @c.check("the default output goes to clips/, with the flow graph")
         def _():
             # The directory of the program and not the current directory. Thus the
             # command gives the same answer from any place, and the clips of one
             # campaign stay with the flow graph that replays them.
             assert CLIPS_DIR.name == "clips", CLIPS_DIR
-            assert (CLIPS_DIR.parent / "iqRepeat.grc").exists(), CLIPS_DIR
+            assert (CLIPS_DIR.parent / "gnuradio" / "iqRepeat.grc").exists(), CLIPS_DIR
         return c.report()
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

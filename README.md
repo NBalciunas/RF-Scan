@@ -79,7 +79,8 @@ An entry in the memory expires. Thus the program can find that signal again.
 - The same level in every class, thus the TX gain controls the signal-to-noise ratio
   and it is not a second variable.
 - A `.json` beside each clip, which holds every value that the extraction used.
-- `transmitting/iqRepeat.grc`, the flow graph that replays a clip through a USRP B210.
+- `transmitting/gnuradio/iqRepeat.grc`, the flow graph that replays a clip through a
+  USRP B210.
 
 ### The trainer
 
@@ -300,8 +301,9 @@ runs, the waterfall looks correct, and the signal is not the drone. Nothing repo
 `prepare_clip.py` takes one slice of the source band, moves it to the baseband, and
 writes a file at the rate of the replay. It also puts the clip at a chosen level.
 
-The program lives in `transmitting/`, beside the flow graph that replays its output.
-The output goes to `transmitting/clips/`, and the name of the source gives the name of
+The program lives in `transmitting/`, with the flow graph that replays its output in
+`transmitting/gnuradio/`. The output goes to `transmitting/clips/`, and the name of
+the source gives the name of
 the clip. That directory is the one of the program and not the current directory, thus
 the command gives the same answer from any place. Give a second path to choose the
 output yourself.
@@ -345,8 +347,8 @@ campaign, and let `--offset-hz` choose which part of the source band goes there.
 
 ### The flow graph of the replay
 
-`transmitting/iqRepeat.grc` holds it. Open it in GNU Radio Companion, put the path of
-a prepared clip in the file source, and generate. `transmitting/clips/` is where the
+`transmitting/gnuradio/iqRepeat.grc` holds it. Open it in GNU Radio Companion, put the
+path of a prepared clip in the file source, and generate. `transmitting/clips/` is where the
 prepared clips go, and it is not in git: one second is 80 MB, and the `.json` beside
 each clip is enough to make it again.
 

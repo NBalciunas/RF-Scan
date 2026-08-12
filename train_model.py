@@ -15,11 +15,13 @@ a .meta.json file. The GUI reads the two files with the same module.
     python train_model.py --max_segs_per_class 4000    # less memory
 """
 
+import os
 import re
 import json
 import time
 import argparse
 from pathlib import Path
+from contextlib import nullcontext
 from collections import defaultdict
 
 import numpy as np
@@ -27,7 +29,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import (TensorDataset, DataLoader, WeightedRandomSampler,
-                              Dataset as TorchDataset)
+                              get_worker_info, Dataset as TorchDataset)
 
 from fp_spectrogram import (iq_to_spectrogram, remove_dc, SpecCNN, VOTE_THRESH,
                             N_FFT, STFT_HOP, SEG_LEN, SEG_HOP)
@@ -49,6 +51,10 @@ MAX_SEGS_PER_FILE   = 150        # 0 = all; segments for each file
 MAX_SEGS_PER_CLASS  = 20000      # 0 = all; segments for each class and split
 STORE_DTYPE         = "float16"  # the cache in memory: "float16" or "float32"
 FORCE_CPU           = False      # True = use the CPU although CUDA is available
+
+# ── how the machine is used ───────────────────────────────────────────────────
+NUM_WORKERS = -1                 # -1 = choose from the core count; 0 = this process
+USE_AMP     = True               # mixed precision on a GPU that has tensor cores
 
 # ── the presets for --preset. The times are for a CPU. ────────────────────────
 PRESETS = {
@@ -223,26 +229,67 @@ class SegmentDataset(TorchDataset):
 
     One segment costs about 320 us of CPU. A raw complex64 segment of 4096 samples
     is 32 kB, and a float16 image of that segment is 31 kB. Thus the memory does not
-    change."""
+    change.
+
+    That 320 us is the cost of one epoch divided by the workers. With no worker it is
+    on the process that also drives the GPU, thus the GPU waits for the CPU. See
+    `share()` for what makes a worker cheap."""
 
     def __init__(self, segs, labels, aug_ok, noise_pool, seed,
                  snr_aug_p=0.0, snr_db=SNR_AUG_DB, f_shift=0.0):
-        self.segs, self.labels, self.aug_ok = segs, labels, aug_ok
+        # A torch tensor and not the numpy array. A worker process maps a shared
+        # tensor and it copies a numpy array. The array is 1.9 GB at --preset best,
+        # thus 6 workers would be 11 GB of copies.
+        self.segs = torch.from_numpy(segs) if isinstance(segs, np.ndarray) else segs
+        self.labels, self.aug_ok = labels, aug_ok
         self.pool = list(noise_pool) if noise_pool else None
+        self.seed = seed
         self.rng = np.random.RandomState(seed)
         self.snr_aug_p, self.snr_db, self.f_shift = snr_aug_p, snr_db, f_shift
+
+    def share(self):
+        """Put the segments in shared memory, before the workers start."""
+        self.segs.share_memory_()
 
     def __len__(self):
         return len(self.segs)
 
     def __getitem__(self, i):
-        seg = self.segs[i]
+        seg = self.segs[i].numpy()
         if self.aug_ok[i]:
             if self.f_shift > 0:
                 seg = _freq_shift(seg, self.rng, self.f_shift)
             if self.pool and self.rng.rand() < self.snr_aug_p:
                 seg = _mix_noise(seg, self.pool, self.rng, *self.snr_db)
         return torch.from_numpy(iq_to_spectrogram(seg)), int(self.labels[i])
+
+
+def _worker_rng(worker_id):
+    """Give each worker its own random stream.
+
+    A worker starts from a copy of the dataset, thus from a copy of one RandomState.
+    Without this every worker draws the same augmentation sequence, and the point of
+    §8 #7 (a new realisation at every epoch) is lost for all but one of them."""
+    info = get_worker_info()
+    info.dataset.rng = np.random.RandomState(info.dataset.seed + 1 + worker_id)
+
+
+def _pick_workers(requested, device, n_segs, epochs):
+    """Choose the loader workers. A flag has precedence over this.
+
+    The GPU path wants workers, because one segment costs 320 us of CPU and the GPU
+    waits for all of it. The CPU path wants few: torch already holds every core for
+    the convolution, and a worker then competes with it.
+
+    The size of the run decides as well. A worker on Windows is a spawn of about 2 s,
+    thus 8 workers cost 16 s before the first batch. Measured: `--preset fast` is
+    5 s of spectrograms in the whole run and 8 workers made it 18 s slower. The rule
+    below gives 0 workers there and the full count for `balanced` and `best`."""
+    if requested >= 0:
+        return requested
+    n = os.cpu_count() or 1
+    cap = min(8, n // 2) if device.type == "cuda" else min(2, n // 4)
+    return cap if n_segs * epochs * 320e-6 > 4.0 * cap else 0
 
 
 def load_split(data_dir: Path, seg_len: int, seg_hop: int, rng, *,
@@ -496,13 +543,24 @@ def train(args):
     device = torch.device("cpu" if (args.cpu or not torch.cuda.is_available())
                           else "cuda")
     store_dtype = np.float16 if args.store_dtype == "float16" else np.float32
+    amp = bool(args.amp) and device.type == "cuda"
+    if device.type == "cuda":
+        # The image size never changes, thus cudnn may measure the algorithms once
+        # and keep the fastest. TF32 is the tensor-core path of an Ampere card.
+        torch.backends.cudnn.benchmark = True
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
 
     if args.preset == "fast":
         print("\n*** FAST PRESET — small caps + few epochs. Sanity check only; "
               "the val number here is NOT final. ***")
 
     print(f"\nPreset : {args.preset}   |   {args.epochs} epochs, base_ch {args.base_ch}")
-    print(f"Device : {device}   |   cache dtype {store_dtype.__name__}")
+    print(f"Device : {device}"
+          + (f" ({torch.cuda.get_device_name(0)})" if device.type == "cuda" else "")
+          + f"   |   cache dtype {store_dtype.__name__}")
+    print(f"Machine: {'mixed precision' if amp else 'full precision'}, "
+          f"{torch.get_num_threads()} torch threads")
     print(f"STFT   : {N_FFT}-pt, hop {STFT_HOP}   |   segment {args.seg_len}/{args.seg_hop}")
     caps = []
     if args.max_files_per_class: caps.append(f"<={args.max_files_per_class} files/class/session")
@@ -547,8 +605,23 @@ def train(args):
     sw     = torch.tensor([w_cls[l] for l in ytr], dtype=torch.float)
     sampler = WeightedRandomSampler(sw, len(sw), replacement=True)
 
-    tr_loader = DataLoader(tr_ds, batch_size=args.batch_size, sampler=sampler)
-    va_loader = DataLoader(va_ds, batch_size=args.batch_size, shuffle=False)
+    pin = device.type == "cuda"
+    workers = _pick_workers(args.workers, device, len(Str), args.epochs)
+    print(f"Loader   : {workers} worker processes"
+          + ("  (the run is too short for a spawn to pay)"
+             if not workers and args.workers < 0 else ""))
+    if workers:
+        tr_ds.share()
+    # The train loader makes a spectrogram for each item, thus it wants the workers.
+    # The val loader gives images that are in memory already, thus a worker there is
+    # only the cost of a process.
+    tr_loader = DataLoader(tr_ds, batch_size=args.batch_size, sampler=sampler,
+                           num_workers=workers, pin_memory=pin,
+                           persistent_workers=bool(workers),
+                           worker_init_fn=_worker_rng if workers else None,
+                           **({"prefetch_factor": 4} if workers else {}))
+    va_loader = DataLoader(va_ds, batch_size=args.batch_size, shuffle=False,
+                           pin_memory=pin)
 
     model = SpecCNN(len(classes), base=args.base_ch).to(device)
     opt   = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-3)
@@ -559,21 +632,31 @@ def train(args):
     print(f"\n{'Epoch':>6}  {'TrainLoss':>10}  {'TrainAcc':>9}  {'ValAcc':>9}  {'LR':>9}")
     print("-" * 52)
 
+    scaler = torch.amp.GradScaler("cuda", enabled=amp)
+    def cast():
+        return torch.autocast("cuda", dtype=torch.float16) if amp else nullcontext()
+
     best_acc, best_state = 0.0, None
     t0 = time.time()
     for epoch in range(1, args.epochs + 1):
         model.train()
         tl = tc = tn = 0
         for xb, yb in tr_loader:
-            xb, yb = xb.to(device).float(), yb.to(device)
+            xb = xb.to(device, non_blocking=True).float()
+            yb = yb.to(device, non_blocking=True)
             if SPEC_MASK_P:
                 xb = spec_mask(xb, SPEC_MASK_P)
-            opt.zero_grad()
-            logits = model(xb)
-            loss = crit(logits, yb)
-            loss.backward()
+            opt.zero_grad(set_to_none=True)
+            with cast():
+                logits = model(xb)
+                loss = crit(logits, yb)
+            scaler.scale(loss).backward()
+            # The gradient must be unscaled before it is clipped, or the norm is the
+            # norm of the scaled gradient and the clip cuts at the wrong value.
+            scaler.unscale_(opt)
             nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-            opt.step()
+            scaler.step(opt)
+            scaler.update()
             tl += loss.item() * len(yb)
             tc += (logits.argmax(1) == yb).sum().item()
             tn += len(yb)
@@ -582,8 +665,10 @@ def train(args):
         vc = vn = 0
         with torch.no_grad():
             for xb, yb in va_loader:
-                xb, yb = xb.to(device).float(), yb.to(device)
-                vc += (model(xb).argmax(1) == yb).sum().item()
+                xb = xb.to(device, non_blocking=True).float()
+                yb = yb.to(device, non_blocking=True)
+                with cast():
+                    vc += (model(xb).argmax(1) == yb).sum().item()
                 vn += len(yb)
 
         sched.step()
@@ -728,6 +813,12 @@ def parse_args():
                    help="the same as --preset fast")
     p.add_argument("--cpu", action="store_true", default=FORCE_CPU,
                    help="use the CPU although CUDA is available")
+    p.add_argument("--workers", type=int, default=NUM_WORKERS,
+                   help="the loader processes that make the spectrograms. "
+                        "-1 = choose from the core count, 0 = this process.")
+    p.add_argument("--no_amp", dest="amp", action="store_false", default=USE_AMP,
+                   help="full precision on the GPU. Slower, and it is the way to "
+                        "show that a result is not an effect of float16.")
     args = p.parse_args()
     # the order of precedence: a CLI flag, then --preset, then the PRESET constant
     if args.preset is None:
