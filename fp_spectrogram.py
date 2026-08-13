@@ -21,7 +21,12 @@ SEG_LEN  = 4096         # IQ samples for one spectrogram (0.4 ms at 10 Msps)
 DC_HP_WIN = 256         # moving average of remove_dc. About +-20 kHz at 10 Msps.
 SEG_HOP  = 2048         # samples between two spectrogram segments
 INFER_MAX_SEGS = 24     # live inference: maximum segments for one buffer (0 = all)
-MIN_SEG_SHARE  = 0.2    # a class is present when it wins this part of the segments
+# A class is present when it wins this part of the segments. The value decides how
+# often a bursty link is seen, thus it was measured and not chosen: on the validation
+# session, 0.10 gives 98% of the DJI captures and 32% of the hopping AT9S captures
+# with no false alarm in 100 noise captures. 0.05 reaches 63% and costs 2%, and 0.20
+# gave the AT9S 2%. See the defect #29 and evaluate.py --sweep.
+MIN_SEG_SHARE  = 0.10
 VOTE_THRESH    = 0.5    # a segment votes when its best class has this probability
 
 
@@ -155,7 +160,9 @@ def segment_vote(seg_probs, classes, thresh, min_share):
     out = []
     for i, cls in enumerate(classes):
         m = (win == i) & (wconf >= thresh)
-        if m.sum() / k >= min_share:
+        # A class with no segment is not present at any share. The test also keeps an
+        # empty selection out of the mean below, because that value is NaN.
+        if m.sum() and m.sum() / k >= min_share:
             out.append({"label": cls, "share": float(m.sum() / k),
                         "confidence": float(seg_probs[m, i].mean())})
     return sorted(out, key=lambda d: d["share"], reverse=True)
@@ -204,13 +211,17 @@ class FingerprintModel:
         idx   = int(probs.argmax())
         conf  = float(probs[idx])
         label = self.classes[idx] if conf >= self.unknown_thresh else "unknown"
+        # Every share, and then the same list at MIN_SEG_SHARE. One rule makes both,
+        # thus a caller that holds a lock below the limit of the badge reads the same
+        # numbers that the badge reads.
+        votes = segment_vote(seg_probs, self.classes, self.vote_thresh, 0.0)
         return {
             "label"     : label,
             "confidence": conf,
             "probs"     : {c: float(p) for c, p in zip(self.classes, probs)},
             "unknown"   : conf < self.unknown_thresh,
-            "detections": segment_vote(seg_probs, self.classes,
-                                       self.vote_thresh, MIN_SEG_SHARE),
+            "shares"    : {d["label"]: d["share"] for d in votes},
+            "detections": [d for d in votes if d["share"] >= MIN_SEG_SHARE],
         }
 
 

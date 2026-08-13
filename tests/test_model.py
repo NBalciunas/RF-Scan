@@ -124,7 +124,8 @@ def main():
         def _():
             fm = FingerprintModel(_write_model(tmp))
             res = fm.classify_iq(_noise(50_000))
-            assert set(res) == {"label", "confidence", "probs", "unknown", "detections"}
+            assert set(res) == {"label", "confidence", "probs", "unknown",
+                                "shares", "detections"}
             assert res["label"] in CLASSES + ["unknown"]
             assert sorted(res["probs"]) == sorted(CLASSES)
             assert abs(sum(res["probs"].values()) - 1.0) < 1e-5

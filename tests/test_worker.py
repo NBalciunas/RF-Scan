@@ -100,6 +100,10 @@ def _cfg(**over):
         "record_kind": "device", "record_device": "droneA", "record_session": "1",
         "record_max_files": 1000, "record_every_n": 1, "focus_freq": SIGNAL_HZ,
         "skip_lock": False, "jump_to": None, "fp_hold_settle_ms": 0,
+        # These two checks drive the lock itself, thus they take the peak on one
+        # sweep and they do not centre it. The defect #31 rule and the refinement
+        # have checks of their own below.
+        "peak_hits": 1, "refine_lock": False,
     }
     c["hop_freqs"] = compute_hop_freqs(CENTER, SPAN, min(SR, BW), OLAP)
     c.update(over)
@@ -184,6 +188,39 @@ def main():
             assert abs(held - SIGNAL_HZ) < 60e3
             after = [f for f in sdr.lo_log[len(cfg["hop_freqs"]):]]
             assert set(after) == {int(held)}, f"the lock frequency moved: {set(after)}"
+
+        @c.check("the refinement centres a new lock, and the lock then never moves")
+        def _():
+            # Nojus asked for this: the peak search gives a bin of the composite and
+            # the middle of the signal is not that bin. The refinement reads one
+            # buffer and takes the centroid. It runs one time, thus section 4 holds:
+            # the frequency does not move during the hold.
+            cfg = _cfg(op_mode="locking", refine_lock=True)
+            w, sdr = _make(cfg, stop_after=len(cfg["hop_freqs"]) + 6)
+            w.run()
+            locks = [a for a in w.mode_changed.log if a[0] == "LOCK"]
+            assert locks, f"no lock. modes: {w.mode_changed.log}"
+            held = locks[0][1]
+            c.note(f"refined lock at {held/1e6:.3f} MHz, tone at {SIGNAL_HZ/1e6:.3f} MHz")
+            assert abs(held - SIGNAL_HZ) < 60e3, held
+            # Every tune after the lock is the same value. The refinement tunes once
+            # before the lock, thus it is inside the first part of the log.
+            after = [f for f in sdr.lo_log if f == int(held)]
+            assert len(after) >= 1, sdr.lo_log[-6:]
+            tail = sdr.lo_log[-3:]
+            assert set(tail) == {int(held)}, f"the lock frequency moved: {tail}"
+
+        @c.check("the refinement never moves a lock further than its limit")
+        def _():
+            # A middle far from the candidate is another signal in the same window.
+            # The refinement must keep the candidate rather than jump to it.
+            cfg = _cfg(op_mode="locking", refine_lock=True)
+            w, _sdr = _make(cfg, stop_after=len(cfg["hop_freqs"]) + 6)
+            w.run()
+            locks = [a for a in w.mode_changed.log if a[0] == "LOCK"]
+            assert locks, "no lock"
+            moved = abs(locks[0][1] - SIGNAL_HZ)
+            assert moved <= cfg["sample_rate"] * 0.25, moved
 
         @c.check("Skip releases the lock and remembers the frequency")
         def _():

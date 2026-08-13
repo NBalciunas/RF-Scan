@@ -1,0 +1,73 @@
+{
+  "classes": [
+    "DJI-MINI-3",
+    "Radiolink-AT9S-Pro",
+    "noise"
+  ],
+  "val_acc": 0.9919471501591282,
+  "weak_val_acc": 0.9765785062395231,
+  "weak_val_db": [
+    0.0,
+    10.0
+  ],
+  "confusion": [
+    [
+      37119,
+      190,
+      144
+    ],
+    [
+      56,
+      5351,
+      92
+    ],
+    [
+      74,
+      112,
+      39814
+    ]
+  ],
+  "confusion_rows": "true",
+  "confusion_cols": "pred",
+  "per_class": {
+    "DJI-MINI-3": {
+      "precision": 0.9965099734221053,
+      "recall": 0.9910821563025659,
+      "f1": 0.9937886535835722,
+      "support": 37453,
+      "predicted": 37249
+    },
+    "Radiolink-AT9S-Pro": {
+      "precision": 0.9465770387404918,
+      "recall": 0.9730860156392072,
+      "f1": 0.9596484935437591,
+      "support": 5499,
+      "predicted": 5653
+    },
+    "noise": {
+      "precision": 0.994107365792759,
+      "recall": 0.99535,
+      "f1": 0.9947282948157402,
+      "support": 40000,
+      "predicted": 40050
+    }
+  },
+  "weak_per_class": {
+    "DJI-MINI-3": {
+      "accuracy": 0.981630309988519,
+      "support": 37453
+    },
+    "Radiolink-AT9S-Pro": {
+      "accuracy": 0.9421713038734315,
+      "support": 5499
+    }
+  },
+  "n_train": 93978,
+  "n_val": 82952,
+  "n_weak": 42952,
+  "epochs": 30,
+  "preset": "best",
+  "git_commit": "314772b",
+  "trained_at": "2026-08-13T12:40:00",
+  "train_minutes": 17.42447847922643
+}

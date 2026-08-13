@@ -47,8 +47,10 @@ RX_BW_HZ        = 8_000_000   # 0.8 of the sample rate. A lower value fills part
                               # spectrogram with the skirt of the filter and not with signal.
 GAIN            = 10
 
-CENTER_FREQ     = 2_400_000_000
-TOTAL_SPAN_HZ   = 20_000_000
+CENTER_FREQ     = 2_440_000_000   # the middle of the 2.4 GHz ISM band. The narrowband
+                                  # mode and the record path also start here.
+TOTAL_SPAN_HZ   = 100_000_000     # 2390 to 2490 MHz, thus the sweep holds all of the
+                                  # ISM band, 2400 to 2483.5 MHz. 15 hops at 10 Msps.
 HOP_DWELL_MS    = 50
 HOP_SETTLE_MS   = 50
 HOP_OVERLAP_PCT = 30
@@ -72,9 +74,20 @@ FP_GONE_S            = 2.5       # release the lock if the signal stops for this
 FP_MEMORY_TTL_S      = 30.0      # a caught frequency stays in the memory this long
 FP_MEMORY_GUARD_HZ   = 3_000_000 # a peak nearer than this to a caught frequency is the same
 FP_AUTO_DWELL_MS     = 5000      # Auto: hold this long before the program judges the lock
-FP_AUTO_NOISE_PCT    = 75        # Auto: release the lock at this probability of noise
-FP_DEVICE_THRESH     = 0.6       # the badge shows a device at this probability. Below it, the
+FP_AUTO_NOISE_PCT    = 85        # Auto: release the lock at this probability of noise
+FP_DEVICE_HOLD_S     = 5.0       # Auto: a device that was seen this recently holds the
+                                 # lock. A hopping link is silent between its bursts, and
+                                 # silence is not absence. See the defect #30.
+FP_REFINE_LOCK       = True      # centre a new lock on the signal, one time
+FP_REFINE_MAX_FRAC   = 0.25      # the refinement may move the lock by this part of the
+                                 # sample rate. A larger step is another signal.
+FP_PEAK_HITS         = 2         # sweeps that must agree before a peak causes a lock.
+                                 # 1 = lock on one sweep, as before. See the defect #31.
+FP_DEVICE_THRESH     = 0.4       # the badge shows a device at this probability. Below it, the
                                  # badge shows "clear". The votes use unknown_thresh.
+FP_HOLD_SHARE        = 0.05      # a vote at this share of the segments holds a lock. It is
+                                 # below MIN_SEG_SHARE on purpose: to keep a lock costs one
+                                 # dwell, and to drop one costs the drone. See the defect #30.
 ML_INTERVAL_S        = 0.75      # the minimum time between two runs of the classifier
 RECORD_DIR           = "./fingerprint_data"   # relative to the current directory
 RECORD_EVERY_N       = 10        # the record keeps every Nth buffer, or every Nth sweep in
@@ -277,6 +290,19 @@ def device_votes(result):
     return [d for d in (result or {}).get("detections", []) if d["label"] != "noise"]
 
 
+def device_share(result):
+    """Give the largest share of the segments that named a device.
+
+    The badge names a device at MIN_SEG_SHARE. A lock holds below that limit on
+    purpose, because the two decisions do not cost the same: to keep a lock costs one
+    dwell, and to drop one costs the drone. See the defects #29 and #30.
+    """
+    shares = (result or {}).get("shares")
+    if shares:
+        return max((v for k, v in shares.items() if k != "noise"), default=0.0)
+    return max((d["share"] for d in device_votes(result)), default=0.0)
+
+
 def badge_for(result, device_thresh=None):
     """Turn a classifier result into the badge text and its style.
 
@@ -367,6 +393,8 @@ class SweepWorker(QtCore.QThread):
         self._caught         = []          # [(freq_hz, t_caught)]
         self._lock_t         = 0.0         # the time when the current lock started
         self._last_class     = None        # the last result from the classifier
+        self._last_device_t  = 0.0         # the last time that a vote named a device
+        self._cand           = None        # (freq, best_snr_db, hits) of the candidate
         self._psd_bias_db    = 0.0         # the bias of the last peak-hold floor
 
     def stop(self):
@@ -514,10 +542,69 @@ class SweepWorker(QtCore.QThread):
             s = max(0, min(total, s)); e = max(0, min(total, e))
             if e > s:
                 masked[s:e] = -1e9
+        # A candidate must hold its place. One sweep is 50 ms for each hop, thus a
+        # burst that lands in one sweep and not in the next is not a transmitter that
+        # the program can follow. The candidate of the last sweeps must repeat before
+        # it causes a lock, and a new candidate must be near the old one to count as
+        # the same signal. Without this the lock moves to the side whenever another
+        # emitter is loud for one sweep. See the defect #31.
         idx = int(np.argmax(masked))
         if masked[idx] <= -1e8:                     # all the band is in the memory
+            self._cand = None
             return None, -999.0
-        return float(bin_freqs(f_min, f_max, total)[idx]), float(composite[idx]) - med
+        freq = float(bin_freqs(f_min, f_max, total)[idx])
+        snr  = float(composite[idx]) - med
+        need = int(self.cfg.get("peak_hits", FP_PEAK_HITS))
+        guard = float(self.cfg.get("fp_memory_guard_hz", FP_MEMORY_GUARD_HZ))
+        if self._cand is not None and abs(self._cand[0] - freq) <= guard:
+            # The same signal. Keep the strongest reading of it and count the hit.
+            best = max(self._cand[1], snr)
+            hits = self._cand[2] + 1
+            self._cand = (freq, best, hits)
+        else:
+            self._cand = (freq, snr, 1)
+        if self._cand[2] < need:
+            return None, -999.0
+        return self._cand[0], self._cand[1]
+
+    def _refine_lock(self, freq):
+        """Move a new lock to the middle of the signal, one time only.
+
+        The peak search gives the strongest bin of the composite, and a bin of the
+        composite is wide. The middle of the signal is not that bin: a link is not
+        symmetric about its strongest bin, and the narrowband image that the
+        classifier reads is cut around the tuned frequency.
+
+        The program therefore tunes to the candidate, reads one buffer, and takes the
+        centroid that signal_extent gives. The centroid is used and not the argmax,
+        because the argmax jitters from bin to bin while the centroid does not.
+
+        This runs one time, at the acquisition, and never during the hold. Section 4
+        says the lock frequency does not move, because a lock that drifts makes the
+        narrowband plot and the recorded captures inconsistent. A refinement before
+        the first capture keeps that rule and still centres the signal.
+
+        Gives the new frequency, or the old one when there is nothing to centre on.
+        """
+        sr = float(self.cfg["sample_rate"])
+        limit = sr * FP_REFINE_MAX_FRAC
+        try:
+            self.sdr.rx_lo = int(freq)
+            self.msleep(int(self.cfg.get("settle_ms", HOP_SETTLE_MS)))
+            iq = self.sdr.rx()
+        except Exception:
+            return freq                      # keep the candidate, see the tune error
+        psd = self._peak_hold_psd(iq)
+        freqs = bin_freqs(freq - sr / 2, freq + sr / 2, len(psd))
+        ext = signal_extent(freqs, psd)
+        if ext is None:
+            return freq
+        _l, f_mid, _r = ext
+        if abs(f_mid - freq) > limit:
+            # A middle far from the candidate is another signal in the same window,
+            # not the same one. Keep the candidate.
+            return freq
+        return float(f_mid)
 
     def _remember(self, freq):
         """Put a caught frequency in the memory. Remove the near duplicates first."""
@@ -611,6 +698,10 @@ class SweepWorker(QtCore.QThread):
         try:
             res = self.engine.classify_iq(iq)
             self._last_class = res          # Auto uses this to judge the lock
+            if device_share(res) >= float(self.cfg.get("hold_share", FP_HOLD_SHARE)):
+                # The time of the last device, not of the last buffer that held one.
+                # A hopping link is silent between its bursts. See the defect #30.
+                self._last_device_t = now
             self.fingerprint_ready.emit(res)
         except Exception as e:
             self.status_msg.emit(f"Inference error: {e}")
@@ -651,6 +742,7 @@ class SweepWorker(QtCore.QThread):
                 self._last_present_t = self._lock_t = time.time()
                 self._last_infer_t = 0.0        # classify the new lock now
                 self._last_class = None         # Auto: use only the new results
+                self._last_device_t = 0.0       # no device has been seen on this lock
                 self.mode_changed.emit("LOCK", float(jt))
                 self.status_msg.emit(f"Jumped to {jt/1e6:.3f} MHz — Skip to advance")
             if mode == "SCAN":
@@ -667,10 +759,14 @@ class SweepWorker(QtCore.QThread):
                 f, peak_db = self._detect_new_peak(composite)
                 if f is not None and peak_db >= float(
                         self.cfg.get("fp_peak_thresh_db", FP_PEAK_THRESH_DB)):
+                    if self.cfg.get("refine_lock", FP_REFINE_LOCK):
+                        f = self._refine_lock(f)
                     self._held_freq, mode = f, "LOCK"
                     self._last_present_t = self._lock_t = time.time()
                     self._last_infer_t = 0.0    # classify the new lock now
                     self._last_class = None     # Auto: use only the new results
+                    self._last_device_t = 0.0   # no device has been seen on this lock
+                    self._cand = None           # the candidate became a lock
                     self.mode_changed.emit("LOCK", f)
                     self.status_msg.emit(
                         f"Locked +{peak_db:.0f} dB @ {f/1e6:.3f} MHz — Skip to advance")
@@ -706,11 +802,13 @@ class SweepWorker(QtCore.QThread):
                     dwell = float(self.cfg.get("auto_dwell_ms", FP_AUTO_DWELL_MS)) / 1000.0
                     thr   = float(self.cfg.get("auto_noise_pct", FP_AUTO_NOISE_PCT)) / 100.0
                     noise_p = self._noise_prob(self._last_class)
-                    # A vote holds the lock against the mean. A bursty link puts most
-                    # of its capture below the noise floor, thus the mean alone
-                    # releases a drone that is still there. See the defect #29.
+                    # A device that was seen recently holds the lock against the mean.
+                    # A bursty link puts most of its capture below the noise floor and
+                    # is silent between its bursts, thus the current buffer alone
+                    # releases a drone that is still there. See the defects #29 and #30.
+                    hold = float(self.cfg.get("device_hold_s", FP_DEVICE_HOLD_S))
                     if (self._last_class is not None
-                            and not device_votes(self._last_class)
+                            and time.time() - self._last_device_t >= hold
                             and time.time() - self._lock_t >= dwell
                             and noise_p >= thr):
                         self._release_lock(
@@ -1165,7 +1263,8 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.w_gain.setValue(GAIN)
         self.w_center = cell(2, 0, "Center Freq (Hz)", QtWidgets.QLineEdit(str(CENTER_FREQ)))
         self.w_span   = cell(2, 1, "Total Span (Hz)",
-                             hz_combo([5e6, 10e6, 20e6, 40e6, 80e6], TOTAL_SPAN_HZ))
+                             hz_combo([10e6, 20e6, 40e6, 80e6, 100e6, 200e6, 400e6],
+                                      TOTAL_SPAN_HZ))
         self.w_olap_pct = cell(2, 2, "Overlap (%)", QtWidgets.QComboBox())
         self.w_olap_pct.addItems(["0", "10", "20", "30", "40", "50", "60", "75"])
         self.w_olap_pct.setCurrentText(str(HOP_OVERLAP_PCT))

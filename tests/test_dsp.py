@@ -24,8 +24,10 @@ from terminal import (SweepWorker, signal_extent, compute_hop_freqs,
                       composite_geometry, badge_for, peak_hold_bias_db,
                       FFT_BINS, MARK_MIN_SNR_DB, EMPTY_SLOT_DB)
 
+# peak_hits 1 keeps these checks on the question they ask, which is where the peak is
+# and which frequencies are masked. The rule of the defect #31 has its own checks.
 APP_CFG = dict(sample_rate=10_000_000, rx_bw=8_000_000, overlap_pct=30,
-               fp_memory_guard_hz=3_000_000)
+               fp_memory_guard_hz=3_000_000, peak_hits=1)
 
 
 def _app_cfg():
@@ -46,6 +48,9 @@ def _worker(cfg, psd_bias_db=0.0):
     w._caught = []
     w._last_composite = None
     w._psd_bias_db = psd_bias_db
+    # _detect_new_peak writes the candidate here. A QObject that never ran its
+    # __init__ refuses a new attribute, thus every attribute it writes must exist.
+    w._cand = None
     return w
 
 
@@ -395,6 +400,46 @@ def main():
         text, _k = badge_for(_res({"droneA": 0.93, "droneB": 0.02, "noise": 0.05},
                                   dets=[("droneA", 0.6), ("noise", 0.3)]))
         assert "noise" not in text, text
+
+    @c.check("a peak of one sweep does not cause a lock, the defect #31")
+    def _():
+        cfg = _app_cfg(); cfg["peak_hits"] = 2
+        w = _worker(cfg)
+        n, _f0, _f1 = composite_geometry(cfg)
+        comp = np.full(n, -80.0, dtype=np.float32)
+        comp[n // 2] = -20.0
+        f, _db = w._detect_new_peak(comp)
+        assert f is None, f          # one sweep is not enough
+        f, db = w._detect_new_peak(comp)
+        assert f is not None and db > 50, (f, db)   # the second sweep agrees
+
+    @c.check("a burst that moves to another frequency never causes a lock")
+    def _():
+        # The report of Nojus: the lock jumps to the side because another emitter is
+        # loud for one sweep. Two sweeps that disagree must give nothing.
+        cfg = _app_cfg(); cfg["peak_hits"] = 2
+        w = _worker(cfg)
+        n, _f0, _f1 = composite_geometry(cfg)
+        for pos in (n // 4, 3 * n // 4, n // 4, 3 * n // 4):
+            comp = np.full(n, -80.0, dtype=np.float32)
+            comp[pos] = -20.0
+            f, _db = w._detect_new_peak(comp)
+            assert f is None, (pos, f)
+
+    @c.check("the candidate keeps its strongest reading across the sweeps")
+    def _():
+        # A burst is not at its peak in every sweep. The lock must report the height
+        # that was really seen, and not the height of the last sweep.
+        cfg = _app_cfg(); cfg["peak_hits"] = 2
+        w = _worker(cfg)
+        n, _f0, _f1 = composite_geometry(cfg)
+        comp = np.full(n, -80.0, dtype=np.float32)
+        comp[n // 2] = -20.0
+        w._detect_new_peak(comp)
+        weaker = np.full(n, -80.0, dtype=np.float32)
+        weaker[n // 2] = -50.0
+        _f, db = w._detect_new_peak(weaker)
+        assert db > 50, db           # -20 against the floor, not -50
 
     @c.check("a bursty drone is named although the mean of the buffer reads noise")
     def _():

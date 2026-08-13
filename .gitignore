@@ -3,6 +3,7 @@ __pycache__/
 output/
 
 fingerprint_data/
+heldout_data/
 measurements/**/*.npy
 transmitting/clips/
 
