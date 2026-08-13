@@ -264,10 +264,20 @@ The method:
    at 100 Msps, the B210 gives 61.44 Msps at the maximum and this program receives
    10 Msps in an 8 MHz filter. **Do not give the source file to GNU Radio.** See the
    section below.
-3. Connect the B210 TX to the PlutoSDR RX with a cable and a fixed attenuator. A
-   conducted path repeats, it makes the signal-to-noise ratio a setting and not an
-   estimate, and it keeps the WiFi and the Bluetooth of the building out of the
-   captures.
+3. Connect the B210 to the PlutoSDR. Two paths are possible and they are not equal.
+
+   | path | what it gives | what it costs |
+   | --- | --- | --- |
+   | A cable and a fixed attenuator | the signal-to-noise ratio is a setting and not an estimate. The WiFi and the Bluetooth of the building stay out of the captures. Nothing radiates | the channel is identical in every session, thus a held-out session cannot show that the model operates in another channel |
+   | An antenna at each end | the channel changes between the sessions, and the room is in every class. That is the condition that the monitor meets when it operates | the level that arrives depends on the antennas, the distance and the orientation. You must write those values down, or no capture has a signal-to-noise ratio |
+
+   For the cable path use 30 dB of fixed attenuation at the least. The B210 gives
+   approximately +10 dBm at 2.4 GHz and the PlutoSDR receiver is damaged near
+   +2.5 dBm. The attenuator must survive a wrong gain, and not only the gain that you
+   intend.
+
+   For the antenna path keep the transmitter gain low and the distance short. The
+   2.4 GHz band is shared with other users.
 4. Record each drone type from the training clips, at three or more TX gains. The TX
    gain gives the signal-to-noise ratio directly, thus the accuracy for a weak signal
    is a measured value.
@@ -284,8 +294,14 @@ The method:
 
 One consequence to state in a report: each class leaves the same B210, thus the
 hardware signature of the transmitter is identical in all of them. The model
-identifies the **type of the drone** from the waveform. It does not identify one
+identifies the type of the drone from the waveform. It does not identify one
 individual unit.
+
+The classes of this project were recorded with an antenna at each end, at 2440 MHz,
+with the receiver at 10 Msps, 8 MHz and gain 10. The transmitter gain, the antennas
+and the distance were not written down, thus no capture of that dataset carries a
+signal-to-noise ratio. Write those three values before your first session, because no
+capture holds them and no program can recover them later.
 
 ### Prepare a clip for the replay
 
@@ -502,7 +518,7 @@ The terminal at the end of a run, with the confusion matrix and the per-class fi
 
 ### The self-checks
 
-The project has 166 self-checks in 10 scripts. One command runs all of them. The same
+The project has 168 self-checks in 10 scripts. One command runs all of them. The same
 command runs on each push, through `.github/workflows/tests.yml`.
 
 ```bash
@@ -537,7 +553,7 @@ python tests/test_dsp.py
 | `fp_spectrogram.py` | 1 | The function `segment_vote` must find two transmitters in one buffer, and it must give no name to a buffer with a low probability. |
 | `tests/test_geometry.py` | 9 | The frequency of a tone must return through the map of the composite. The parts must join without a gap. The band must be the band that you asked for. |
 | `tests/test_spectrogram.py` | 18 | The size of the image, the normalization, the frequency of each row, and the segment cutter. A gain of 60 dB must not move the image. The high pass must remove the artifact of the receiver and keep a signal that is near it, and the 0 Hz row of the image must carry nothing for any input. Three of the checks use an artifact that is calibrated against the PlutoSDR, because a constant offset is not what a radio makes. |
-| `tests/test_dsp.py` | 30 | The peak hold must find a burst that is in 1 window of 100, and also a burst at the end of a long buffer. One window alone must miss it. The artifact of the receiver must not make a peak at the middle of a hop. The corrected noise floor must not change with the dwell time. The markers must give the correct middle and the correct edges of a signal of a known width. A hop that failed must not change the noise floor. The badge must give the correct name in each condition. |
+| `tests/test_dsp.py` | 32 | The peak hold must find a burst that is in 1 window of 100, and also a burst at the end of a long buffer. One window alone must miss it. The artifact of the receiver must not make a peak at the middle of a hop. The corrected noise floor must not change with the dwell time. The markers must give the correct middle and the correct edges of a signal of a known width. A hop that failed must not change the noise floor. The badge must give the correct name in each condition. |
 | `tests/test_snr_aug.py` | 11 | The function `_mix_noise` must give the exact signal-to-noise ratio, with an error of less than 0.1 dB. The function `_freq_shift` must change the phase of each sample only. |
 | `tests/test_model.py` | 17 | The sizes and the parameter count of `SpecCNN`, the votes of the segments, and a write and read cycle of `FingerprintModel`. The trainer and the graphical interface must calculate the same path for the meta file. The wrapper must read the sample rate of the training data from the meta, and a model that has none must give `None` and not 0 Hz. |
 | `tests/test_dataset.py` | 30 | The split by session, the energy gate, and the augmentation. A device segment must give a new image at each epoch, and a noise segment must never change. The val data must never change. A device class and the noise class must get the same DC treatment. The sample rate must come from the sidecars, and two rates in one dataset must give a warning. The tool `dataset_info` must give each warning. |

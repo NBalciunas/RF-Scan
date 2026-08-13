@@ -396,6 +396,26 @@ def main():
                                   dets=[("droneA", 0.6), ("noise", 0.3)]))
         assert "noise" not in text, text
 
+    @c.check("a bursty drone is named although the mean of the buffer reads noise")
+    def _():
+        # The defect #29. A real DJI MINI 3 capture is 26% signal and 74% silence,
+        # thus the mean reads 71% noise and the old rule answered 'clear' while a
+        # quarter of the segments named the drone. The numbers are measured, from
+        # 10 captures of session 1 on 2026-08-13.
+        text, kind = badge_for(_res({"DJI-MINI-3": 0.29, "Radiolink": 0.00,
+                                     "noise": 0.71},
+                                    dets=[("DJI-MINI-3", 0.29)]))
+        assert text == "DJI-MINI-3 29%", text
+        assert kind == "device", kind
+
+    @c.check("a quiet channel with no vote still reads 'clear'")
+    def _():
+        # The other half of #29: the votes give presence, thus they must not invent
+        # it. An empty channel has no vote above min_share and reads clear.
+        text, kind = badge_for(_res({"droneA": 0.05, "droneB": 0.03, "noise": 0.92}))
+        assert text == "clear (92% noise)", text
+        assert kind == "none", kind
+
     @c.check("a model with no noise class can never read 'clear'")
     def _():
         # p_dev is 1 - P(noise), and P(noise) is 0 when the class does not exist,

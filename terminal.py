@@ -266,6 +266,17 @@ def signal_extent(freqs, psd, min_snr_db=MARK_MIN_SNR_DB,
     return float(freqs[l]), f_center, float(freqs[r])
 
 
+def device_votes(result):
+    """Give the non-noise detections of a classifier result, strongest first.
+
+    The votes answer "is a device there", where the mean of the buffer answers "how
+    much of this capture is the device". The two disagree for every transmitter that
+    stops: a capture of a 26% duty video link is 74% silence, thus the mean reads
+    noise while a quarter of the segments name the drone. See the defect #29.
+    """
+    return [d for d in (result or {}).get("detections", []) if d["label"] != "noise"]
+
+
 def badge_for(result, device_thresh=None):
     """Turn a classifier result into the badge text and its style.
 
@@ -273,13 +284,18 @@ def badge_for(result, device_thresh=None):
     decides what the user reads.
 
     Presence and identity are two different questions.
-      1. p_dev = 1 - P(noise) answers "does a device transmit?". The strongest class
-         alone does not answer it. A result of 67% noise is a clear channel, and not
-         an unknown device.
-      2. Only above device_thresh does the name mean something. The name is unknown
-         when no single device class holds enough of the probability.
-      3. The votes of the segments have precedence. The mean of two transmitters in
-         one buffer becomes "unknown", but the votes give the two names.
+      1. p_dev = 1 - P(noise) is the mean over the segments of the buffer. It answers
+         "how much of this capture is the device", and that is presence only for a
+         transmitter that does not stop.
+      2. The votes of the segments answer presence for every other transmitter. A
+         capture of a 26% duty video link is 74% silence, thus the mean reads noise
+         while a quarter of the segments name the drone. The votes therefore have
+         precedence over the mean, for one name and for two. See the defect #29.
+      3. Only above device_thresh does a name from the mean mean something. The name
+         is unknown when no single device class holds enough of the probability.
+
+    The percentage follows the statistic that decided. A badge from the votes gives
+    the share of the segments, and a badge from the mean gives the probability.
 
     Gives (text, style). The style is a key of PlutoApp._BADGE_STYLES.
     """
@@ -291,14 +307,16 @@ def badge_for(result, device_thresh=None):
                        key=lambda cp: cp[1],
                        default=(result.get("label", "unknown"),
                                 result.get("confidence", 0.0)))
-    dets = [d for d in result.get("detections", []) if d["label"] != "noise"]
+    dets = device_votes(result)
     if len(dets) >= 2:
         return " + ".join(f"{d['label']} {d['share']:.0%}" for d in dets), "device"
-    if p_dev < device_thresh:
-        return f"clear ({1.0 - p_dev:.0%} noise)", "none"
-    if p_best >= device_thresh:
-        return f"{best} ({p_best:.0%})", "device"
-    return f"unknown device ({p_dev:.0%})", "other"
+    if p_dev >= device_thresh:
+        if p_best >= device_thresh:
+            return f"{best} ({p_best:.0%})", "device"
+        return f"unknown device ({p_dev:.0%})", "other"
+    if dets:
+        return f"{dets[0]['label']} {dets[0]['share']:.0%}", "device"
+    return f"clear ({1.0 - p_dev:.0%} noise)", "none"
 
 
 def _write_iq_sidecar(iq_path, device, session, freq, cfg, n_samples, ts):
@@ -688,7 +706,11 @@ class SweepWorker(QtCore.QThread):
                     dwell = float(self.cfg.get("auto_dwell_ms", FP_AUTO_DWELL_MS)) / 1000.0
                     thr   = float(self.cfg.get("auto_noise_pct", FP_AUTO_NOISE_PCT)) / 100.0
                     noise_p = self._noise_prob(self._last_class)
+                    # A vote holds the lock against the mean. A bursty link puts most
+                    # of its capture below the noise floor, thus the mean alone
+                    # releases a drone that is still there. See the defect #29.
                     if (self._last_class is not None
+                            and not device_votes(self._last_class)
                             and time.time() - self._lock_t >= dwell
                             and noise_p >= thr):
                         self._release_lock(

@@ -99,7 +99,9 @@ def report(data_dir: Path):
 
     print(f"\nDataset: {data_dir.resolve()}")
     print(f"Segments counted at seg_len {SEG_LEN} / seg_hop {SEG_HOP}\n")
-    head = f"{'class':<12}{'session':<12}{'files':>7}{'segments':>10}{'seconds':>9}{'size':>10}{'gain':>7}"
+    cw = max(12, max(len(c) for c in tree) + 2)   # a long class name must keep a space
+    head = (f"{'class':<{cw}}{'session':<12}{'files':>7}{'segments':>10}"
+            f"{'seconds':>9}{'size':>10}{'gain':>7}")
     print(head)
     print("-" * len(head))
 
@@ -112,7 +114,7 @@ def report(data_dir: Path):
         for name, s in sessions.items():
             gain = ",".join(str(g) for g in sorted(s["gain"])) or "?"
             all_gains |= s["gain"]
-            print(f"{cls:<12}{name:<12}{s['files']:>7,}{s['segments']:>10,}"
+            print(f"{cls:<{cw}}{name:<12}{s['files']:>7,}{s['segments']:>10,}"
                   f"{s['seconds']:>9.1f}{_fmt_gb(s['bytes']):>10}{gain:>7}")
             c_files += s["files"]; c_segs += s["segments"]
             c_bytes += s["bytes"]; c_secs += s["seconds"]
@@ -130,7 +132,7 @@ def report(data_dir: Path):
                     f"{cls}/{name} has {len(s['short'])} truncated capture(s). The "
                     f"worst is {worst[0]}, {worst[1]:,} of {worst[2]:,} samples. A "
                     f"full disk during the record is the usual cause.")
-        print(f"{cls:<12}{'TOTAL':<12}{c_files:>7,}{c_segs:>10,}"
+        print(f"{cls:<{cw}}{'TOTAL':<12}{c_files:>7,}{c_segs:>10,}"
               f"{c_secs:>9.1f}{_fmt_gb(c_bytes):>10}\n")
         tot_files += c_files; tot_segs += c_segs
         tot_bytes += c_bytes; tot_secs += c_secs
@@ -139,7 +141,7 @@ def report(data_dir: Path):
                             f"falls back to a random split, and that accuracy has no "
                             f"meaning. Record a second session with the antenna moved.")
 
-    print(f"{'ALL':<24}{tot_files:>7,}{tot_segs:>10,}{tot_secs:>9.1f}"
+    print(f"{'ALL':<{cw + 12}}{tot_files:>7,}{tot_segs:>10,}{tot_secs:>9.1f}"
           f"{_fmt_gb(tot_bytes):>10}")
 
     if not any(c.lower() == NOISE_CLASS for c in tree):
@@ -159,7 +161,7 @@ def report(data_dir: Path):
         freqs = sorted({f for s in sessions.values() for f in s["freqs"]})
         shown = ", ".join(f"{f:.3f}" for f in freqs[:8])
         more = f" (+{len(freqs) - 8} more)" if len(freqs) > 8 else ""
-        print(f"  {cls:<12}{shown or 'unknown'}{more}")
+        print(f"  {cls:<{cw}}{shown or 'unknown'}{more}")
 
     if warnings:
         print(f"\n{len(warnings)} warning(s):")
