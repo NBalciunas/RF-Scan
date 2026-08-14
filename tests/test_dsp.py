@@ -381,6 +381,16 @@ def main():
         text, kind = badge_for(_res({"droneA": 0.38, "droneB": 0.33, "noise": 0.29}))
         assert text.startswith("unknown device") and kind == "other", (text, kind)
 
+    @c.check("a vote names a device that the mean alone calls 'unknown'")
+    def _():
+        # The defect #35. A device is present (49% noise), no class holds enough of
+        # the mean, and one vote names droneA. "unknown device" is the answer of last
+        # resort, thus the vote wins. 82 of 500 real DJI captures read "unknown
+        # device" while this test ran after the mean.
+        text, kind = badge_for(_res({"droneA": 0.38, "droneB": 0.13, "noise": 0.49},
+                                    dets=[("droneA", 0.35)]))
+        assert text == "droneA 35%" and kind == "device", (text, kind)
+
     @c.check("two votes have precedence over the mean")
     def _():
         # The mean of two transmitters is 'unknown'. The votes give both names.

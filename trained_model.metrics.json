@@ -4,61 +4,61 @@
     "Radiolink-AT9S-Pro",
     "noise"
   ],
-  "val_acc": 0.9924393942724016,
-  "weak_val_acc": 0.9666653594258598,
+  "val_acc": 0.9865271764214598,
+  "weak_val_acc": 0.9734499392133025,
   "weak_val_db": [
     0.0,
     10.0
   ],
   "confusion": [
     [
-      19871,
-      86,
-      43
+      19677,
+      312,
+      11
     ],
     [
-      6,
-      5440,
-      53
+      25,
+      5427,
+      47
     ],
     [
-      3,
-      153,
-      19844
+      28,
+      190,
+      19782
     ]
   ],
   "confusion_rows": "true",
   "confusion_cols": "pred",
   "per_class": {
     "DJI-MINI-3": {
-      "precision": 0.9995472837022132,
-      "recall": 0.99355,
-      "f1": 0.9965396188565696,
+      "precision": 0.9973137354282818,
+      "recall": 0.98385,
+      "f1": 0.990536118801913,
       "support": 20000,
-      "predicted": 19880
+      "predicted": 19730
     },
     "Radiolink-AT9S-Pro": {
-      "precision": 0.9579151259024477,
-      "recall": 0.9892707765048191,
-      "f1": 0.9733404902487028,
+      "precision": 0.9153314218249283,
+      "recall": 0.9869067103109657,
+      "f1": 0.9497724886244312,
       "support": 5499,
-      "predicted": 5679
+      "predicted": 5929
     },
     "noise": {
-      "precision": 0.9951855566700101,
-      "recall": 0.9922,
-      "f1": 0.9936905358037056,
+      "precision": 0.9970766129032258,
+      "recall": 0.9891,
+      "f1": 0.9930722891566264,
       "support": 20000,
-      "predicted": 19940
+      "predicted": 19840
     }
   },
   "weak_per_class": {
     "DJI-MINI-3": {
-      "accuracy": 0.96715,
+      "accuracy": 0.97495,
       "support": 20000
     },
     "Radiolink-AT9S-Pro": {
-      "accuracy": 0.9649027095835606,
+      "accuracy": 0.9679941807601382,
       "support": 5499
     }
   },
@@ -67,7 +67,7 @@
   "n_weak": 25499,
   "epochs": 8,
   "preset": "balanced",
-  "git_commit": "8902d80",
-  "trained_at": "2026-08-13T11:15:08",
-  "train_minutes": 2.4222025434176127
+  "git_commit": "c933bc6",
+  "trained_at": "2026-08-13T16:45:34",
+  "train_minutes": 2.311245306332906
 }

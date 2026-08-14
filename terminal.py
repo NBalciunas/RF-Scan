@@ -317,8 +317,11 @@ def badge_for(result, device_thresh=None):
          capture of a 26% duty video link is 74% silence, thus the mean reads noise
          while a quarter of the segments name the drone. The votes therefore have
          precedence over the mean, for one name and for two. See the defect #29.
-      3. Only above device_thresh does a name from the mean mean something. The name
-         is unknown when no single device class holds enough of the probability.
+      3. Only above device_thresh does a name from the mean mean something. The badge
+         reads "unknown device" when a device is present, no single class holds enough
+         of the mean, and no vote names one. The vote comes first, because "unknown"
+         is the answer of last resort and a vote is a name. A lower device_thresh sent
+         a named capture to "unknown device" while this test ran after the mean.
 
     The percentage follows the statistic that decided. A badge from the votes gives
     the share of the segments, and a badge from the mean gives the probability.
@@ -336,12 +339,12 @@ def badge_for(result, device_thresh=None):
     dets = device_votes(result)
     if len(dets) >= 2:
         return " + ".join(f"{d['label']} {d['share']:.0%}" for d in dets), "device"
-    if p_dev >= device_thresh:
-        if p_best >= device_thresh:
-            return f"{best} ({p_best:.0%})", "device"
-        return f"unknown device ({p_dev:.0%})", "other"
+    if p_dev >= device_thresh and p_best >= device_thresh:
+        return f"{best} ({p_best:.0%})", "device"
     if dets:
         return f"{dets[0]['label']} {dets[0]['share']:.0%}", "device"
+    if p_dev >= device_thresh:
+        return f"unknown device ({p_dev:.0%})", "other"
     return f"clear ({1.0 - p_dev:.0%} noise)", "none"
 
 
