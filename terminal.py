@@ -99,6 +99,8 @@ RECORD_EVERY_N       = 10        # the record keeps every Nth buffer, or every N
 MARK_MIN_SNR_DB     = 6.0   # the peak must be this many dB above the floor
 MARK_EDGE_MARGIN_DB = 3.0   # an edge is where the signal goes below floor plus this
 MARK_SMOOTH_BINS    = 5     # a smooth operation prevents a movement of the edges
+MARK_CLIP_EDGE_FRAC = 0.02  # an edge inside this part of the window is not a real edge.
+                            # The signal continues past the receiver. See signal_clipped.
 
 # ── The stylesheet of the panel: white text on a dark background. ─────────────
 _INPUT_SS = (
@@ -346,6 +348,32 @@ def badge_for(result, device_thresh=None):
     if p_dev >= device_thresh:
         return f"unknown device ({p_dev:.0%})", "other"
     return f"clear ({1.0 - p_dev:.0%} noise)", "none"
+
+
+def signal_clipped(freqs, psd, edge_frac=MARK_CLIP_EDGE_FRAC, **kw):
+    """Say whether the signal reaches the edge of the receiver window.
+
+    signal_extent puts an edge where the smooth spectrum falls below the floor. An
+    edge that sits at the boundary of the window is not an edge: the spectrum never
+    fell, thus the signal continues past the receiver and the plot shows a part of it.
+    A part of a signal looks like another signal, thus the user must be told.
+
+    Gives (low, high). Each is True when the signal touches that side of the window.
+
+    The function has one limit and it is not small. signal_extent takes its floor from
+    the median of the window, thus a signal that fills more than half of the window
+    puts the median inside itself and signal_extent gives None. This function then
+    gives (False, False) for the widest signal of all. To answer that case the floor
+    must come from outside the window, which means a level that the sweep measured in
+    the band around the lock. See §9 Phase 4b task 4 of NOTES.md.
+    """
+    ext = signal_extent(freqs, psd, **kw)
+    if ext is None:
+        return False, False
+    f_left, _f_mid, f_right = ext
+    f0, f1 = float(freqs[0]), float(freqs[-1])
+    margin = abs(f1 - f0) * float(edge_frac)
+    return f_left <= f0 + margin, f_right >= f1 - margin
 
 
 def _write_iq_sidecar(iq_path, device, session, freq, cfg, n_samples, ts):
@@ -819,12 +847,13 @@ class SweepWorker(QtCore.QThread):
                             f"after {dwell*1000:.0f} ms")
                         mode = "SCAN"
                         continue
-                # Release the lock if the signal is absent for FP_GONE_S.
+                # Release the lock if the signal is absent for the gone time.
                 thresh = float(self.cfg.get("fp_peak_thresh_db", FP_PEAK_THRESH_DB))
+                gone = float(self.cfg.get("fp_gone_s", FP_GONE_S))
                 snr = (float(psd.max()) - float(np.median(psd)) + self._psd_bias_db)
                 if snr >= thresh:
                     self._last_present_t = time.time()
-                elif time.time() - self._last_present_t >= FP_GONE_S:
+                elif time.time() - self._last_present_t >= gone:
                     self._release_lock("Signal gone — moving on")
                     mode = "SCAN"
                     continue
@@ -946,6 +975,7 @@ class PlutoApp(QtWidgets.QMainWindow):
             "record_every_n"      : RECORD_EVERY_N,
             "fp_peak_thresh_db"   : FP_PEAK_THRESH_DB,
             "fp_hold_settle_ms"   : FP_HOLD_SETTLE_MS,
+            "fp_gone_s"           : FP_GONE_S,
             "fp_memory_ttl_s"     : FP_MEMORY_TTL_S,
             "fp_memory_guard_hz"  : FP_MEMORY_GUARD_HZ,
         }
@@ -1604,7 +1634,13 @@ class PlutoApp(QtWidgets.QMainWindow):
             self.p_zoom.setXRange(held_freq - sr / 2, held_freq + sr / 2, padding=0)
             self._zoom_center = held_freq
             self.zoom_wf_data[:] = -200.0      # remove the data of the last lock
-        self.p_zoom.setTitle(f"Narrowband Spectrum ({held_freq / 1e6:.3f} MHz)")
+        title = f"Narrowband Spectrum ({held_freq / 1e6:.3f} MHz)"
+        low, high = signal_clipped(freqs, psd)
+        if low or high:
+            side = "both edges" if low and high else ("the low edge" if low
+                                                     else "the high edge")
+            title += f"   |   wider than the window at {side}"
+        self.p_zoom.setTitle(title)
         self.zoom_wf_data = np.roll(self.zoom_wf_data, -1, axis=1)
         self.zoom_wf_data[:, -1] = psd
         self.zoom_wf_img.setImage(self.zoom_wf_data, autoLevels=False)

@@ -20,7 +20,7 @@ from _support import Checks, run, stub_hardware
 stub_hardware()          # this must run before the import of terminal
 
 import terminal
-from terminal import (SweepWorker, signal_extent, compute_hop_freqs,
+from terminal import (SweepWorker, signal_extent, signal_clipped, compute_hop_freqs,
                       composite_geometry, badge_for, peak_hold_bias_db,
                       FFT_BINS, MARK_MIN_SNR_DB, EMPTY_SLOT_DB)
 
@@ -380,6 +380,29 @@ def main():
         # A device is present (29% noise) but neither drone holds enough.
         text, kind = badge_for(_res({"droneA": 0.38, "droneB": 0.33, "noise": 0.29}))
         assert text.startswith("unknown device") and kind == "other", (text, kind)
+
+    @c.check("a signal inside the window is not called wider than it")
+    def _():
+        freqs = np.linspace(-5e6, 5e6, 1024)
+        psd = np.full(1024, -80.0)
+        psd[400:600] = -40.0
+        assert signal_clipped(freqs, psd) == (False, False)
+
+    @c.check("a signal against the window edge is reported, Phase 4b task 4")
+    def _():
+        # The lock sits low and the signal runs off the top of the window. The plot
+        # shows a part of it, thus the title must say so.
+        freqs = np.linspace(-5e6, 5e6, 1024)
+        psd = np.full(1024, -80.0)
+        psd[700:] = -40.0
+        low, high = signal_clipped(freqs, psd)
+        assert high and not low, (low, high)
+
+    @c.check("an empty window reports no clipped signal")
+    def _():
+        freqs = np.linspace(-5e6, 5e6, 1024)
+        rng = np.random.RandomState(3)
+        assert signal_clipped(freqs, -80.0 + rng.randn(1024) * 0.5) == (False, False)
 
     @c.check("a vote names a device that the mean alone calls 'unknown'")
     def _():

@@ -27,6 +27,9 @@ on the validation session and never on the held-out captures.
 """
 
 import argparse
+import json
+import subprocess
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -39,6 +42,62 @@ from train_model import _seg_powers_db, GATE_MARGIN_DB, NOISE_CLASS
 from terminal import badge_for
 
 SWEEP = (0.30, 0.20, 0.15, 0.10, 0.05, 0.02)
+
+
+def _git_commit():
+    try:
+        return subprocess.run(["git", "rev-parse", "--short", "HEAD"],
+                              capture_output=True, text=True,
+                              cwd=Path(__file__).parent).stdout.strip() or None
+    except Exception:
+        return None
+
+
+def _write_json(args, fp, share, gate, rows, devices):
+    """Write the report of the captures to a file.
+
+    The trainer writes `<out>.metrics.json` so that a result in the repository can be
+    traced to a commit. A held-out result needs the same, and it needs it more: the
+    captures may be read one time only, thus a number that lives in a terminal alone
+    is one window close from gone.
+    """
+    cols = devices + ["unknown", "clear"]
+    per_class, confusion = {}, {}
+    for cls in fp.classes:
+        g = [r for r in rows if r["cls"] == cls]
+        if not g:
+            continue
+        named = [badge_of(fp, r["seg_probs"], share) for r in g]
+        sig = [i for i, r in enumerate(g) if r["signal"]]
+        right = sum(n == cls for n in named)
+        clear = sum(n == "clear" for n in named)
+        per_class[cls] = {
+            "n": len(g),
+            "named_right": right,
+            "clear": clear,
+            "named_wrong": len(g) - right - clear,
+            "holds_signal": len(sig) if gate is not None else None,
+            "right_of_those": (sum(named[i] == cls for i in sig) / len(sig)
+                               if sig and cls != NOISE_CLASS else None),
+        }
+        confusion[cls] = {c: sum(n == c for n in named) for c in cols}
+    report = {
+        "model"         : args.model,
+        "data_dir"      : str(Path(args.data_dir).resolve()),
+        "session"       : args.session,
+        "classes"       : fp.classes,
+        "rule"          : {"vote_thresh": fp.vote_thresh, "min_share": share,
+                           "unknown_thresh": fp.unknown_thresh},
+        "gate_db"       : gate,
+        "per_class"     : per_class,
+        "confusion"     : confusion,
+        "confusion_rows": "true", "confusion_cols": "badge",
+        "git_commit"    : _git_commit(),
+        "evaluated_at"  : datetime.now().isoformat(timespec="seconds"),
+    }
+    Path(args.json).parent.mkdir(parents=True, exist_ok=True)
+    Path(args.json).write_text(json.dumps(report, indent=2), encoding="utf-8")
+    print(f"[ok] report -> {args.json}\n")
 
 
 def gate_threshold(data_dir: Path, seg_len, seg_hop, max_files=20):
@@ -124,12 +183,16 @@ def main(argv=None):
                    help="override MIN_SEG_SHARE for the report")
     p.add_argument("--sweep", action="store_true",
                    help="vary MIN_SEG_SHARE. Use the validation session only.")
+    p.add_argument("--json", default=None,
+                   help="also write the report to this file. A held-out result that "
+                        "lives only in a terminal is one window close from gone.")
     args = p.parse_args(argv)
 
-    from fp_spectrogram import MIN_SEG_SHARE
-    share = MIN_SEG_SHARE if args.min_share is None else args.min_share
     data_dir = Path(args.data_dir)
     fp = FingerprintModel(args.model)
+    # The model carries its own operating point since 2026-08-13. An older meta has
+    # no such field and FingerprintModel then gives the constant.
+    share = fp.min_seg_share if args.min_share is None else args.min_share
     print(f"\nModel   : {args.model}")
     print(f"Classes : {', '.join(fp.classes)}")
     print(f"Data    : {data_dir.resolve()}"
@@ -172,6 +235,9 @@ def main(argv=None):
                 acc_txt = "-"
             print(f"{cls:<20}{sess:<11}{len(g):>5}{right:>12}{clear:>7}{wrong:>12}"
                   f"{ok / len(g):>9.1%}   {sig_txt:>13}{acc_txt:>16}")
+
+    if args.json:
+        _write_json(args, fp, share, gate, rows, devices)
 
     # 2. the confusion of the captures
     cols = devices + ["unknown", "clear"]

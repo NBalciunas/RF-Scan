@@ -32,7 +32,7 @@ from torch.utils.data import (TensorDataset, DataLoader, WeightedRandomSampler,
                               get_worker_info, Dataset as TorchDataset)
 
 from fp_spectrogram import (iq_to_spectrogram, remove_dc, SpecCNN, VOTE_THRESH,
-                            N_FFT, STFT_HOP, SEG_LEN, SEG_HOP)
+                            MIN_SEG_SHARE, N_FFT, STFT_HOP, SEG_LEN, SEG_HOP)
 
 DATA_DIR   = "./fingerprint_data"
 OUTPUT     = "./trained_model.pt"   # the name that terminal.py loads at the start
@@ -721,6 +721,7 @@ def train(args):
         "base_ch"       : args.base_ch,
         "unknown_thresh": args.unknown_thresh,
         "vote_thresh"   : args.vote_thresh,
+        "min_seg_share" : args.min_seg_share,
         "val_acc"       : best_acc,
         "model"         : "SpecCNN",
         "representation": "stft256_logmag_1ch",
@@ -783,6 +784,10 @@ def parse_args():
     p.add_argument("--vote_thresh",    type=float, default=VOTE_THRESH,
                    help="the probability of one segment that gives a vote. It is "
                         "lower than unknown_thresh, because one segment is 0.4 ms.")
+    p.add_argument("--min_seg_share",  type=float, default=MIN_SEG_SHARE,
+                   help="the share of the segments that makes a class present. It "
+                        "goes in the meta, thus the operating point travels with "
+                        "the model. Choose it with evaluate.py --sweep.")
     p.add_argument("--seed",           type=int,   default=SEED)
     # The default of these flags is None. Thus the program can find a value that
     # the user gives, and use the preset for the other values.

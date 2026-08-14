@@ -27,7 +27,7 @@ from _support import Checks, run
 import train_model
 from train_model import train
 from fp_spectrogram import (FingerprintModel, iq_segments_to_specs,
-                            SEG_LEN, SEG_HOP, VOTE_THRESH)
+                            SEG_LEN, SEG_HOP, VOTE_THRESH, MIN_SEG_SHARE)
 
 SESSIONS, FILES, SEGS = 3, 6, 20
 FILE_LEN = SEG_LEN + (SEGS - 1) * SEG_HOP
@@ -41,12 +41,17 @@ def _noise(n, sigma=0.02, rng=None):
     return ((r.randn(n) + 1j * r.randn(n)) * (sigma / np.sqrt(2))).astype(np.complex64)
 
 
-def _capture(cls, rng, continuous=False):
+def _capture(cls, rng, continuous=False, duty=0.60):
     """A device capture is bursts with silence between them, as a real one is.
 
     continuous=True fills the whole buffer with the transmission. That is what the
     radio sees while the drone is actually sending, thus it is the right input for
-    the two-drone vote."""
+    the two-drone vote.
+
+    duty is the part of the buffer that holds the transmission, in three bursts. The
+    default of 0.60 is more than twice as generous as a real link: a DJI MINI 3
+    capture is 26% signal, and the defect #29 lived in that difference. See the check
+    that gives a realistic duty."""
     iq = _noise(FILE_LEN, rng=rng)
     if cls == "noise":
         return iq
@@ -62,7 +67,7 @@ def _capture(cls, rng, continuous=False):
     # tone and the task is a small fingerprint, not a single frequency.
     for start in (0, 35, 70):
         s = start * FILE_LEN // 100
-        e = s + FILE_LEN // 5
+        e = s + int(FILE_LEN * duty / 3)
         t = np.arange(e - s)
         burst = np.exp(2j * np.pi * f * t)
         if cls == "droneB":
@@ -85,6 +90,7 @@ def build_tree(root):
 def _args(data_dir, out, **over):
     a = dict(data_dir=str(data_dir), out=str(out), seg_len=SEG_LEN, seg_hop=SEG_HOP,
              batch_size=64, lr=1e-3, unknown_thresh=0.8, vote_thresh=VOTE_THRESH,
+             min_seg_share=MIN_SEG_SHARE,
              seed=0, preset="test",
              epochs=25, base_ch=8, max_files_per_class=0, max_segs_per_file=0,
              max_segs_per_class=0, store_dtype="float16", gate_margin_db=3.0,
@@ -156,6 +162,24 @@ def main():
                 top = max(res["probs"], key=res["probs"].get)
                 c.note(f"{cls:<7} -> {top} ({res['probs'][top]:.0%})")
                 assert top == cls, f"a {cls} capture was called {top}"
+
+        @c.check("a capture at a realistic 26% duty is still named, the defect #29")
+        def _():
+            # The wrapper checks use 60% duty and they passed while the program read
+            # `clear` on every real drone capture. A DJI MINI 3 capture is 26% signal,
+            # thus the mean of the buffer reads noise and only the votes hold the
+            # drone. This check asks the question at the duty of the radio.
+            fm = FingerprintModel(str(out))
+            rng = np.random.RandomState(2626)
+            for cls in ("droneA", "droneB"):
+                iq = np.concatenate([_capture(cls, rng, duty=0.26)
+                                     for _ in range(3)])
+                res = fm.classify_iq(iq)
+                share = max((d["share"] for d in res["detections"]
+                             if d["label"] == cls), default=0.0)
+                c.note(f"{cls} at 26% duty: p(noise) {res['probs']['noise']:.2f}, "
+                       f"vote share {share:.2f}")
+                assert share > 0.0, f"no vote named {cls} at a realistic duty"
 
         def _two_drone_buffer():
             rng = np.random.RandomState(1234)

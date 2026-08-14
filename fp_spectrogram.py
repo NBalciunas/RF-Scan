@@ -188,6 +188,10 @@ class FingerprintModel:
         base          = int(meta.get("base_ch",  16))
         self.unknown_thresh = float(meta.get("unknown_thresh", unknown_thresh))
         self.vote_thresh    = float(meta.get("vote_thresh", VOTE_THRESH))
+        # The operating point of the badge. It belongs to the model and not to the
+        # code, because it is chosen against one dataset. A model from before this
+        # field falls back to the constant.
+        self.min_seg_share  = float(meta.get("min_seg_share", MIN_SEG_SHARE))
         self.infer_max_segs = int(infer_max_segs)
         # The rate of the captures that trained the model. A spectrogram row is
         # sample_rate / n_fft Hz, thus another rate makes every frequency in the
@@ -221,7 +225,7 @@ class FingerprintModel:
             "probs"     : {c: float(p) for c, p in zip(self.classes, probs)},
             "unknown"   : conf < self.unknown_thresh,
             "shares"    : {d["label"]: d["share"] for d in votes},
-            "detections": [d for d in votes if d["share"] >= MIN_SEG_SHARE],
+            "detections": [d for d in votes if d["share"] >= self.min_seg_share],
         }
 
 

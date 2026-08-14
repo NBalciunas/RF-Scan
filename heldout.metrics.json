@@ -1,0 +1,66 @@
+{
+  "model": "trained_model.pt",
+  "data_dir": "C:\\Users\\Nojus\\PycharmProjects\\RF-Scan\\heldout_data",
+  "session": null,
+  "classes": [
+    "DJI-MINI-3",
+    "Radiolink-AT9S-Pro",
+    "noise"
+  ],
+  "rule": {
+    "vote_thresh": 0.5,
+    "min_share": 0.1,
+    "unknown_thresh": 0.8
+  },
+  "gate_db": 8.663355600733905,
+  "per_class": {
+    "DJI-MINI-3": {
+      "n": 500,
+      "named_right": 490,
+      "clear": 10,
+      "named_wrong": 0,
+      "holds_signal": 498,
+      "right_of_those": 0.9839357429718876
+    },
+    "Radiolink-AT9S-Pro": {
+      "n": 500,
+      "named_right": 169,
+      "clear": 331,
+      "named_wrong": 0,
+      "holds_signal": 312,
+      "right_of_those": 0.5192307692307693
+    },
+    "noise": {
+      "n": 500,
+      "named_right": 0,
+      "clear": 498,
+      "named_wrong": 2,
+      "holds_signal": 166,
+      "right_of_those": null
+    }
+  },
+  "confusion": {
+    "DJI-MINI-3": {
+      "DJI-MINI-3": 490,
+      "Radiolink-AT9S-Pro": 0,
+      "unknown": 0,
+      "clear": 10
+    },
+    "Radiolink-AT9S-Pro": {
+      "DJI-MINI-3": 0,
+      "Radiolink-AT9S-Pro": 169,
+      "unknown": 0,
+      "clear": 331
+    },
+    "noise": {
+      "DJI-MINI-3": 0,
+      "Radiolink-AT9S-Pro": 2,
+      "unknown": 0,
+      "clear": 498
+    }
+  },
+  "confusion_rows": "true",
+  "confusion_cols": "badge",
+  "git_commit": "23453b5",
+  "evaluated_at": "2026-08-14T09:54:05"
+}
