@@ -19,7 +19,7 @@ import numpy as np
 import torch
 
 from _support import Checks, run
-# dataset_info moved to tools/ on 2026-08-13. The folder has no __init__.py and it
+# dataset_info moved to tools/ on 2026-08-14. The folder has no __init__.py and it
 # needs none: a namespace package works from the repo root that _support puts on
 # sys.path, which is what tests/test_prepare_clip.py does with transmitting/.
 from tools import dataset_info

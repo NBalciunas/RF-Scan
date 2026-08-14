@@ -538,6 +538,31 @@ def _dataset_sample_rate(data_dir: Path):
     return rates.pop()
 
 
+def _dataset_device_freqs(data_dir: Path, noise_label="noise"):
+    """Give the centre frequencies that the device classes were recorded at.
+
+    A scanner uses these to know where it has been taught to listen, thus it never
+    walks past one of them because a band plan called it WiFi. Every distinct
+    frequency of every device class is kept, not one value: a second drone recorded
+    somewhere else in the band must protect its own place too.
+
+    The `noise` class is left out on purpose. It is recorded across the whole sweep in
+    a band record, thus it names frequencies where no device was ever taught."""
+    freqs = set()
+    for j in Path(data_dir).rglob("*.json"):
+        cls = j.parent.parent.name
+        if cls == noise_label:
+            continue
+        try:
+            with open(j) as f:
+                cf = json.load(f).get("center_freq")
+        except Exception:
+            continue
+        if cf:
+            freqs.add(round(float(cf)))
+    return sorted(freqs)
+
+
 def train(args):
     rng = np.random.RandomState(args.seed)
     torch.manual_seed(args.seed)
@@ -717,6 +742,7 @@ def train(args):
         "n_fft"         : N_FFT,
         "stft_hop"      : STFT_HOP,
         "sample_rate"   : _dataset_sample_rate(Path(args.data_dir)),
+        "train_freqs"   : _dataset_device_freqs(Path(args.data_dir)),
         "seg_len"       : args.seg_len,
         "seg_hop"       : args.seg_hop,
         "base_ch"       : args.base_ch,

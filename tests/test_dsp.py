@@ -22,6 +22,8 @@ stub_hardware()          # this must run before the import of terminal
 import terminal
 from terminal import (SweepWorker, signal_extent, signal_clipped, compute_hop_freqs,
                       composite_geometry, badge_for, peak_hold_bias_db,
+                      band_floor_db, window_filled, lock_snr_db,
+                      band_plan_name, occupied_span, near_known_device,
                       FFT_BINS, MARK_MIN_SNR_DB, EMPTY_SLOT_DB)
 
 # peak_hits 1 keeps these checks on the question they ask, which is where the peak is
@@ -403,6 +405,216 @@ def main():
         freqs = np.linspace(-5e6, 5e6, 1024)
         rng = np.random.RandomState(3)
         assert signal_clipped(freqs, -80.0 + rng.randn(1024) * 0.5) == (False, False)
+
+    # ── The window that is full of signal. Phase 4b task 4, the second half. ──
+    # A 20 MHz WiFi channel in a 10 MHz receiver window. Every bin holds signal and
+    # the outer tenth is the skirt of the analog filter. The numbers follow 120 real
+    # captures of WiFi channel 11, where the window sat 14 dB above the band floor at
+    # the mean and 22 dB at its best.
+
+    def _full_window(floor=-80.0, above=20.0, n=1024):
+        psd = np.full(n, floor + above)
+        k = n // 10
+        psd[:k] = np.linspace(floor + above - 15.0, floor + above, k)
+        psd[-k:] = np.linspace(floor + above, floor + above - 15.0, k)
+        return psd
+
+    @c.check("a window full of signal is reported, Phase 4b task 4")
+    def _():
+        assert window_filled(_full_window(), -80.0)
+
+    @c.check("an empty window is not called full")
+    def _():
+        rng = np.random.RandomState(11)
+        assert not window_filled(-80.0 + rng.randn(1024) * 1.5, -80.0)
+
+    @c.check("a signal that covers a third of the window is not called full")
+    def _():
+        psd = np.full(1024, -80.0)
+        psd[350:680] = -55.0
+        assert not window_filled(psd, -80.0)
+
+    @c.check("no band floor means no report of a full window")
+    def _():
+        # The Narrowband mode never sweeps, thus nothing measured the band around
+        # the frequency and the program must not guess.
+        assert not window_filled(_full_window(), None)
+
+    @c.check("the floor inside the window can not see a full window, which is why "
+             "band_floor_db exists")
+    def _():
+        # This is the defect that the two functions above answer. signal_extent takes
+        # its floor from the median of the window, thus a full window puts the median
+        # inside the signal: it reported 3.24 MHz at the median on 120 real captures
+        # of a 20 MHz channel, and signal_clipped saw no edge at the boundary on any.
+        freqs = np.linspace(-5e6, 5e6, 1024)
+        psd = _full_window()
+        # Any structure inside the signal becomes "the signal" once the median sits
+        # inside it. A real channel has more than this.
+        psd[500:530] += 8.0
+        ext = signal_extent(freqs, psd)
+        assert ext is not None and (ext[2] - ext[0]) < 2e6, ext
+        assert signal_clipped(freqs, psd) == (False, False)
+        assert window_filled(psd, -80.0)        # the floor from outside answers it
+
+    @c.check("band_floor_db leaves out the lock and the band next to it")
+    def _():
+        # 100 MHz of band at -80 dB, and a signal of 12 MHz around the lock. A floor
+        # that holds the signal is not a floor.
+        comp = np.full(2000, -80.0)
+        f0, f1 = 2_390_000_000, 2_490_000_000
+        comp[880:1120] = -30.0                  # 2434 to 2446 MHz
+        got = band_floor_db(comp, f0, f1, 2_440_000_000, 10_000_000)
+        assert abs(got - (-80.0)) < 0.5, got
+
+    @c.check("band_floor_db does not count a hop that gave no data")
+    def _():
+        comp = np.full(2000, -80.0)
+        comp[:900] = EMPTY_SLOT_DB
+        got = band_floor_db(comp, 2_390_000_000, 2_490_000_000)
+        assert abs(got - (-80.0)) < 0.5, got
+
+    @c.check("band_floor_db gives None when the guard leaves too little band")
+    def _():
+        comp = np.full(100, -80.0)
+        assert band_floor_db(comp, 2_435_000_000, 2_445_000_000,
+                             2_440_000_000, 10_000_000) is None
+
+    @c.check("a full window is still present, the defect #38")
+    def _():
+        # The release test asks "is the signal still there". A window full of signal
+        # gave 12.4 dB against its own median and 32 dB against the band floor, on
+        # the DJI video link, at a release threshold of 18 dB.
+        psd = _full_window(floor=-80.0, above=20.0)
+        assert lock_snr_db(psd, 8.2) < 18.0                  # what it did
+        assert lock_snr_db(psd, 8.2, -80.0) >= 18.0          # what it does now
+
+    @c.check("an empty window is still absent when the band floor is used")
+    def _():
+        rng = np.random.RandomState(5)
+        psd = -80.0 + rng.randn(1024) * 1.5
+        assert lock_snr_db(psd, 8.2, -80.0) < 18.0
+
+    @c.check("a narrow signal is present either way")
+    def _():
+        psd = np.full(1024, -80.0)
+        psd[500:530] = -45.0
+        assert lock_snr_db(psd, 8.2) >= 18.0
+        assert lock_snr_db(psd, 8.2, -80.0) >= 18.0
+
+    # ── The band plan. §9 Phase 5b item 5, and the answer to §8 #37. ─────────
+    # Every width below is a measurement of 2026-08-14 and not a guess.
+
+    @c.check("a 20 MHz channel at a WiFi centre is named WiFi")
+    def _():
+        assert band_plan_name(2_462_000_000, 20_000_000) == "WiFi ch 11"
+        # The narrowest reading of channel 11 over a hold of four sweeps, measured
+        # on 2026-08-14 across three sessions: 12.95, 13.04, 13.13 and 15.31 MHz.
+        assert band_plan_name(2_460_900_000, 12_950_000) == "WiFi ch 11"
+
+    @c.check("the replayed drones are NOT named WiFi, though they sit on the raster")
+    def _():
+        # The measurement that decides the whole design. The AT9S was at 2438.15 MHz
+        # and the DJI at 2441.48 MHz, which are 1.15 MHz from channel 6 and 0.52 MHz
+        # from channel 7. Only the width keeps them out of the WiFi bucket.
+        assert band_plan_name(2_438_150_000, 9_120_000) is None
+        assert band_plan_name(2_441_480_000, 9_020_000) is None
+
+    @c.check("a narrow signal at a WiFi centre is not WiFi")
+    def _():
+        assert band_plan_name(2_437_000_000, 1_000_000) != "WiFi ch 6"
+
+    @c.check("Bluetooth is named by its width, and its advertising channels by name")
+    def _():
+        assert band_plan_name(2_402_100_000, 1_170_000) == "Bluetooth LE advertising"
+        assert band_plan_name(2_426_000_000, 930_000) == "Bluetooth LE advertising"
+        assert band_plan_name(2_450_000_000, 1_000_000) == "Bluetooth"
+
+    @c.check("the band plan says nothing about a width it does not know")
+    def _():
+        assert band_plan_name(2_440_000_000, 5_000_000) is None
+        assert band_plan_name(2_440_000_000, 9_000_000) is None
+
+    # ── A frequency the model was trained at is never walked past. ───────────
+    # The width test alone is not safe at 2440 MHz: the replay sits between WiFi
+    # channels 6 and 7, and a drone beside the traffic of the room measured 10.68 to
+    # 11.25 MHz against an 11 MHz limit, thus it crossed on some sweeps and not on
+    # others. Measured 2026-08-14 in a real composite.
+
+    @c.check("a candidate at a trained frequency is protected")
+    def _():
+        assert near_known_device(2_438_150_000, [2_440_000_000])   # the AT9S
+        assert near_known_device(2_441_480_000, [2_440_000_000])   # the DJI
+
+    @c.check("every trained frequency protects its own place, not only the first")
+    def _():
+        # A second drone recorded elsewhere in the band must be protected there too.
+        known = [2_440_000_000, 2_470_000_000]
+        assert near_known_device(2_469_000_000, known)
+        assert near_known_device(2_441_000_000, known)
+        assert not near_known_device(2_455_000_000, known)
+
+    @c.check("a frequency far from any trained one is not protected")
+    def _():
+        assert not near_known_device(2_462_000_000, [2_440_000_000])
+        assert not near_known_device(2_412_000_000, [2_440_000_000])
+
+    @c.check("no trained frequency means no protection, and no crash")
+    def _():
+        assert not near_known_device(2_440_000_000, [])
+        assert not near_known_device(2_440_000_000, None)
+
+    @c.check("the guard covers where both drones were really found")
+    def _():
+        # The AT9S was 1.85 MHz below the record frequency and the DJI 1.48 MHz above.
+        assert terminal.FP_KNOWN_GUARD_HZ >= 2_000_000
+
+    @c.check("the limit sits between the drones and WiFi with margin on both sides")
+    def _():
+        # 9.12 MHz is the widest drone measured and 12.95 MHz the narrowest WiFi.
+        # If a later session moves WIFI_MIN_WIDTH_HZ, this check says what it costs.
+        assert 9_120_000 < terminal.WIFI_MIN_WIDTH_HZ < 12_950_000
+        assert terminal.WIFI_MIN_WIDTH_HZ - 9_120_000 >= 1_500_000
+        assert 12_950_000 - terminal.WIFI_MIN_WIDTH_HZ >= 1_500_000
+
+    @c.check("occupied_span measures a signal wider than the receiver window")
+    def _():
+        # 100 MHz of band in 2000 bins. A 20 MHz channel around 2462 MHz, which no
+        # 10 MHz window could measure from the inside.
+        f0, f1 = 2_390_000_000, 2_490_000_000
+        comp = np.full(2000, -80.0)
+        lo = int((2_452_000_000 - f0) / (f1 - f0) * 2000)
+        hi = int((2_472_000_000 - f0) / (f1 - f0) * 2000)
+        comp[lo:hi] = -50.0
+        span = occupied_span(comp, f0, f1, 2_462_000_000, -80.0)
+        assert span is not None
+        width = span[1] - span[0]
+        assert 19e6 <= width <= 21e6, width / 1e6
+        assert band_plan_name((span[0] + span[1]) / 2, width) == "WiFi ch 11"
+
+    @c.check("occupied_span gives None where the band holds no signal")
+    def _():
+        comp = np.full(2000, -80.0)
+        assert occupied_span(comp, 2_390_000_000, 2_490_000_000,
+                             2_440_000_000, -80.0) is None
+
+    @c.check("occupied_span stops at the edge of the signal, not at the band edge")
+    def _():
+        f0, f1 = 2_390_000_000, 2_490_000_000
+        comp = np.full(2000, -80.0)
+        comp[900:1000] = -50.0          # one block
+        comp[1200:1300] = -50.0         # another, with a gap between them
+        span = occupied_span(comp, f0, f1, 2_437_500_000, -80.0)
+        assert span is not None and (span[1] - span[0]) < 6e6, span
+
+    @c.check("the band floor is the quiet part of the band, not its middle")
+    def _():
+        # Half the band is busy. The percentile must stay on the quiet half, because
+        # the room is not empty and the reference may not follow the traffic.
+        comp = np.full(2000, -80.0)
+        comp[1000:] = -40.0
+        got = band_floor_db(comp, 2_390_000_000, 2_490_000_000)
+        assert abs(got - (-80.0)) < 0.5, got
 
     @c.check("a vote names a device that the mean alone calls 'unknown'")
     def _():

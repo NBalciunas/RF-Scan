@@ -47,13 +47,25 @@ RX_BW_HZ        = 8_000_000   # 0.8 of the sample rate. A lower value fills part
                               # spectrogram with the skirt of the filter and not with signal.
 GAIN            = 10
 
-CENTER_FREQ     = 2_440_000_000   # the middle of the 2.4 GHz ISM band. The narrowband
+CENTER_FREQ     = 2_400_000_000   # the low edge of the 2.4 GHz ISM band. The narrowband
                                   # mode and the record path also start here.
-TOTAL_SPAN_HZ   = 100_000_000     # 2390 to 2490 MHz, thus the sweep holds all of the
-                                  # ISM band, 2400 to 2483.5 MHz. 15 hops at 10 Msps.
+TOTAL_SPAN_HZ   = 100_000_000     # 2350 to 2450 MHz at this centre. 15 hops at 10 Msps.
+                                  # The ISM band goes to 2483.5 MHz, thus the top of the
+                                  # band is outside the default sweep. Set the centre to
+                                  # 2440 MHz to hold all of it.
 HOP_DWELL_MS    = 50
-HOP_SETTLE_MS   = 50
+HOP_SETTLE_MS   = 5           # the wait after a tune, before the program reads. It was
+                              # 50 ms until 2026-08-14, where it was believed to keep the
+                              # data of the new frequency. It never did that: the queue of
+                              # the driver did, by accident. See RX_KERNEL_BUFFERS and the
+                              # defect #36. The radio gives the new frequency in the first
+                              # buffer at every wait from 0 to 50 ms, measured.
 HOP_OVERLAP_PCT = 30
+RX_KERNEL_BUFFERS = 1         # libiio keeps four buffers and rx() gives the oldest, thus a
+                              # change of rx_lo appeared only in the fourth buffer that the
+                              # program read. One buffer costs 51 ms for each read and it
+                              # makes the next read hold the frequency that was asked for.
+                              # See the defect #36.
 
 FFT_BINS           = 1024
 PSD_CHUNK_WINS     = 1024     # FFT windows for each block of the peak hold. Memory only.
@@ -101,6 +113,63 @@ MARK_EDGE_MARGIN_DB = 3.0   # an edge is where the signal goes below floor plus 
 MARK_SMOOTH_BINS    = 5     # a smooth operation prevents a movement of the edges
 MARK_CLIP_EDGE_FRAC = 0.02  # an edge inside this part of the window is not a real edge.
                             # The signal continues past the receiver. See signal_clipped.
+MARK_BAND_FLOOR_PCT = 25    # the percentile of the swept band that is its noise floor.
+                            # Measured over three sessions: p25 held -22.4 to -23.9 dB
+                            # while p50 moved -14.9 to -23.2 with the traffic of the room.
+MARK_BAND_GUARD_FRAC = 1.0  # the guard around the lock when the floor is measured, in
+                            # sample rates. The signal that fills the window continues
+                            # past it, thus the reference must start further away.
+MARK_BAND_FLOOR_MIN = 64    # fewer bins than this outside the guard measure nothing
+MARK_FILL_MARGIN_DB = 10.0  # a bin this far above the band floor holds signal
+MARK_FILL_SHARE     = 0.5   # this share of the window above the margin makes it full.
+                            # Measured on 280 captures of the room: a WiFi channel of
+                            # 20 MHz in the 10 MHz window gives 1.00 and the widest empty
+                            # window gives 0.16. See window_filled.
+
+# ── The band plan of 2.4 GHz. It is public and fixed, thus it needs no model. ─────
+# Channels 1 to 13 are 2412 to 2472 MHz at a step of 5 MHz, and channel 14 is 2484.
+WIFI_CH_HZ = {n: int((2407 + 5 * n) * 1e6) for n in range(1, 14)}
+WIFI_CH_HZ[14] = 2_484_000_000
+WIFI_TOL_HZ       = 3_000_000   # how near the middle must sit to a channel centre
+WIFI_MIN_WIDTH_HZ = 11_000_000  # and how wide it must be. The width is what decides:
+                                # the channels are 5 MHz apart, thus every frequency in
+                                # the band is within 2.5 MHz of one of them. Measured
+                                # 2026-08-14 over a hold of BAND_HOLD_SWEEPS: WiFi
+                                # channel 11 read 12.95 to 15.31 MHz and the replayed
+                                # drones 9.00 to 9.12 MHz, and both drones sit within
+                                # 1.2 MHz of a channel centre. This value is the middle
+                                # of those two, thus each has about 1.9 MHz of margin.
+BAND_HOLD_SWEEPS  = 4           # sweeps that the band plan holds before it measures a
+                                # width. One sweep of WiFi is full of gaps: the run of
+                                # bins above the floor read 4.6 to 13.0 MHz across ten
+                                # sweeps and reached the limit twice. A hold reads 12.95
+                                # to 15.31 MHz. Same reason as the peak hold of the PSD.
+BLE_ADV_HZ      = (2_402_000_000, 2_426_000_000, 2_480_000_000)
+                                # The three advertising channels of Bluetooth LE, 37, 38
+                                # and 39. These are fixed by the specification and every
+                                # LE device uses these three and no others to advertise.
+                                # They sit in the gaps between WiFi channels 1, 6 and 11
+                                # on purpose. The 37 data channels hop and only their
+                                # grid is fixed, the even megahertz from 2404 to 2478.
+BT_LOW_HZ       = 2_400_000_000
+BT_HIGH_HZ      = 2_483_500_000
+BT_MAX_WIDTH_HZ = 3_000_000     # classic Bluetooth is 1 MHz and LE is 2 MHz for each
+                                # channel, thus 3 MHz covers both with margin. Measured
+                                # 0.93 to 1.17 MHz in this room. The drones are 9 MHz,
+                                # thus this limit has no way to reach them.
+BT_TOL_HZ       = 1_000_000
+# The frequencies the model was trained at. A candidate near one of these is never
+# walked past, whatever the band plan says, because the program knows it has been
+# taught to listen there. The model carries them in its .meta.json when the trainer
+# wrote them, and this is the fallback for a model from before that field. Every one
+# of the 6,000 captures of this dataset is at 2440 MHz. See near_known_device.
+FP_KNOWN_DEVICE_HZ = (2_440_000_000,)
+FP_KNOWN_GUARD_HZ  = 6_000_000  # half a receiver window plus the drift of a hopping
+                                # link. The AT9S was found 1.85 MHz below its record
+                                # frequency and the DJI 1.48 MHz above it.
+FP_SKIP_BAND_PLAN = True        # Auto walks past a signal that the band plan names.
+                                # The scan exists to find what is not on the raster.
+                                # See the defect #37.
 
 # ── The stylesheet of the panel: white text on a dark background. ─────────────
 _INPUT_SS = (
@@ -376,6 +445,199 @@ def signal_clipped(freqs, psd, edge_frac=MARK_CLIP_EDGE_FRAC, **kw):
     return f_left <= f0 + margin, f_right >= f1 - margin
 
 
+def band_floor_db(composite, f0, f1, exclude_hz=None,
+                  guard_hz=0.0, pct=MARK_BAND_FLOOR_PCT):
+    """Give the noise floor of the swept band, measured away from one place in it.
+
+    The sweep covers the band around the lock, thus it holds a reference that the
+    narrowband window can not hold: a level that the signal under test does not
+    reach. The guard removes the lock and the part of the band next to it, because a
+    signal that fills the receiver window continues past it.
+
+    A hop that gave no data keeps EMPTY_SLOT_DB and it is not a floor.
+
+    Gives dB, or None when too little of the band is left to measure.
+    """
+    comp = np.asarray(composite, dtype=np.float64)
+    total = len(comp)
+    if total == 0 or f1 <= f0:
+        return None
+    ok = comp > EMPTY_SLOT_DB + 1.0
+    if exclude_hz is not None and guard_hz > 0:
+        s = hz_to_bin(exclude_hz - guard_hz, f0, f1, total)
+        e = hz_to_bin(exclude_hz + guard_hz, f0, f1, total) + 1
+        ok[max(0, min(total, s)):max(0, min(total, e))] = False
+    if int(ok.sum()) < MARK_BAND_FLOOR_MIN:
+        return None
+    return float(np.percentile(comp[ok], pct))
+
+
+def window_filled(psd, floor_db, margin_db=MARK_FILL_MARGIN_DB,
+                  min_share=MARK_FILL_SHARE):
+    """Say whether the receiver window is full of signal from one side to the other.
+
+    signal_extent and signal_clipped both take their floor from the median of the
+    window that they read, thus neither can answer this question: a signal that fills
+    the window puts the median inside itself. Measured on 120 captures of a 20 MHz
+    WiFi channel in the 10 MHz window, signal_extent reported a signal of 3.24 MHz at
+    the median and signal_clipped reported no edge at the boundary on any of them.
+    The program was confident and wrong, which is worse than the silence that this
+    task expected.
+
+    The floor must therefore come from outside the window. That is the defect #27
+    again: the reference must come from outside the thing that is measured.
+
+    Measured on 280 captures of the room, at margin 10.0 dB: the full window gives a
+    share of 1.00, the part window 0.39 at its largest, and the two empty windows
+    0.16 at their largest.
+    """
+    if floor_db is None:
+        return False
+    return bool(np.mean(np.asarray(psd, dtype=np.float64)
+                        > float(floor_db) + float(margin_db)) >= float(min_share))
+
+
+def occupied_span(composite, f0, f1, at_hz, floor_db,
+                  margin_db=MARK_FILL_MARGIN_DB):
+    """Give the contiguous part of the swept band around at_hz that holds signal.
+
+    The width of a signal cannot be measured inside the receiver window when it is
+    wider than the window, and that is the case the band plan needs most: a WiFi
+    channel is 20 MHz and the window is 10 MHz. The sweep already covers the band,
+    thus the width comes from the composite and not from the zoom.
+
+    Gives (low_hz, high_hz), or None when the bin at at_hz holds no signal.
+    """
+    comp = np.asarray(composite, dtype=np.float64)
+    total = len(comp)
+    if total == 0 or f1 <= f0 or floor_db is None:
+        return None
+    thr = float(floor_db) + float(margin_db)
+    i = hz_to_bin(at_hz, f0, f1, total)
+    if i < 0 or i >= total or comp[i] <= thr:
+        return None
+    lo = i
+    while lo > 0 and comp[lo - 1] > thr:
+        lo -= 1
+    hi = i
+    while hi < total - 1 and comp[hi + 1] > thr:
+        hi += 1
+    edges = bin_freqs(f0, f1, total)
+    return float(edges[lo]), float(edges[hi])
+
+
+def near_known_device(freq_hz, known_hz, guard_hz=FP_KNOWN_GUARD_HZ):
+    """Say whether a frequency is one the model was trained at.
+
+    The band plan is a guess about what a signal is. This is not a guess: the training
+    captures carry the frequency they were recorded at, thus the program knows exactly
+    where it has been taught to listen. A candidate there is never walked past,
+    whatever the raster says about it.
+
+    It exists because the raster alone is not safe here. The replay sits at 2440 MHz,
+    which puts the AT9S at 2438.15 MHz and the DJI at 2441.48 MHz, and WiFi channels 6
+    and 7 are at 2437 and 2442. Measured on 2026-08-14 in a real composite, an AT9S of
+    9.12 MHz beside the traffic of the room measured 10.68 to 11.25 MHz, thus it
+    crossed the 11 MHz WiFi limit on some sweeps and not on others. A width test alone
+    would have walked past the drone that this project exists to find, some of the
+    time, and that is the worst possible failure: intermittent.
+
+    A test on how much of the WiFi channel is occupied was tried first and rejected by
+    measurement. A drone alone in a channel filled 0.70 to 0.84 of it, because the
+    room fills the rest, against 1.00 for real WiFi. That does not separate.
+    """
+    if not known_hz:
+        return False
+    f = float(freq_hz)
+    return any(abs(f - float(k)) <= float(guard_hz) for k in known_hz)
+
+
+def band_plan_name(freq_hz, width_hz):
+    """Name a signal from the public band plan of 2.4 GHz, with no model at all.
+
+    The raster is fixed and public, thus this answer needs no training data and no
+    class. It is a second opinion beside the CNN and never a replacement: §9 Phase 3
+    warns that a frequency which follows a class becomes a class cue, and that warning
+    is about training. A rule applied to a live lock, after the model has answered,
+    contaminates nothing.
+
+    **The width decides, not the frequency.** WiFi channels are 5 MHz apart, thus
+    every frequency in the band is within 2.5 MHz of one of them and a rule on the
+    centre alone names everything WiFi. Measured on 2026-08-14, the replayed AT9S sat
+    at 2438.15 MHz and the DJI at 2441.48 MHz, which are 1.15 MHz from channel 6 and
+    0.52 MHz from channel 7. A frequency-only rule would have called both drones WiFi.
+
+    What separates them is that WiFi really is wide: channel 11 measured 13.0 to
+    15.3 MHz in this room, against 9.02 and 9.12 MHz for the two replayed drones and
+    0.93 to 1.17 MHz for Bluetooth LE.
+
+    Gives a string, or None when the band plan has nothing to say.
+    """
+    f, wide = float(freq_hz), float(width_hz)
+    if wide <= BT_MAX_WIDTH_HZ and BT_LOW_HZ <= f <= BT_HIGH_HZ:
+        for adv in BLE_ADV_HZ:
+            if abs(f - adv) <= BT_TOL_HZ:
+                return "Bluetooth LE advertising"
+        return "Bluetooth"
+    if wide >= WIFI_MIN_WIDTH_HZ:
+        best = min(WIFI_CH_HZ, key=lambda n: abs(f - WIFI_CH_HZ[n]))
+        if abs(f - WIFI_CH_HZ[best]) <= WIFI_TOL_HZ:
+            return f"WiFi ch {best}"
+    return None
+
+
+def lock_snr_db(psd, bias_db=0.0, floor_db=None):
+    """Give the SNR of the held signal, for the question "is it still there".
+
+    The reference is the band floor when the sweep measured one, and the median of
+    the window when it did not. The difference is not small and it is the defect #38:
+    a signal that fills the receiver window puts the median inside itself, thus the
+    program reported the strongest case as the weakest one. Measured on the DJI video
+    link on 2026-08-14, which fills the window at 10 Msps: 12.4 dB against the median
+    and 32 dB against the band floor, at a release threshold of 18 dB. Auto dropped
+    the drone every 2.5 s and locked it again a few megahertz away.
+
+    bias_db corrects the peak-hold floor, see peak_hold_bias_db. Both references are
+    peak-hold statistics of the same window count, thus the same correction applies.
+    """
+    base = float(np.median(np.asarray(psd, dtype=np.float64))) \
+        if floor_db is None else float(floor_db)
+    return float(np.max(psd)) - base + float(bias_db)
+
+
+def configure_sdr(sdr, cfg):
+    """Push the settings of cfg to the radio.
+
+    The function is separate from the window, thus a check can prove the setup with
+    no radio and no Qt. It is the same reason that badge_for is a plain function.
+
+    The count of the kernel buffers is not a detail of the driver. libiio keeps four
+    and rx() gives the oldest of them, thus a change of rx_lo appears only in the
+    fourth buffer that the program reads, and no wait changes that. Each hop of
+    _sweep_once reads one buffer, thus the composite carried the spectrum of the hop
+    three places earlier: measured on 2026-08-14, the wideband plot put every signal
+    3.00 hops above its true place, which is 16.8 MHz at the default span. See the
+    defect #36.
+    """
+    sdr.sample_rate     = int(cfg["sample_rate"])
+    sdr.rx_rf_bandwidth = int(cfg["rx_bw"])
+    sdr.rx_lo           = int(cfg["hop_freqs"][0])
+    # Use a manual gain. A constant level is necessary for the fingerprints.
+    try:
+        sdr.gain_control_mode_chan0 = "manual"
+    except Exception:
+        pass
+    sdr.rx_hardwaregain_chan0 = int(cfg["gain"])
+    # The count applies when the buffer is made. rx_buffer_size makes a new one, thus
+    # the order of the two lines below is not free.
+    try:
+        sdr._rxadc.set_kernel_buffers_count(RX_KERNEL_BUFFERS)
+    except Exception:
+        pass                        # an older libiio keeps its own count
+    sdr.rx_buffer_size = max(
+        1024, int(cfg["sample_rate"] * cfg["dwell_ms"] / 1000.0))
+
+
 def _write_iq_sidecar(iq_path, device, session, freq, cfg, n_samples, ts):
     """Write the JSON metadata file next to a recorded .iq file."""
     meta = {
@@ -397,7 +659,8 @@ def _write_iq_sidecar(iq_path, device, session, freq, cfg, n_samples, ts):
 
 class SweepWorker(QtCore.QThread):
     sweep_ready       = QtCore.pyqtSignal(object, object)        # composite, hop_bufs
-    zoom_ready        = QtCore.pyqtSignal(object, object, float)  # freqs, psd, held_freq
+    # freqs, psd, held_freq, the band floor in dB or None when no sweep measured one
+    zoom_ready        = QtCore.pyqtSignal(object, object, float, object)
     fingerprint_ready = QtCore.pyqtSignal(object)               # the result dictionary
     mode_changed      = QtCore.pyqtSignal(str, float)           # the mode, held_freq
     caught_changed    = QtCore.pyqtSignal(object)               # the caught frequencies
@@ -419,6 +682,7 @@ class SweepWorker(QtCore.QThread):
         self._seq        = 0               # makes each file name unique
         self._held_freq = None
         self._last_composite = None        # the last full sweep, kept during a lock
+        self._sweep_hold = collections.deque(maxlen=BAND_HOLD_SWEEPS)   # for the width
         self._last_present_t = 0.0         # the last time that the signal was present
         self._last_infer_t   = 0.0         # the last time that the classifier ran
         self._caught         = []          # [(freq_hz, t_caught)]
@@ -450,6 +714,59 @@ class SweepWorker(QtCore.QThread):
     def _band_edges(self):
         _n, f0, f1 = composite_geometry(self.cfg)
         return f0, f1
+
+    def _note_sweep(self, composite):
+        """Keep the last sweep, and the hold that the band plan measures widths on."""
+        self._last_composite = composite
+        self._sweep_hold.append(composite)
+
+    def _band_plan_at(self, freq):
+        """What the public band plan says about a frequency.
+
+        Gives (name, width_hz), or (None, None). Two things about where the numbers
+        come from, and both are the difference between working and not.
+
+        The width comes from the composite and not from the receiver window, because
+        the widest service is wider than the window: a WiFi channel is 20 MHz and the
+        window is 10 MHz.
+
+        And it comes from a hold of BAND_HOLD_SWEEPS sweeps and not from one. WiFi is
+        bursty, thus one sweep of it is full of gaps and occupied_span stops at the
+        first one. Measured on ten single sweeps of channel 11: the run of bins read
+        4.6 to 13.0 MHz and passed the 11 MHz limit twice. The same channel held over
+        four sweeps reads 12.95 to 15.31 MHz, every time.
+        """
+        if freq is None or not self._sweep_hold:
+            return None, None
+        held = self._sweep_hold[0] if len(self._sweep_hold) == 1 else \
+            np.maximum.reduce(list(self._sweep_hold))
+        f0, f1 = self._band_edges()
+        floor = band_floor_db(held, f0, f1, float(freq),
+                              float(self.cfg["sample_rate"]) * MARK_BAND_GUARD_FRAC)
+        if floor is None:
+            return None, None
+        span = occupied_span(held, f0, f1, float(freq), floor)
+        if span is None:
+            return None, None
+        lo, hi = span
+        return band_plan_name((lo + hi) / 2.0, hi - lo), (hi - lo)
+
+    def _known_freqs(self):
+        """The frequencies the model was trained at, from the model or the constant."""
+        freqs = getattr(self.engine, "train_freqs", None)
+        return freqs if freqs else FP_KNOWN_DEVICE_HZ
+
+    def _band_floor(self):
+        """The noise floor of the band around the lock, from the last full sweep.
+
+        It is the reference that the narrowband window can not hold itself. Gives
+        None before the first sweep, and in a mode that does not sweep."""
+        if self._last_composite is None or self._held_freq is None:
+            return None
+        f0, f1 = self._band_edges()
+        guard = float(self.cfg["sample_rate"]) * MARK_BAND_GUARD_FRAC
+        return band_floor_db(self._last_composite, f0, f1,
+                             float(self._held_freq), guard)
 
     def _sweep_once(self):
         """Do one sweep of the full band. Gives (composite, hop_bufs)."""
@@ -728,6 +1045,10 @@ class SweepWorker(QtCore.QThread):
         self._last_infer_t = now
         try:
             res = self.engine.classify_iq(iq)
+            # The band plan travels with the result as a second opinion. badge_for
+            # never sees it, thus the rule that decides the name stays one rule.
+            plan, _w = self._band_plan_at(self._held_freq)
+            res["band_plan"] = plan
             self._last_class = res          # Auto uses this to judge the lock
             if device_share(res) >= float(self.cfg.get("hold_share", FP_HOLD_SHARE)):
                 # The time of the last device, not of the last buffer that held one.
@@ -781,7 +1102,7 @@ class SweepWorker(QtCore.QThread):
                 composite, hop_bufs = self._sweep_once()
                 if composite is None:
                     return
-                self._last_composite = composite
+                self._note_sweep(composite)
                 self.sweep_ready.emit(composite, hop_bufs)
                 self.status_msg.emit(
                     f"Scan: {(time.perf_counter()-t0)*1000:.0f} ms  |  "
@@ -790,6 +1111,28 @@ class SweepWorker(QtCore.QThread):
                 f, peak_db = self._detect_new_peak(composite)
                 if f is not None and peak_db >= float(
                         self.cfg.get("fp_peak_thresh_db", FP_PEAK_THRESH_DB)):
+                    # Walk past what the band plan explains. A scan exists to find what
+                    # is not on the public raster, and a WiFi channel that the model
+                    # calls a drone otherwise holds the lock for ever. See #37.
+                    #
+                    # A frequency the model was trained at is never walked past. The
+                    # raster cannot be trusted there: the replay sits between WiFi
+                    # channels 6 and 7, and a drone beside the traffic of the room
+                    # measured 10.68 to 11.25 MHz against an 11 MHz limit, thus the
+                    # width test would drop the drone on some sweeps and not others.
+                    skip = (self.cfg.get("op_mode") == "auto"
+                            and self.cfg.get("skip_band_plan", FP_SKIP_BAND_PLAN)
+                            and not near_known_device(
+                                f, self._known_freqs(),
+                                self.cfg.get("known_guard_hz", FP_KNOWN_GUARD_HZ)))
+                    plan, wide = self._band_plan_at(f) if skip else (None, None)
+                    if plan is not None:
+                        self._remember(f)
+                        self._cand = None
+                        self.status_msg.emit(
+                            f"Passed {plan} @ {f/1e6:.3f} MHz, "
+                            f"{wide/1e6:.1f} MHz wide — still scanning")
+                        continue
                     if self.cfg.get("refine_lock", FP_REFINE_LOCK):
                         f = self._refine_lock(f)
                     self._held_freq, mode = f, "LOCK"
@@ -822,7 +1165,8 @@ class SweepWorker(QtCore.QThread):
                 if iq is None or len(iq) == 0:
                     continue
                 freqs, psd = self._narrowband_psd(iq, self._held_freq)
-                self.zoom_ready.emit(freqs, psd, float(self._held_freq))
+                self.zoom_ready.emit(freqs, psd, float(self._held_freq),
+                                     self._band_floor())
                 comp = self._composite_with_hold(self._held_freq, psd)
                 if comp is not None:
                     self.sweep_ready.emit(comp, {})
@@ -850,7 +1194,7 @@ class SweepWorker(QtCore.QThread):
                 # Release the lock if the signal is absent for the gone time.
                 thresh = float(self.cfg.get("fp_peak_thresh_db", FP_PEAK_THRESH_DB))
                 gone = float(self.cfg.get("fp_gone_s", FP_GONE_S))
-                snr = (float(psd.max()) - float(np.median(psd)) + self._psd_bias_db)
+                snr = lock_snr_db(psd, self._psd_bias_db, self._band_floor())
                 if snr >= thresh:
                     self._last_present_t = time.time()
                 elif time.time() - self._last_present_t >= gone:
@@ -871,7 +1215,7 @@ class SweepWorker(QtCore.QThread):
             composite, hop_bufs = self._sweep_once()
             if composite is None:
                 return
-            self._last_composite = composite
+            self._note_sweep(composite)
             self.sweep_ready.emit(composite, hop_bufs)
             rec = (bool(self.cfg.get("record"))
                    and self.cfg.get("record_kind") == "noise_band")
@@ -921,7 +1265,10 @@ class SweepWorker(QtCore.QThread):
             if iq is None or len(iq) == 0:
                 continue
             freqs, psd = self._narrowband_psd(iq, freq)
-            self.zoom_ready.emit(freqs, psd, float(freq))
+            # No band floor here: this mode never sweeps, thus nothing measured the
+            # band around the frequency. A window full of signal is not reported in
+            # Narrowband. See §9 Phase 4b task 4 of NOTES.md.
+            self.zoom_ready.emit(freqs, psd, float(freq), None)
             self._maybe_classify(iq)
             kind = self.cfg.get("record_kind", "device")
             if self.cfg.get("record") and kind in ("device", "noise_freq"):
@@ -1024,17 +1371,7 @@ class PlutoApp(QtWidgets.QMainWindow):
         self._effective_bw = effective_bw
 
     def _push_sdr_settings(self):
-        self.sdr.sample_rate           = int(self.cfg["sample_rate"])
-        self.sdr.rx_rf_bandwidth       = int(self.cfg["rx_bw"])
-        self.sdr.rx_lo                 = int(self.cfg["hop_freqs"][0])
-        # Use a manual gain. A constant level is necessary for the fingerprints.
-        try:
-            self.sdr.gain_control_mode_chan0 = "manual"
-        except Exception:
-            pass
-        self.sdr.rx_hardwaregain_chan0 = int(self.cfg["gain"])
-        self.sdr.rx_buffer_size        = max(
-            1024, int(self.cfg["sample_rate"] * self.cfg["dwell_ms"] / 1000.0))
+        configure_sdr(self.sdr, self.cfg)
 
     def _make_waterfall_buf(self):
         return np.full((self.total_bins, WATERFALL_ROWS),
@@ -1107,7 +1444,7 @@ class PlutoApp(QtWidgets.QMainWindow):
             _ln.setVisible(False)
             _ln.setZValue(10)                 # keep the markers above the curve
             self.p_zoom.addItem(_ln, ignoreBounds=True)
-        self._last_zoom = None                # the last (freqs, psd) for the markers
+        self._last_zoom = None            # the last (freqs, psd, filled) for the markers
 
         # ── The narrowband waterfall ────────────────────────────────────────────
         self.p_zoom_wf = self.win.addPlot(row=1, col=1, title="Narrowband Waterfall")
@@ -1610,6 +1947,11 @@ class PlutoApp(QtWidgets.QMainWindow):
         conf  = result["confidence"]
         probs = result["probs"]
         text, kind = badge_for(result, FP_DEVICE_THRESH)
+        # The band plan is a second line and never the name. If the two disagree, that
+        # is information for the user and not a fault to hide. See §9 Phase 5b item 5.
+        plan = result.get("band_plan")
+        if plan:
+            text += f"   |   band plan: {plan}"
         if getattr(self, "_no_noise_class", False):
             text += "  ⚠ no noise class"
             kind = "error" if kind == "none" else kind
@@ -1624,7 +1966,7 @@ class PlutoApp(QtWidgets.QMainWindow):
             self._conf_labels[cls].setText(f"{p:.0%}")
         self.infer_stat_lbl.setText(f"Inference: {_hl(f'{label} @ {conf:.1%}')}")
 
-    def _on_zoom_ready(self, freqs, psd, held_freq):
+    def _on_zoom_ready(self, freqs, psd, held_freq, band_floor=None):
         self.zoom_curve.setData(freqs, psd)
         sr = self.cfg["sample_rate"]
         # Move the view only for a new lock. Thus the program does not cancel the
@@ -1635,18 +1977,25 @@ class PlutoApp(QtWidgets.QMainWindow):
             self._zoom_center = held_freq
             self.zoom_wf_data[:] = -200.0      # remove the data of the last lock
         title = f"Narrowband Spectrum ({held_freq / 1e6:.3f} MHz)"
-        low, high = signal_clipped(freqs, psd)
-        if low or high:
-            side = "both edges" if low and high else ("the low edge" if low
-                                                     else "the high edge")
-            title += f"   |   wider than the window at {side}"
+        # A full window is tested first. Its edges are both outside the receiver, thus
+        # the program can not measure them and must not draw them.
+        filled = window_filled(psd, band_floor)
+        if filled:
+            title += (f"   |   full of signal, wider than the "
+                      f"{sr / 1e6:.0f} MHz window")
+        else:
+            low, high = signal_clipped(freqs, psd)
+            if low or high:
+                side = "both edges" if low and high else ("the low edge" if low
+                                                          else "the high edge")
+                title += f"   |   wider than the window at {side}"
         self.p_zoom.setTitle(title)
         self.zoom_wf_data = np.roll(self.zoom_wf_data, -1, axis=1)
         self.zoom_wf_data[:, -1] = psd
         self.zoom_wf_img.setImage(self.zoom_wf_data, autoLevels=False)
         self.zoom_wf_img.setRect(QtCore.QRectF(held_freq - sr / 2, 0, sr, WATERFALL_ROWS))
-        self._last_zoom = (freqs, psd)
-        self._update_signal_markers(freqs, psd)
+        self._last_zoom = (freqs, psd, filled)
+        self._update_signal_markers(freqs, psd, filled)
 
     # ── The markers of the narrowband signal ──────────────────────────────────
 
@@ -1662,16 +2011,21 @@ class PlutoApp(QtWidgets.QMainWindow):
         if self._last_zoom is not None:
             self._update_signal_markers(*self._last_zoom)
 
-    def _update_signal_markers(self, freqs, psd):
+    def _update_signal_markers(self, freqs, psd, filled=False):
         """Put the red lines at the middle and the edges of the signal. The function
         signal_extent gives the positions. If the signal is below the noise floor,
-        the program hides the lines."""
+        the program hides the lines.
+
+        A window that is full of signal hides them as well. Both edges are outside
+        the receiver there, thus signal_extent measures a bump inside the signal and
+        not the signal: 3.24 MHz at the median for a 20 MHz WiFi channel, measured on
+        120 captures. The title says why the lines are absent."""
         show_mid  = self.w_show_mid.isChecked()
         show_edge = self.w_show_borders.isChecked()
         if not (show_mid or show_edge):
             return
-        extent = signal_extent(freqs, psd)
-        if extent is None:                         # there is no signal
+        extent = None if filled else signal_extent(freqs, psd)
+        if extent is None:                         # there is no signal to mark
             self.mid_line.setVisible(False)
             for ln in self.edge_lines:
                 ln.setVisible(False)

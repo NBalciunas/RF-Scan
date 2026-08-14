@@ -20,7 +20,7 @@ The program has one signal chain. Each step gives its result to the next step.
 
 | Step | Operation |
 |---|---|
-| 1. Sweep | The program divides the span into hops. It tunes to each hop, it waits for the settle time, and it reads one buffer. |
+| 1. Sweep | The program divides the span into hops. It tunes to each hop, it waits for the settle time, and it reads one buffer. It asks the driver for one kernel buffer, thus that read holds the frequency that it tuned to. With the four buffers that libiio keeps by default, the read held the frequency of the hop three places earlier. |
 | 2. Spectrum | For each hop the program calculates 1024-bin FFTs across the full buffer. It removes the mean of each window first, thus the artifact of the receiver at 0 Hz does not become a false peak. It keeps the maximum value of each bin, thus a short burst stays visible. |
 | 3. Composite | The program keeps the central bins of each hop and joins the parts end to end. One linear map gives the frequency of each bin. |
 | 4. Peak | The program finds the strongest peak that is not in the memory of the caught signals. A peak above the threshold causes a lock. |
@@ -46,8 +46,23 @@ An entry in the memory expires. Thus the program can find that signal again.
 - A peak-hold spectrum. Thus a short burst is visible at its true amplitude.
 - A lock state machine with a caught list, a time-out, a Skip button and a Jump-to
   button.
+- The band plan of 2.4 GHz, which needs no model and no training data. The program
+  names a signal WiFi when it sits at a channel centre **and** it is 11 MHz or wider,
+  and Bluetooth when it is under 3 MHz. The width decides, because the WiFi channels
+  are 5 MHz apart and every frequency in the band is near one of them. The badge
+  carries the answer as a second line beside the name from the model, and the Auto
+  mode walks past a signal that the band plan explains instead of holding it.
+- The frequencies of the training data, which the model carries in its `.meta.json`.
+  The Auto mode never walks past a signal that sits at one of them, whatever the band
+  plan says about it, because the program knows where it was taught to listen. Record
+  a second drone at another frequency and that frequency protects itself. Without
+  this the band plan can walk past a drone that sits beside a busy WiFi channel,
+  because the measured width of the two together crosses the limit.
 - Markers for the middle and the two edges of the narrowband signal. The program
-  measures the markers from the spectrum only.
+  measures the markers from the spectrum only. The title of the plot says when the
+  signal runs off one side of the window, and when the window is full of signal from
+  one side to the other. In the second condition the program hides the markers,
+  because both edges are outside the receiver and it cannot measure them.
 - Manual gain. The program sets the automatic gain control to off, because a constant
   level is necessary for the fingerprints.
 
@@ -129,7 +144,23 @@ python terminal.py
 
 The program writes the recordings to `./fingerprint_data/`. This path is relative to
 the current directory. Thus you must start the program from the directory of the
-project.
+project. The same is true of the two tools below.
+
+The project has four commands. The first two are the program and the other two report
+on it.
+
+| Command | Function |
+|---|---|
+| `python terminal.py` | The monitor: sweep, lock, classify and record. |
+| `python train_model.py` | The trainer: a folder of captures to a model. |
+| `python tools/dataset_info.py` | What the dataset holds, and the warnings that decide whether a training run can mean anything. |
+| `python tools/evaluate.py` | What a model does to whole captures, which is the level that the user sees. |
+
+The sweep starts at 2400 MHz with a span of 100 MHz, thus it covers 2350 to 2450 MHz in
+15 hops. A sweep takes about 1.5 seconds at the default dwell. The 2.4 GHz ISM band goes
+to 2483.5 MHz: to hold all of it, set **Center Freq (Hz)** to 2440 MHz, or increase the
+span. A wider span is in the **Total Span (Hz)** list and it costs time in proportion:
+400 MHz is 58 hops and 5.8 seconds, and a lock needs two sweeps that agree.
 
 The panel on the right side has four mode buttons:
 
@@ -392,7 +423,7 @@ captures into spectrograms, it trains the network, and it writes three files.
 | File | Content |
 |---|---|
 | `trained_model.pt` | The weights. |
-| `trained_model.meta.json` | The geometry, the class names, the two limits, the sample rate of the captures, the git commit, the time and every argument. The graphical interface reads this file. |
+| `trained_model.meta.json` | The geometry, the class names, the three limits, the sample rate of the captures, the git commit, the time and every argument. The graphical interface reads this file. |
 | `results/trained_model.metrics.json` | The confusion matrix, the precision, the recall, the F1 value and the support of each class, and the weak-signal figures. Use this file for a report. Every result goes in `results/`, because the weights and the meta stay out of git and the metrics go in. |
 
 ### The model
@@ -518,7 +549,7 @@ The terminal at the end of a run, with the confusion matrix and the per-class fi
 
 ### The self-checks
 
-The project has 173 self-checks in 10 scripts. One command runs all of them. The same
+The project has 207 self-checks in 10 scripts. One command runs all of them. The same
 command runs on each push, through `.github/workflows/tests.yml`.
 
 ```bash
@@ -553,13 +584,13 @@ python tests/test_dsp.py
 | `fp_spectrogram.py` | 1 | The function `segment_vote` must find two transmitters in one buffer, and it must give no name to a buffer with a low probability. |
 | `tests/test_geometry.py` | 9 | The frequency of a tone must return through the map of the composite. The parts must join without a gap. The band must be the band that you asked for. |
 | `tests/test_spectrogram.py` | 18 | The size of the image, the normalization, the frequency of each row, and the segment cutter. A gain of 60 dB must not move the image. The high pass must remove the artifact of the receiver and keep a signal that is near it, and the 0 Hz row of the image must carry nothing for any input. Three of the checks use an artifact that is calibrated against the PlutoSDR, because a constant offset is not what a radio makes. |
-| `tests/test_dsp.py` | 35 | The peak hold must find a burst that is in 1 window of 100, and also a burst at the end of a long buffer. One window alone must miss it. The artifact of the receiver must not make a peak at the middle of a hop. The corrected noise floor must not change with the dwell time. The markers must give the correct middle and the correct edges of a signal of a known width. A hop that failed must not change the noise floor. The badge must give the correct name in each condition. |
+| `tests/test_dsp.py` | 65 | The peak hold must find a burst that is in 1 window of 100, and also a burst at the end of a long buffer. One window alone must miss it. The artifact of the receiver must not make a peak at the middle of a hop. The corrected noise floor must not change with the dwell time. The markers must give the correct middle and the correct edges of a signal of a known width. A hop that failed must not change the noise floor. The badge must give the correct name in each condition, and a vote must name a device that the mean alone calls unknown. A signal that reaches the edge of the receiver window must be reported as wider than the window. A window that is full of signal must be reported as well, and an empty window must not be, which needs a floor that the sweep measured outside the window. |
 | `tests/test_snr_aug.py` | 11 | The function `_mix_noise` must give the exact signal-to-noise ratio, with an error of less than 0.1 dB. The function `_freq_shift` must change the phase of each sample only. |
 | `tests/test_model.py` | 17 | The sizes and the parameter count of `SpecCNN`, the votes of the segments, and a write and read cycle of `FingerprintModel`. The trainer and the graphical interface must calculate the same path for the meta file. The wrapper must read the sample rate of the training data from the meta, and a model that has none must give `None` and not 0 Hz. |
 | `tests/test_dataset.py` | 30 | The split by session, the energy gate, and the augmentation. A device segment must give a new image at each epoch, and a noise segment must never change. The val data must never change. A device class and the noise class must get the same DC treatment. The sample rate must come from the sidecars, and two rates in one dataset must give a warning. The tool `dataset_info` must give each warning. |
-| `tests/test_worker.py` | 21 | A false radio replaces the PlutoSDR. The sweep must tune to each hop and find the tone at its true frequency. The lock must hold one frequency. Skip, Jump to and the memory of the caught signals must operate. The record must write the correct file and the correct metadata, and each name must be different. Three checks hold the order of the imports: `terminal.py` must import torch before Qt, because Qt first stops the program on Windows. |
+| `tests/test_worker.py` | 25 | A false radio replaces the PlutoSDR. The sweep must tune to each hop and find the tone at its true frequency. The lock must hold one frequency. Skip, Jump to and the memory of the caught signals must operate. The record must write the correct file and the correct metadata, and each name must be different. Three checks hold the order of the imports: `terminal.py` must import torch before Qt, because Qt first stops the program on Windows. Four hold the setup of the radio: the program must ask the driver for one kernel buffer, before the buffer is made, and it must continue on a driver that does not offer the setting. |
 | `tests/test_prepare_clip.py` | 20 | A source of 100 Msps holds tones at known frequencies. A slice that holds no transmitter must be refused and not scaled up, and a carrier that never stops must count as a transmitter. A tone at the middle of the slice must arrive at 0 Hz, and a tone beside it must keep its distance. A tone outside the slice must not fold into it, even when it is 40 dB stronger. The phase ramp must not restart at a block boundary. The level must reach the target. The `.xml` of the pack must give the rate, and it must win against the flag. A second run must not write over a clip. |
-| `tests/test_end_to_end.py` | 11 | A synthetic dataset of two drones goes through the real trainer. Then the same `FingerprintModel` that the graphical interface loads must give the correct name to a capture of a session that it did not see, and it must report both drones when both transmit. |
+| `tests/test_end_to_end.py` | 12 | A synthetic dataset of two drones goes through the real trainer. Then the same `FingerprintModel` that the graphical interface loads must give the correct name to a capture of a session that it did not see, and it must report both drones when both transmit. One capture holds a signal for 26% of its length, which is the duty of a real video link, because a check at a generous duty passed while the program read `clear` on every real drone capture. |
 
 ### How to read the result
 
@@ -596,6 +627,71 @@ three results:
 If a class has one session only, the trainer uses a random split and gives a `[warn]`
 message. That accuracy value is not correct, because the adjacent segments of one
 recording are almost identical.
+
+### Measure the model on whole captures
+
+The trainer counts segments, and it counts only the segments that pass the energy gate.
+The program shows one badge for a whole capture. The two are not the same measurement,
+and a model can be correct in the first and wrong in the second: a control link sends for
+6% of a capture, thus a mean over the whole capture reads noise while the segments that
+hold a hop read the drone.
+
+```bash
+python tools/evaluate.py trained_model.pt
+```
+
+The program gives three tables: each class and session, the captures with `clear` as a
+column of its own, and the same captures at the level of the segments. A `clear` on a
+drone capture is a miss and it is not a wrong name, thus the two never go in one cell.
+The column "holds signal" gives the captures with at least one segment above the noise
+floor, because a capture of a hopping link often holds no hop and `clear` is then the
+correct answer.
+
+The program uses `badge_for` from `terminal.py` and does not hold a second copy of the
+rule. Thus the report and the program cannot disagree. It needs the same environment as
+the graphical interface.
+
+### Choose the operating point
+
+`MIN_SEG_SHARE` decides how much of a capture must vote for a class before the badge
+names it. A low value finds more of a bursty link and it also names more empty channels.
+
+```bash
+python tools/evaluate.py trained_model.pt --session session_3 --sweep
+```
+
+Read the false alarm column first, and run the sweep on the validation session. The
+validation session is the last session of every class, thus a class with more sessions
+than the others does not have the same validation session as the rest. Check that before
+you trust a zero in the false alarm column.
+
+The value that you choose goes in the `.meta.json` through `--min_seg_share` when you
+train, thus the operating point travels with the model.
+
+A false alarm rate measured on your `noise` captures is the rate on the room and the
+conditions that recorded them. It is not the rate that the monitor gives on a busy band.
+Measured on 2026-08-14 with this model: 0.4% on 500 held-out `noise` captures of a quiet
+room, and 24% on 100 live captures at 2470 MHz in a room with WiFi and no drone at all. A
+class that the model has never met becomes the class it most resembles. If your band
+carries WiFi or Bluetooth, record those as classes of their own.
+
+### The held-out set, and the one rule it has
+
+A validation session chooses the model, because the trainer keeps the best epoch measured
+on it. Thus the validation accuracy is not a result that a report may quote. A held-out
+set is a third group of captures that nothing has touched.
+
+Move the last session of each class out of the training folder, train, choose the
+operating point on the validation session, and then read the held-out captures one time.
+
+```bash
+python tools/evaluate.py trained_model.pt --data_dir ./heldout_data --json results/heldout.metrics.json
+```
+
+The rule: after you read them, do not change the model, the thresholds or the
+augmentation. Each of those makes the number invalid, and a second held-out set costs
+another recording session. Write the result to a file with `--json`, because a number
+that lives in a terminal is one window close from gone.
 
 ## Measuring your radio
 

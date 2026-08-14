@@ -199,7 +199,7 @@ def main(argv=None):
 
     data_dir = Path(args.data_dir)
     fp = FingerprintModel(args.model)
-    # The model carries its own operating point since 2026-08-13. An older meta has
+    # The model carries its own operating point since 2026-08-14. An older meta has
     # no such field and FingerprintModel then gives the constant.
     share = fp.min_seg_share if args.min_share is None else args.min_share
     print(f"\nModel   : {args.model}")

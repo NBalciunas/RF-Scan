@@ -192,6 +192,11 @@ class FingerprintModel:
         # code, because it is chosen against one dataset. A model from before this
         # field falls back to the constant.
         self.min_seg_share  = float(meta.get("min_seg_share", MIN_SEG_SHARE))
+        # The centre frequencies of the training captures. A scanner uses them to know
+        # where it has been taught to listen, thus it never walks past one because the
+        # band plan called it WiFi. A model from before this field gives an empty list
+        # and the caller falls back to its own constant.
+        self.train_freqs    = [float(f) for f in meta.get("train_freqs", [])]
         self.infer_max_segs = int(infer_max_segs)
         # The rate of the captures that trained the model. A spectrogram row is
         # sample_rate / n_fft Hz, thus another rate makes every frequency in the

@@ -440,6 +440,80 @@ def main():
                 assert r.stdout.strip().endswith("1"), \
                     "torch did not survive the import of Qt"
 
+        # ── The setup of the radio. The defect #36. ──────────────────────────
+        # libiio keeps four kernel buffers and rx() gives the oldest, thus a change
+        # of rx_lo appeared only in the fourth buffer that the program read, and no
+        # wait changed it. Each hop reads one buffer, thus the composite carried the
+        # spectrum of the hop three places earlier and every signal in the wideband
+        # plot sat 3.00 hops above its true place, which is 16.8 MHz at the default
+        # span. Measured on the radio on 2026-08-14; a FakeSDR can not show it,
+        # because a stub answers with the frequency it was last given. What a check
+        # can hold is that the program asks for one buffer.
+
+        class _Adc:
+            def __init__(self):
+                self.count = None
+
+            def set_kernel_buffers_count(self, n):
+                self.count = int(n)
+
+        class _Radio:
+            def __init__(self, adc=None):
+                self.rx_buffer_size = 0
+                self._rxadc = adc
+                self.order = []
+
+            def __setattr__(self, k, v):
+                if k not in ("order", "_rxadc"):
+                    self.__dict__.setdefault("order", []).append(k)
+                object.__setattr__(self, k, v)
+
+        setup_cfg = dict(sample_rate=SR, rx_bw=BW, gain=10, dwell_ms=50,
+                         hop_freqs=[CENTER])
+
+        @c.check("configure_sdr asks the driver for one kernel buffer, #36")
+        def _():
+            adc = _Adc()
+            terminal.configure_sdr(_Radio(adc), dict(setup_cfg))
+            assert adc.count == 1, adc.count
+
+        @c.check("the buffer count is set before the buffer is made, #36")
+        def _():
+            # The count applies to a new buffer only. A count set after
+            # rx_buffer_size reaches the driver and not the data.
+            calls = []
+
+            class _Ordered(_Adc):
+                def set_kernel_buffers_count(self, n):
+                    calls.append("count")
+                    super().set_kernel_buffers_count(n)
+
+            class _R(_Radio):
+                def __setattr__(self, k, v):
+                    if k == "rx_buffer_size":
+                        calls.append("buffer")
+                    object.__setattr__(self, k, v)
+
+            r = _R(_Ordered())
+            calls.clear()                       # the constructor set one too
+            terminal.configure_sdr(r, dict(setup_cfg))
+            assert calls == ["count", "buffer"], calls
+
+        @c.check("configure_sdr survives a driver that has no buffer count")
+        def _():
+            # An older libiio has no set_kernel_buffers_count. The program must set
+            # everything else and continue, because the radio still works.
+            r = _Radio(None)
+            terminal.configure_sdr(r, dict(setup_cfg))
+            assert r.rx_buffer_size == int(SR * 50 / 1000.0), r.rx_buffer_size
+            assert r.sample_rate == SR and r.rx_lo == CENTER
+
+        @c.check("the settle is short, because the queue and not the wait held the "
+                 "stale data, #36")
+        def _():
+            assert terminal.HOP_SETTLE_MS <= 10, terminal.HOP_SETTLE_MS
+            assert terminal.RX_KERNEL_BUFFERS == 1, terminal.RX_KERNEL_BUFFERS
+
         return c.report()
     finally:
         os.chdir(cwd)
