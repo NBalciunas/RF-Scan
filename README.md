@@ -198,7 +198,7 @@ the limit. The counter gives a warning in that condition.
 ### Verify the data before you train
 
 ```bash
-python dataset_info.py
+python tools/dataset_info.py
 ```
 
 This command gives the number of files, segments, seconds and bytes of each class and
@@ -393,7 +393,7 @@ captures into spectrograms, it trains the network, and it writes three files.
 |---|---|
 | `trained_model.pt` | The weights. |
 | `trained_model.meta.json` | The geometry, the class names, the two limits, the sample rate of the captures, the git commit, the time and every argument. The graphical interface reads this file. |
-| `trained_model.metrics.json` | The confusion matrix, the precision, the recall, the F1 value and the support of each class, and the weak-signal figures. Use this file for a report. |
+| `results/trained_model.metrics.json` | The confusion matrix, the precision, the recall, the F1 value and the support of each class, and the weak-signal figures. Use this file for a report. Every result goes in `results/`, because the weights and the meta stay out of git and the metrics go in. |
 
 ### The model
 

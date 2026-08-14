@@ -36,6 +36,7 @@ from fp_spectrogram import (iq_to_spectrogram, remove_dc, SpecCNN, VOTE_THRESH,
 
 DATA_DIR   = "./fingerprint_data"
 OUTPUT     = "./trained_model.pt"   # the name that terminal.py loads at the start
+RESULTS_DIR = "results"   # the metrics go in here, beside the model that --out names
 BATCH_SIZE = 512
 EPOCHS     = 8
 LR         = 1e-3
@@ -761,7 +762,12 @@ def train(args):
         "trained_at"     : meta["trained_at"],
         "train_minutes"  : (time.time() - t0) / 60.0,
     }
-    metrics_path = Path(args.out).with_suffix(".metrics.json")
+    # The metrics go to results/ beside the model, and not beside this file. A run that
+    # writes its model to a temporary directory must not leave a file in the repository,
+    # which is what a fixed path did to the end-to-end check.
+    results = Path(args.out).parent / RESULTS_DIR
+    results.mkdir(parents=True, exist_ok=True)
+    metrics_path = results / (Path(args.out).stem + ".metrics.json")
     with open(metrics_path, "w") as f:
         json.dump(metrics, f, indent=2)
 

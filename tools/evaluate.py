@@ -5,9 +5,12 @@ gate. That number is correct and it is not what the program shows: the GUI reads
 whole capture and gives one badge. The defect #29 lived in that difference for as
 long as nobody measured the second one. This program measures the second one.
 
-    python evaluate.py trained_model.pt
-    python evaluate.py trained_model.pt --data_dir ./heldout_data
-    python evaluate.py trained_model.pt --session session_3 --sweep
+    python tools/evaluate.py trained_model.pt
+    python tools/evaluate.py trained_model.pt --data_dir ./heldout_data
+    python tools/evaluate.py trained_model.pt --session session_3 --sweep
+
+Run it from the repository root: the model path and the data path are relative to the
+current directory and not to this file.
 
 Three tables come out.
 
@@ -26,11 +29,17 @@ above the noise floor, and the accuracy beside it counts those only.
 on the validation session and never on the held-out captures.
 """
 
+import sys
 import argparse
 import json
 import subprocess
 from datetime import datetime
 from pathlib import Path
+
+# This file is in tools/ and it reads the model, the trainer and the badge rule from
+# the root. The root is on sys.path already when a check imports tools.evaluate, and it
+# is not when the user types the path of this file. See §2 of NOTES.md.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import numpy as np
 import torch

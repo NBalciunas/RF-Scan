@@ -1,4 +1,4 @@
-"""Report what fingerprint_data/ holds. Type `python dataset_info.py`.
+"""Report what fingerprint_data/ holds. Type `python tools/dataset_info.py`.
 
 The trainer tells you nothing until it runs, and by then the recording session is
 over. This tool reads the folders and the .json sidecars and it answers the questions
@@ -11,14 +11,23 @@ that decide whether a training run can mean anything:
   * Is the gain the same in every session? The energy gate compares a device against
     a noise level in raw dB. A gain change makes that comparison false.
 
-    python dataset_info.py
-    python dataset_info.py --data_dir ./other_data
+    python tools/dataset_info.py
+    python tools/dataset_info.py --data_dir ./other_data
+
+The data path is relative to the current directory and not to this file. Run it from
+the repository root, as the README says.
 """
 
+import sys
 import json
 import argparse
 from pathlib import Path
 from collections import defaultdict
+
+# This file is in tools/ and it reads the shared front end from the root. The root is
+# on sys.path already when a check imports tools.dataset_info, and it is not when the
+# user types the path of this file. See §2 of NOTES.md.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from fp_spectrogram import SEG_LEN, SEG_HOP
 

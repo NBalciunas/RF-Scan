@@ -19,7 +19,10 @@ import numpy as np
 import torch
 
 from _support import Checks, run
-import dataset_info
+# dataset_info moved to tools/ on 2026-08-13. The folder has no __init__.py and it
+# needs none: a namespace package works from the repo root that _support puts on
+# sys.path, which is what tests/test_prepare_clip.py does with transmitting/.
+from tools import dataset_info
 from train_model import (load_split, file_to_specs, file_to_segments,
                          SegmentDataset, _seg_powers_db, _natkey, WEAK_VAL_DB,
                          _dataset_sample_rate)
