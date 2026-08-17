@@ -28,7 +28,7 @@ The program has one signal chain. Each step gives its result to the next step.
 | 6. Segments | The program cuts the held IQ data into segments of 4096 samples, with a step of 2048 samples. |
 | 7. Spectrogram | A high pass removes the artifact of the receiver near 0 Hz. Each segment then becomes a 256-point STFT image of the log magnitude. The program replaces the 0 Hz row with the median row, thus no class can be recognized by that row. The program normalizes each image with its own mean and standard deviation, thus the result does not change with the gain. |
 | 8. Classifier | A CNN gives a probability for each class and for each segment. The program calculates the mean, and it also counts the votes of the segments. |
-| 9. Result | The badge shows the name of the device, or `clear`, or two names. |
+| 9. Result | The badge shows the name of the device, or `Clear`, or two names. |
 
 The program releases the lock in three conditions: the user clicks **Skip lock**, the
 signal stops for 2.5 s, or the Auto mode finds that the signal is noise. Then the
@@ -49,9 +49,9 @@ An entry in the memory expires. Thus the program can find that signal again.
 - The band plan of 2.4 GHz, which needs no model and no training data. The program
   names a signal WiFi when it sits at a channel centre **and** it is 11 MHz or wider,
   and Bluetooth when it is under 3 MHz. The width decides, because the WiFi channels
-  are 5 MHz apart and every frequency in the band is near one of them. The badge
-  carries the answer as a second line beside the name from the model, and the Auto
-  mode walks past a signal that the band plan explains instead of holding it.
+  are 5 MHz apart and every frequency in the band is near one of them. The **Band
+  plan** row of the Status panel carries the answer beside the name from the model, and
+  the Auto mode walks past a signal that the band plan explains instead of holding it.
 - The frequencies of the training data, which the model carries in its `.meta.json`.
   The Auto mode never walks past a signal that sits at one of them, whatever the band
   plan says about it, because the program knows where it was taught to listen. Record
@@ -59,10 +59,10 @@ An entry in the memory expires. Thus the program can find that signal again.
   this the band plan can walk past a drone that sits beside a busy WiFi channel,
   because the measured width of the two together crosses the limit.
 - Markers for the middle and the two edges of the narrowband signal. The program
-  measures the markers from the spectrum only. The title of the plot says when the
-  signal runs off one side of the window, and when the window is full of signal from
-  one side to the other. In the second condition the program hides the markers,
-  because both edges are outside the receiver and it cannot measure them.
+  measures the markers from the spectrum only. The **Window** row of the Status panel
+  says when the signal runs off one side of the window, and when the window is full of
+  signal from one side to the other. In the second condition the program hides the
+  markers, because both edges are outside the receiver and it cannot measure them.
 - Manual gain. The program sets the automatic gain control to off, because a constant
   level is necessary for the fingerprints.
 
@@ -193,8 +193,24 @@ The window shows four plots.
 The section **Waterfall Scale (dB)** sets the minimum and the maximum of the color
 scale of both waterfalls.
 
-The **Status** section shows the model, the last result of the classifier, the mode,
-the caught frequencies, the number of hops and the time of one sweep.
+The **Status** section shows the model, the last result of the classifier, the band plan,
+the mode, the caught frequencies, the number of hops and the time of one sweep.
+
+The **Band plan** row is a second opinion about the held signal, from the public raster of
+2.4 GHz and with no model at all. It reads `WiFi ch 1` to `WiFi ch 14`, `Bluetooth`,
+`Bluetooth LE advertising`, or `—` when the raster has nothing to say. It never changes
+the name on the badge: if the two disagree, that is information for you.
+
+The **Warning** row is not visible while there is nothing to report. It gives
+`no noise class` when the model has no background class, and `sample rate` when the model
+was trained at a rate that the radio does not give now.
+
+The **Window** row of that section says how the signal sits in the receiver window. It
+reads `Full window` when the signal fills the window from one side to the other, `Low
+edge`, `High edge` or `Both edges` when it runs off a side, and `—` when the window
+holds all of it. `Full window` needs the **Band floor**, which is a level that the sweep
+measured outside the window. The Narrowband mode never sweeps, thus it has no floor and
+it reports the edges only.
 
 ## Recording
 
@@ -501,17 +517,26 @@ To load a different model, click **Browse…**, select the `.pt` file, and click
 The button **ML Inference: ON** sets the classifier to off. Then the program only shows
 the spectrum, and it operates much faster.
 
-The badge above the buttons shows the result:
+The badge above the buttons shows the result, and it holds the answer of the model alone.
+The band plan and the warnings are rows of the **Status** section.
 
 | Badge | Meaning |
 |---|---|
-| `clear (82% noise)` | There is no device. |
-| `deviceA (93%)` | The named device transmits. The limit is 60%. |
-| `unknown device (71%)` | A device transmits, but no single class has a sufficient probability. |
-| `deviceA 50% + droneB 40%` | The votes of the segments found two transmitters in one capture. A segment votes at 50%, and a class needs 20% of all the segments. |
+| `Clear (82% Noise)` | There is no device. |
+| `deviceA (93%)` | The named device transmits. The limit is 40%. |
+| `deviceA (29%)` | One vote of the segments names the device, though the mean of the capture is below the limit. A bursty link reads this way. |
+| `Unknown Device (71%)` | A device transmits, but no single class has a sufficient probability and no vote names one. |
+| `deviceA (50%) + droneB (40%)` | The votes of the segments found two transmitters in one capture. A segment votes at 50%, and a class needs 10% of all the segments. |
+
+The percentage follows the value that decided: a share of the segments when the votes
+decided, and a probability when the mean decided.
+
+Before the first result the badge reads `SCANNING`, or `ML OFF` when the classifier is
+off. `NO MODEL LOADED`, `MODEL NOT FOUND`, `LOAD ERROR` and `TORCH MISSING` are the four
+conditions that keep it from operating.
 
 The bar of each class shows the mean probability. The Auto mode releases a lock when
-the probability of the class `noise` is 75% or more, after a dwell time of 5000 ms.
+the probability of the background classes is 85% or more, after a dwell time of 5000 ms.
 Both values are adjustable in the **Mode** section. The Auto mode needs a class with
 the name `noise`. Without that class the program does not release a lock automatically,
 and the panel gives a warning at the load of the model.
@@ -555,7 +580,7 @@ the result of the project.
 
 ### The self-checks
 
-The project has 225 self-checks in 11 scripts. One command runs all of them. The same
+The project has 234 self-checks in 11 scripts. One command runs all of them. The same
 command runs on each push, through `.github/workflows/tests.yml`.
 
 ```bash
@@ -592,13 +617,13 @@ python tests/test_dsp.py
 | `fp_spectrogram.py` | 1 | The function `segment_vote` must find two transmitters in one buffer, and it must give no name to a buffer with a low probability. |
 | `tests/test_geometry.py` | 9 | The frequency of a tone must return through the map of the composite. The parts must join without a gap. The band must be the band that you asked for. |
 | `tests/test_spectrogram.py` | 18 | The size of the image, the normalization, the frequency of each row, and the segment cutter. A gain of 60 dB must not move the image. The high pass must remove the artifact of the receiver and keep a signal that is near it, and the 0 Hz row of the image must carry nothing for any input. Three of the checks use an artifact that is calibrated against the PlutoSDR, because a constant offset is not what a radio makes. |
-| `tests/test_dsp.py` | 65 | The peak hold must find a burst that is in 1 window of 100, and also a burst at the end of a long buffer. One window alone must miss it. The artifact of the receiver must not make a peak at the middle of a hop. The corrected noise floor must not change with the dwell time. The markers must give the correct middle and the correct edges of a signal of a known width. A hop that failed must not change the noise floor. The badge must give the correct name in each condition, and a vote must name a device that the mean alone calls unknown. A signal that reaches the edge of the receiver window must be reported as wider than the window. A window that is full of signal must be reported as well, and an empty window must not be, which needs a floor that the sweep measured outside the window. |
+| `tests/test_dsp.py` | 69 | The peak hold must find a burst that is in 1 window of 100, and also a burst at the end of a long buffer. One window alone must miss it. The artifact of the receiver must not make a peak at the middle of a hop. The corrected noise floor must not change with the dwell time. The markers must give the correct middle and the correct edges of a signal of a known width. A hop that failed must not change the noise floor. The badge must give the correct name in each condition, and a vote must name a device that the mean alone calls unknown. A named background class, for example WiFi, must never read as a device. A signal that reaches the edge of the receiver window must be reported as wider than the window. A window that is full of signal must be reported as well, and an empty window must not be, which needs a floor that the sweep measured outside the window. |
 | `tests/test_snr_aug.py` | 11 | The function `_mix_noise` must give the exact signal-to-noise ratio, with an error of less than 0.1 dB. The function `_freq_shift` must change the phase of each sample only. |
 | `tests/test_model.py` | 17 | The sizes and the parameter count of `SpecCNN`, the votes of the segments, and a write and read cycle of `FingerprintModel`. The trainer and the graphical interface must calculate the same path for the meta file. The wrapper must read the sample rate of the training data from the meta, and a model that has none must give `None` and not 0 Hz. |
 | `tests/test_dataset.py` | 35 | The split by session, the energy gate, and the augmentation. A device segment must give a new image at each epoch, and a noise segment must never change. The val data must never change. A device class and the noise class must get the same DC treatment. The sample rate must come from the sidecars, and two rates in one dataset must give a warning. The tool `dataset_info` must give each warning. |
 | `tests/test_worker.py` | 25 | A false radio replaces the PlutoSDR. The sweep must tune to each hop and find the tone at its true frequency. The lock must hold one frequency. Skip, Jump to and the memory of the caught signals must operate. The record must write the correct file and the correct metadata, and each name must be different. Three checks hold the order of the imports: `terminal.py` must import torch before Qt, because Qt first stops the program on Windows. Four hold the setup of the radio: the program must ask the driver for one kernel buffer, before the buffer is made, and it must continue on a driver that does not offer the setting. |
 | `tests/test_prepare_clip.py` | 20 | A source of 100 Msps holds tones at known frequencies. A slice that holds no transmitter must be refused and not scaled up, and a carrier that never stops must count as a transmitter. A tone at the middle of the slice must arrive at 0 Hz, and a tone beside it must keep its distance. A tone outside the slice must not fold into it, even when it is 40 dB stronger. The phase ramp must not restart at a block boundary. The level must reach the target. The `.xml` of the pack must give the rate, and it must win against the flag. A second run must not write over a clip. |
-| `tests/test_widgets.py` | 13 | The real window, built with no radio and drawn to memory. The badge must carry the name of a device and read `clear` on a quiet capture. The band plan must be a second line and never the name. The badge must warn when the model and the radio disagree about the sample rate. A sweep of the wrong length must draw nothing. The markers must stay off until the user asks for them, they must land on the middle of a signal, and a window that is full of signal must hide them and say why in the title. The script needs a real Qt: on a machine that has none, for example the CI, it reports that and passes. |
+| `tests/test_widgets.py` | 16 | The real window, built with no radio and drawn to memory. The badge must carry the name of a device and read `Clear` on a quiet capture. The band plan and the warnings must be rows of the Status panel and never the badge, and the warning row must hide itself again. A sweep of the wrong length must draw nothing. The markers must stay off until the user asks for them, they must land on the middle of a signal, and a window that is full of signal must hide them and say so in the **Window** row of the Status panel. The title of the narrowband plot must carry the frequency alone. The script needs a real Qt: on a machine that has none, for example the CI, it reports that and passes. |
 | `tests/test_end_to_end.py` | 12 | A synthetic dataset of two drones goes through the real trainer. Then the same `FingerprintModel` that the graphical interface loads must give the correct name to a capture of a session that it did not see, and it must report both drones when both transmit. One capture holds a signal for 26% of its length, which is the duty of a real video link, because a check at a generous duty passed while the program read `clear` on every real drone capture. |
 
 ### How to read the result

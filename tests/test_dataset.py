@@ -26,7 +26,7 @@ import train_model
 from tools import dataset_info, eval_clip
 from train_model import (load_split, file_to_specs, file_to_segments,
                          SegmentDataset, _seg_powers_db, _natkey, WEAK_VAL_DB,
-                         _dataset_sample_rate)
+                         _dataset_sample_rate, _dataset_device_freqs)
 from fp_spectrogram import SEG_LEN, SEG_HOP, N_FFT
 
 NOISE_SIGMA = 0.01
@@ -113,6 +113,24 @@ def main():
             names = ["session_1", "session_10", "session_2", "session_9"]
             assert sorted(names, key=_natkey) == \
                 ["session_1", "session_2", "session_9", "session_10"]
+
+        @c.check("train_freqs holds the device frequencies and not the background ones")
+        def _():
+            # §9.2 job 1. A wifi class sits on the channels of the room. Keeping its
+            # frequency would let near_known_device protect a WiFi channel from the
+            # skip, thus the band plan would stop across most of the band.
+            freq_tree = Path(tempfile.mkdtemp(prefix="rfscan_freq_"))
+            try:
+                for cls, cf in (("droneA", 2440e6), ("wifi", 2462e6),
+                                ("noise", 2440e6)):
+                    d = freq_tree / cls / "session_1"
+                    d.mkdir(parents=True)
+                    (d / f"{cls}_s1_0.json").write_text(
+                        json.dumps({"center_freq": cf}))
+                assert _dataset_device_freqs(freq_tree) == [2_440_000_000], \
+                    _dataset_device_freqs(freq_tree)
+            finally:
+                shutil.rmtree(freq_tree, ignore_errors=True)
 
         @c.check("a tree with no captures is refused with a clear message")
         def _():

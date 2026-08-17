@@ -100,7 +100,7 @@ def main():
     @c.check("the badge reads clear on a quiet capture")
     def _():
         win._on_fingerprint_ready(quiet)
-        assert win.det_badge.text().startswith("clear"), win.det_badge.text()
+        assert win.det_badge.text().startswith("Clear"), win.det_badge.text()
 
     @c.check("the confidence bars follow the probabilities")
     def _():
@@ -109,11 +109,15 @@ def main():
         assert win._conf_bars["DJI-MINI-3"].value() == 93
         assert win._conf_labels["noise"].text() == "5%"
 
-    @c.check("the band plan is a second line and never the name")
+    @c.check("the band plan is a row of the panel and never the badge")
     def _():
         win._on_fingerprint_ready(dict(dev, band_plan="WiFi ch 6"))
-        text = win.det_badge.text()
-        assert text.startswith("DJI-MINI-3") and "band plan: WiFi ch 6" in text
+        assert win.det_badge.text().startswith("DJI-MINI-3"), win.det_badge.text()
+        assert "band plan" not in win.det_badge.text().lower()
+        assert "WiFi ch 6" in win.bandplan_lbl.text(), win.bandplan_lbl.text()
+        # A result with nothing on the raster puts the row back to the dash.
+        win._on_fingerprint_ready(dev)
+        assert win.bandplan_lbl.text() == "Band plan: —", win.bandplan_lbl.text()
 
     # The warning of §5: the model and the radio disagree about the sample rate. The
     # arithmetic was checked and the panel was not, because PlutoApp was never built.
@@ -121,15 +125,26 @@ def main():
         classes = ["DJI-MINI-3", "noise"]
         sample_rate = 20e6
 
-    @c.check("the badge warns when the model and the radio disagree on the rate")
+    @c.check("a rate that disagrees warns on the panel and not on the badge")
     def _():
         win._engine = _FakeEngine()
         assert win._sr_mismatch() is True
         win._on_fingerprint_ready(dev)
-        assert "sample rate" in win.det_badge.text()
+        assert win.warn_lbl.isVisible() and "sample rate" in win.warn_lbl.text()
+        assert "sample rate" not in win.det_badge.text(), win.det_badge.text()
         win._engine = None
         win._on_fingerprint_ready(dev)
-        assert "sample rate" not in win.det_badge.text()
+        assert not win.warn_lbl.isVisible(), win.warn_lbl.text()
+
+    @c.check("a model with no noise class warns, and the warning row hides again")
+    def _():
+        win._no_noise_class = True
+        win._on_fingerprint_ready(dev)
+        assert win.warn_lbl.isVisible(), "the warning row must be visible"
+        assert "no noise class" in win.warn_lbl.text(), win.warn_lbl.text()
+        win._no_noise_class = False
+        win._on_fingerprint_ready(dev)
+        assert not win.warn_lbl.isVisible(), win.warn_lbl.text()
 
     # ── The narrowband plot and its markers ───────────────────────────────────
     @c.check("the markers stay off while the user has not asked for them")
@@ -152,16 +167,33 @@ def main():
         assert win.mid_line.isVisible()
         assert abs(win.mid_line.value() - freqs[mid]) < 0.2e6
         assert all(ln.isVisible() for ln in win.edge_lines)
-        assert "full of signal" not in win.p_zoom.titleLabel.text
+        assert win.window_lbl.text() == "Window: —", win.window_lbl.text()
 
-    @c.check("a full window says so in the title and draws no line")
+    @c.check("a full window says so on the panel and draws no line")
     def _():
         freqs, psd = _zoom_arrays()
         psd[:] = -40.0                      # the window is full from side to side
         win._on_zoom_ready(freqs, psd, 2.44e9, band_floor=-80.0)
-        assert "full of signal" in win.p_zoom.titleLabel.text
+        assert win.window_lbl.text() == "Window: Full window", win.window_lbl.text()
         assert not win.mid_line.isVisible()
         assert not any(ln.isVisible() for ln in win.edge_lines)
+
+    @c.check("the title of the narrowband plot holds the frequency alone")
+    def _():
+        # The warnings moved to the panel. A title that grows and shrinks at every
+        # frame moves the plot under the cursor.
+        freqs, psd = _zoom_arrays()
+        psd[:] = -40.0
+        win._on_zoom_ready(freqs, psd, 2.44e9, band_floor=-80.0)
+        assert win.p_zoom.titleLabel.text == "Narrowband Spectrum (2440.000 MHz)", \
+            win.p_zoom.titleLabel.text
+
+    @c.check("a signal against one edge names that edge on the panel")
+    def _():
+        freqs, psd = _zoom_arrays()
+        psd[700:] = -40.0                   # it runs off the high side only
+        win._on_zoom_ready(freqs, psd, 2.44e9)
+        assert win.window_lbl.text() == "Window: High edge", win.window_lbl.text()
 
     @c.check("the band floor reaches the panel, and says when there is none")
     def _():

@@ -32,7 +32,8 @@ from torch.utils.data import (TensorDataset, DataLoader, WeightedRandomSampler,
                               get_worker_info, Dataset as TorchDataset)
 
 from fp_spectrogram import (iq_to_spectrogram, remove_dc, SpecCNN, VOTE_THRESH,
-                            MIN_SEG_SHARE, N_FFT, STFT_HOP, SEG_LEN, SEG_HOP)
+                            MIN_SEG_SHARE, N_FFT, STFT_HOP, SEG_LEN, SEG_HOP,
+                            AMBIENT_LABELS)
 
 DATA_DIR   = "./fingerprint_data"
 OUTPUT     = "./trained_model.pt"   # the name that terminal.py loads at the start
@@ -578,7 +579,7 @@ def _dataset_sample_rate(data_dir: Path):
     return rates.pop()
 
 
-def _dataset_device_freqs(data_dir: Path, noise_label="noise"):
+def _dataset_device_freqs(data_dir: Path, ambient_labels=AMBIENT_LABELS):
     """Give the centre frequencies that the device classes were recorded at.
 
     A scanner uses these to know where it has been taught to listen, thus it never
@@ -586,12 +587,13 @@ def _dataset_device_freqs(data_dir: Path, noise_label="noise"):
     frequency of every device class is kept, not one value: a second drone recorded
     somewhere else in the band must protect its own place too.
 
-    The `noise` class is left out on purpose. It is recorded across the whole sweep in
-    a band record, thus it names frequencies where no device was ever taught."""
+    The background classes are left out on purpose. `noise` and a WiFi class are
+    recorded on the channels of the room, thus keeping their frequencies would protect
+    a WiFi channel from the skip and stop the band plan across most of the band."""
     freqs = set()
     for j in Path(data_dir).rglob("*.json"):
         cls = j.parent.parent.name
-        if cls == noise_label:
+        if cls in ambient_labels:
             continue
         try:
             with open(j) as f:

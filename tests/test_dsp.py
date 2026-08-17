@@ -21,8 +21,9 @@ stub_hardware()          # this must run before the import of terminal
 
 import terminal
 from terminal import (SweepWorker, signal_extent, signal_clipped, compute_hop_freqs,
-                      composite_geometry, badge_for, peak_hold_bias_db,
-                      band_floor_db, window_filled, lock_snr_db,
+                      composite_geometry, badge_for, device_votes, device_share,
+                      peak_hold_bias_db,
+                      band_floor_db, window_filled, window_state, lock_snr_db,
                       band_plan_name, occupied_span, near_known_device,
                       FFT_BINS, MARK_MIN_SNR_DB, EMPTY_SLOT_DB)
 
@@ -369,7 +370,7 @@ def main():
         # 67% noise is a clear channel. The strongest class alone would call it a
         # device, which is why presence uses 1 - P(noise).
         text, kind = badge_for(_res({"droneA": 0.20, "droneB": 0.13, "noise": 0.67}))
-        assert text == "clear (67% noise)", text
+        assert text == "Clear (67% Noise)", text
         assert kind == "none", kind
 
     @c.check("a confident device is named")
@@ -381,7 +382,28 @@ def main():
     def _():
         # A device is present (29% noise) but neither drone holds enough.
         text, kind = badge_for(_res({"droneA": 0.38, "droneB": 0.33, "noise": 0.29}))
-        assert text.startswith("unknown device") and kind == "other", (text, kind)
+        assert text.startswith("Unknown Device") and kind == "other", (text, kind)
+
+    # ── A named background class is not a device, §9.2 job 1. The four sites read one
+    # AMBIENT_LABELS set, thus a wifi lock is background as a noise lock is. ────────
+    @c.check("a wifi-dominant channel reads 'clear', not a device")
+    def _():
+        # 'wifi' is background, thus p_dev = 1 - P(noise|wifi|bluetooth) is 0.05 here
+        # and neither the mean nor a vote names a device.
+        text, kind = badge_for(_res({"droneA": 0.03, "wifi": 0.90, "noise": 0.07}))
+        assert kind == "none" and text.startswith("Clear"), (text, kind)
+
+    @c.check("a drone beside wifi traffic is still named")
+    def _():
+        # The mean is split across two background classes; the drone still holds it.
+        text, kind = badge_for(_res({"droneA": 0.62, "wifi": 0.30, "noise": 0.08}))
+        assert text == "droneA (62%)" and kind == "device", (text, kind)
+
+    @c.check("a wifi vote is not a device vote")
+    def _():
+        res = _res({"wifi": 0.8, "noise": 0.2}, dets=(("wifi", 0.7),))
+        assert device_votes(res) == [], device_votes(res)
+        assert device_share(res) == 0.0, device_share(res)
 
     @c.check("a signal inside the window is not called wider than it")
     def _():
@@ -439,6 +461,27 @@ def main():
         # The Narrowband mode never sweeps, thus nothing measured the band around
         # the frequency and the program must not guess.
         assert not window_filled(_full_window(), None)
+
+    @c.check("the Window state gives one short word for each case that can happen")
+    def _():
+        freqs = np.linspace(-5e6, 5e6, 1024)
+        inside = np.full(1024, -80.0)
+        inside[400:600] = -40.0                      # a signal inside the window
+        wide = np.full(1024, -40.0)                  # it reaches past both sides
+        low = np.full(1024, -80.0); low[:300] = -40.0
+        high = np.full(1024, -80.0); high[700:] = -40.0
+        assert window_state(True, freqs, wide) == "Full window"
+        assert window_state(False, freqs, low) == "Low edge"
+        assert window_state(False, freqs, high) == "High edge"
+        assert window_state(False, freqs, inside) == "—"
+        # "Both edges" can not happen and this holds the reason. signal_extent takes
+        # its floor from the median of the window, thus the threshold is the median
+        # plus 3 dB and half of the bins are below the median by definition. A run
+        # that reaches both boundaries would need every bin above it. A signal that
+        # runs off both sides fills the window, thus window_filled names it from a
+        # floor that the sweep measured outside. That is the defect #38.
+        assert signal_clipped(freqs, wide) == (False, False)
+        assert window_state(False, freqs, wide) == "—"
 
     @c.check("the floor inside the window can not see a full window, which is why "
              "band_floor_db exists")
@@ -624,14 +667,14 @@ def main():
         # device" while this test ran after the mean.
         text, kind = badge_for(_res({"droneA": 0.38, "droneB": 0.13, "noise": 0.49},
                                     dets=[("droneA", 0.35)]))
-        assert text == "droneA 35%" and kind == "device", (text, kind)
+        assert text == "droneA (35%)" and kind == "device", (text, kind)
 
     @c.check("two votes have precedence over the mean")
     def _():
         # The mean of two transmitters is 'unknown'. The votes give both names.
         text, kind = badge_for(_res({"droneA": 0.45, "droneB": 0.40, "noise": 0.15},
                                     dets=[("droneA", 0.5), ("droneB", 0.4)]))
-        assert text == "droneA 50% + droneB 40%", text
+        assert text == "droneA (50%) + droneB (40%)", text
         assert kind == "device", kind
 
     @c.check("one vote alone does not take the two-name path")
@@ -695,7 +738,7 @@ def main():
         text, kind = badge_for(_res({"DJI-MINI-3": 0.29, "Radiolink": 0.00,
                                      "noise": 0.71},
                                     dets=[("DJI-MINI-3", 0.29)]))
-        assert text == "DJI-MINI-3 29%", text
+        assert text == "DJI-MINI-3 (29%)", text
         assert kind == "device", kind
 
     @c.check("a quiet channel with no vote still reads 'clear'")
@@ -703,7 +746,7 @@ def main():
         # The other half of #29: the votes give presence, thus they must not invent
         # it. An empty channel has no vote above min_share and reads clear.
         text, kind = badge_for(_res({"droneA": 0.05, "droneB": 0.03, "noise": 0.92}))
-        assert text == "clear (92% noise)", text
+        assert text == "Clear (92% Noise)", text
         assert kind == "none", kind
 
     @c.check("a model with no noise class can never read 'clear'")
@@ -715,7 +758,7 @@ def main():
                       {"droneA": 0.95, "droneB": 0.05},
                       {"droneA": 0.34, "droneB": 0.33, "droneC": 0.33}):
             text, kind = badge_for(_res(probs))
-            assert "clear" not in text, (probs, text)
+            assert "Clear" not in text, (probs, text)
             assert kind in ("device", "other"), (probs, kind)
 
     return c.report()

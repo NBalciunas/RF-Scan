@@ -29,6 +29,14 @@ INFER_MAX_SEGS = 24     # live inference: maximum segments for one buffer (0 = a
 MIN_SEG_SHARE  = 0.10
 VOTE_THRESH    = 0.5    # a segment votes when its best class has this probability
 
+# The classes that are background, not a device. The votes, the badge and the Auto
+# release all read these as "not a drone", and the trainer keeps their frequencies out
+# of train_freqs. One set for the four decisions, thus terminal.py and train_model.py can
+# not disagree about what a device is. A model holds only the classes its dataset held,
+# thus a name here that the model does not carry costs nothing: its probability is 0 and
+# no folder carries its label. See §9.2 job 1 of NOTES.md.
+AMBIENT_LABELS = ("noise", "wifi", "bluetooth")
+
 
 @functools.lru_cache(maxsize=8)
 def _window(n_fft):

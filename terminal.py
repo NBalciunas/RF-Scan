@@ -32,9 +32,13 @@ import adi
 # ImportError, thus a narrow except does not give the fallback either.
 try:
     import torch  # a check only — fp_spectrogram does the import of the model
+    from fp_spectrogram import AMBIENT_LABELS
     _TORCH_OK = True
 except Exception:
     _TORCH_OK = False
+    # torch is missing, thus no model runs and no vote or badge reads these. The literal
+    # keeps the badge functions definable; fp_spectrogram holds the one true copy.
+    AMBIENT_LABELS = ("noise", "wifi", "bluetooth")
 
 import pyqtgraph as pg
 from PyQt5 import QtCore, QtWidgets, QtGui
@@ -358,7 +362,8 @@ def device_votes(result):
     stops: a capture of a 26% duty video link is 74% silence, thus the mean reads
     noise while a quarter of the segments name the drone. See the defect #29.
     """
-    return [d for d in (result or {}).get("detections", []) if d["label"] != "noise"]
+    return [d for d in (result or {}).get("detections", [])
+            if d["label"] not in AMBIENT_LABELS]
 
 
 def device_share(result):
@@ -370,7 +375,8 @@ def device_share(result):
     """
     shares = (result or {}).get("shares")
     if shares:
-        return max((v for k, v in shares.items() if k != "noise"), default=0.0)
+        return max((v for k, v in shares.items() if k not in AMBIENT_LABELS),
+                   default=0.0)
     return max((d["share"] for d in device_votes(result)), default=0.0)
 
 
@@ -402,21 +408,21 @@ def badge_for(result, device_thresh=None):
     if device_thresh is None:
         device_thresh = FP_DEVICE_THRESH
     probs = result.get("probs", {})
-    p_dev = 1.0 - probs.get("noise", 0.0)
-    best, p_best = max(((c, p) for c, p in probs.items() if c != "noise"),
+    p_dev = 1.0 - sum(probs.get(k, 0.0) for k in AMBIENT_LABELS)
+    best, p_best = max(((c, p) for c, p in probs.items() if c not in AMBIENT_LABELS),
                        key=lambda cp: cp[1],
                        default=(result.get("label", "unknown"),
                                 result.get("confidence", 0.0)))
     dets = device_votes(result)
     if len(dets) >= 2:
-        return " + ".join(f"{d['label']} {d['share']:.0%}" for d in dets), "device"
+        return " + ".join(f"{d['label']} ({d['share']:.0%})" for d in dets), "device"
     if p_dev >= device_thresh and p_best >= device_thresh:
         return f"{best} ({p_best:.0%})", "device"
     if dets:
-        return f"{dets[0]['label']} {dets[0]['share']:.0%}", "device"
+        return f"{dets[0]['label']} ({dets[0]['share']:.0%})", "device"
     if p_dev >= device_thresh:
-        return f"unknown device ({p_dev:.0%})", "other"
-    return f"clear ({1.0 - p_dev:.0%} noise)", "none"
+        return f"Unknown Device ({p_dev:.0%})", "other"
+    return f"Clear ({1.0 - p_dev:.0%} Noise)", "none"
 
 
 def signal_clipped(freqs, psd, edge_frac=MARK_CLIP_EDGE_FRAC, **kw):
@@ -495,6 +501,35 @@ def window_filled(psd, floor_db, margin_db=MARK_FILL_MARGIN_DB,
         return False
     return bool(np.mean(np.asarray(psd, dtype=np.float64)
                         > float(floor_db) + float(margin_db)) >= float(min_share))
+
+
+def window_state(filled, freqs, psd, **kw):
+    """Say how the signal sits in the receiver window, in one short word.
+
+    The answers are "—", "Full window", "Low edge" and "High edge". A full window is
+    tested first: both of its edges are outside the receiver, thus signal_clipped can
+    not measure them.
+
+    "Both edges" is kept for completeness and it can not happen. signal_extent takes
+    its floor from the median of the window, thus its threshold is the median plus
+    MARK_EDGE_MARGIN_DB and half of the bins sit below the median by definition. A run
+    that reaches both boundaries needs every bin above that threshold. A signal that
+    runs off both sides therefore arrives here as a full window, which window_filled
+    names from a floor that the sweep measured outside it. See the defect #38.
+
+    The function is separate from the widget, as badge_for is, thus a check can prove
+    the rule without Qt.
+    """
+    if filled:
+        return "Full window"
+    low, high = signal_clipped(freqs, psd, **kw)
+    if low and high:
+        return "Both edges"
+    if low:
+        return "Low edge"
+    if high:
+        return "High edge"
+    return "—"
 
 
 def occupied_span(composite, f0, f1, at_hz, floor_db,
@@ -1059,10 +1094,12 @@ class SweepWorker(QtCore.QThread):
             self.status_msg.emit(f"Inference error: {e}")
 
     @staticmethod
-    def _noise_prob(res):
-        """Give the probability of the 'noise' class. If the model has no noise class,
-        or if the classifier did not run, the value is 0.0."""
-        return float((res or {}).get("probs", {}).get("noise", 0.0))
+    def _ambient_prob(res):
+        """Give the summed probability of the background classes. Auto releases a lock
+        on it, thus a confident WiFi lock releases as a noise lock does. If the model
+        has none of them, or if the classifier did not run, the value is 0.0."""
+        probs = (res or {}).get("probs", {})
+        return float(sum(probs.get(k, 0.0) for k in AMBIENT_LABELS))
 
     # ── The modes ─────────────────────────────────────────────────────────────
 
@@ -1176,7 +1213,7 @@ class SweepWorker(QtCore.QThread):
                 if self.cfg.get("op_mode") == "auto":
                     dwell = float(self.cfg.get("auto_dwell_ms", FP_AUTO_DWELL_MS)) / 1000.0
                     thr   = float(self.cfg.get("auto_noise_pct", FP_AUTO_NOISE_PCT)) / 100.0
-                    noise_p = self._noise_prob(self._last_class)
+                    noise_p = self._ambient_prob(self._last_class)
                     # A device that was seen recently holds the lock against the mean.
                     # A bursty link puts most of its capture below the noise floor and
                     # is silent between its bursts, thus the current buffer alone
@@ -1780,6 +1817,11 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.infer_stat_lbl.setWordWrap(True)
         self.infer_stat_lbl.setStyleSheet(_ss)
         vbox.addWidget(self.infer_stat_lbl)
+        # The band plan is a second opinion beside the model, thus it sits beside the
+        # result of the model and never inside the badge.
+        self.bandplan_lbl = QtWidgets.QLabel("Band plan: —")
+        self.bandplan_lbl.setStyleSheet(_ss)
+        vbox.addWidget(self.bandplan_lbl)
         self.mode_lbl = QtWidgets.QLabel("Mode: —")
         self.mode_lbl.setStyleSheet(_ss)
         vbox.addWidget(self.mode_lbl)
@@ -1787,12 +1829,24 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.caught_lbl.setWordWrap(True)
         self.caught_lbl.setStyleSheet(_ss)
         vbox.addWidget(self.caught_lbl)
+        # Whether the signal reaches past the receiver window. It was in the title of
+        # the narrowband plot, where it moved the title at every frame.
+        self.window_lbl = QtWidgets.QLabel("Window: —")
+        self.window_lbl.setStyleSheet(_ss)
+        vbox.addWidget(self.window_lbl)
         # The floor of the swept band. band_floor_db measures it at every lock and only
         # the title of the narrowband plot used it. It is the one number that says
         # whether the room is quiet, and a bench session asks that question first.
         self.floor_lbl = QtWidgets.QLabel("Band floor: —")
         self.floor_lbl.setStyleSheet(_ss)
         vbox.addWidget(self.floor_lbl)
+        # A warning row that is empty must not be visible. An always-present
+        # "Warning: —" teaches the user to read past the word.
+        self.warn_lbl = QtWidgets.QLabel("")
+        self.warn_lbl.setWordWrap(True)
+        self.warn_lbl.setStyleSheet("color: #ff6666; font-size: 11px; font-weight: bold;")
+        self.warn_lbl.setVisible(False)
+        vbox.addWidget(self.warn_lbl)
         self.hop_info_lbl = QtWidgets.QLabel("")
         self.hop_info_lbl.setStyleSheet(_ss)
         vbox.addWidget(self.hop_info_lbl)
@@ -1839,6 +1893,14 @@ class PlutoApp(QtWidgets.QMainWindow):
     def _set_badge_style(self, kind: str):
         self.det_badge.setStyleSheet(
             self._BADGE_STYLES.get(kind, self._BADGE_STYLES["other"]))
+
+    def _show_warnings(self, warns):
+        """Put the warnings on one row of the panel, or hide the row.
+
+        The badge held these until 2026-08-17. The badge is one line of 40 px, thus a
+        warning pushed the name of the device sideways or out of the widget."""
+        self.warn_lbl.setText("Warning: " + " · ".join(warns) if warns else "")
+        self.warn_lbl.setVisible(bool(warns))
 
     # ── The bars of the probabilities ─────────────────────────────────────────
 
@@ -1920,18 +1982,23 @@ class PlutoApp(QtWidgets.QMainWindow):
             if hasattr(self, "worker"):
                 self.worker.engine = engine
             self._rebuild_conf_bars(engine.classes)
-            self.det_badge.setText("MODEL LOADED — SCANNING")
+            self.det_badge.setText("SCANNING")
             self._set_badge_style("none")
             short = os.path.basename(path)
             self._no_noise_class = not any(c.lower() == "noise"
                                            for c in engine.classes)
             warn = ("<br>⚠ No 'noise' class — Auto mode's auto-skip will never "
-                    "trigger, and the badge can never say 'clear'"
+                    "trigger, and the badge can never say 'Clear'"
                     if self._no_noise_class else "")
             if self._sr_mismatch():
                 warn += (f"<br>⚠ Trained at {engine.sample_rate/1e6:.3f} Msps, the "
                          f"radio gives {float(self.cfg['sample_rate'])/1e6:.3f} Msps "
                          "— every frequency in the spectrogram is wrong")
+            # The row of the panel now, and not at the first result. A model that can
+            # not say 'Clear' must say so before it reads anything.
+            self._show_warnings(
+                (["no noise class"] if self._no_noise_class else [])
+                + (["sample rate"] if self._sr_mismatch() else []))
             self.model_info_lbl.setText(
                 f"{_hl(short)} loaded successfully<br>"
                 f"Model classes: {_hl(', '.join(engine.classes))}{warn}"
@@ -1955,8 +2022,10 @@ class PlutoApp(QtWidgets.QMainWindow):
                 bar.setValue(0)
                 self._conf_labels[cls].setText("0%")
             self.infer_stat_lbl.setText("Inference: off")
+            # The band plan travels with a result, thus it is as old as the last one.
+            self.bandplan_lbl.setText("Band plan: —")
         elif self._engine is not None:
-            self.det_badge.setText("MODEL LOADED — SCANNING")
+            self.det_badge.setText("SCANNING")
 
     # ── The results of the classifier ─────────────────────────────────────────
 
@@ -1965,17 +2034,20 @@ class PlutoApp(QtWidgets.QMainWindow):
         conf  = result["confidence"]
         probs = result["probs"]
         text, kind = badge_for(result, FP_DEVICE_THRESH)
-        # The band plan is a second line and never the name. If the two disagree, that
-        # is information for the user and not a fault to hide. See §9 Phase 5b item 5.
+        # The band plan is a second opinion and never the name. If the two disagree,
+        # that is information for the user and not a fault to hide. It goes on the
+        # panel, thus the badge holds the answer of the model alone.
+        # See §9 Phase 5b item 5.
         plan = result.get("band_plan")
-        if plan:
-            text += f"   |   band plan: {plan}"
+        self.bandplan_lbl.setText(f"Band plan: {_hl(plan) if plan else '—'}")
+        warns = []
         if getattr(self, "_no_noise_class", False):
-            text += "  ⚠ no noise class"
-            kind = "error" if kind == "none" else kind
+            warns.append("no noise class")
         if self._sr_mismatch():
-            text += "  ⚠ sample rate"
-            kind = "error" if kind == "none" else kind
+            warns.append("sample rate")
+        self._show_warnings(warns)
+        if warns and kind == "none":
+            kind = "error"
         self.det_badge.setText(text)
         self._set_badge_style(kind)
         for cls, bar in self._conf_bars.items():
@@ -1998,20 +2070,11 @@ class PlutoApp(QtWidgets.QMainWindow):
             self.p_zoom.setXRange(held_freq - sr / 2, held_freq + sr / 2, padding=0)
             self._zoom_center = held_freq
             self.zoom_wf_data[:] = -200.0      # remove the data of the last lock
-        title = f"Narrowband Spectrum ({held_freq / 1e6:.3f} MHz)"
+        self.p_zoom.setTitle(f"Narrowband Spectrum ({held_freq / 1e6:.3f} MHz)")
         # A full window is tested first. Its edges are both outside the receiver, thus
         # the program can not measure them and must not draw them.
         filled = window_filled(psd, band_floor)
-        if filled:
-            title += (f"   |   full of signal, wider than the "
-                      f"{sr / 1e6:.0f} MHz window")
-        else:
-            low, high = signal_clipped(freqs, psd)
-            if low or high:
-                side = "both edges" if low and high else ("the low edge" if low
-                                                          else "the high edge")
-                title += f"   |   wider than the window at {side}"
-        self.p_zoom.setTitle(title)
+        self.window_lbl.setText(f"Window: {window_state(filled, freqs, psd)}")
         self.zoom_wf_data = np.roll(self.zoom_wf_data, -1, axis=1)
         self.zoom_wf_data[:, -1] = psd
         self.zoom_wf_img.setImage(self.zoom_wf_data, autoLevels=False)
