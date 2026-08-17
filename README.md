@@ -146,7 +146,7 @@ The program writes the recordings to `./fingerprint_data/`. This path is relativ
 the current directory. Thus you must start the program from the directory of the
 project. The same is true of the two tools below.
 
-The project has four commands. The first two are the program and the other two report
+The project has five commands. The first two are the program and the other three report
 on it.
 
 | Command | Function |
@@ -155,6 +155,7 @@ on it.
 | `python train_model.py` | The trainer: a folder of captures to a model. |
 | `python tools/dataset_info.py` | What the dataset holds, and the warnings that decide whether a training run can mean anything. |
 | `python tools/evaluate.py` | What a model does to whole captures, which is the level that the user sees. |
+| `python tools/eval_clip.py` | What a model says about a clip that was never on the air, at a chosen signal-to-noise ratio. |
 
 The sweep starts at 2400 MHz with a span of 100 MHz, thus it covers 2350 to 2450 MHz in
 15 hops. A sweep takes about 1.5 seconds at the default dwell. The 2.4 GHz ISM band goes
@@ -517,9 +518,11 @@ and the panel gives a warning at the load of the model.
 
 ## Example
 
-The images are placeholders. Replace them with screen captures of your system. They
-live in `docs/`, which holds the images of this file and nothing else. Keep the file
-names, because the links below use them. Use PNG, and capture the window alone.
+Three of the four images are real captures of this system. `lock-markers.png` is still a
+placeholder, because the markers need a signal that fills a part of the receiver window.
+Replace any of them with captures of your own system. They live in `docs/`, which holds
+the images of this file and nothing else. Keep the file names, because the links below
+use them. Use PNG, and capture the window alone.
 
 ### The main window during a sweep
 
@@ -542,6 +545,9 @@ The **Recording** panel, with the file count and the **Write rate** field.
 ### The output of the trainer with the confusion matrix
 
 The terminal at the end of a run, with the confusion matrix and the per-class figures.
+This one is a real run of `--preset fast` on the dataset of this project. The banner at
+the top says what that means: the accuracy of a fast run is a sanity check and it is not
+the result of the project.
 
 ![The output of the trainer](docs/training-output.png)
 
@@ -549,17 +555,19 @@ The terminal at the end of a run, with the confusion matrix and the per-class fi
 
 ### The self-checks
 
-The project has 207 self-checks in 10 scripts. One command runs all of them. The same
+The project has 225 self-checks in 11 scripts. One command runs all of them. The same
 command runs on each push, through `.github/workflows/tests.yml`.
 
 ```bash
 python tests/run_all.py
 ```
 
-The checks do not need a PlutoSDR. They do not need Qt and they do not need the libiio
-library. They need numpy and torch only, because the support module replaces the three
-driver packages if they are absent. A package that is installed has precedence, except
-where a check asks for the replacement: `tests/test_worker.py` needs the false signal
+The checks do not need a PlutoSDR. They need numpy and torch only, because the support
+module replaces the three driver packages if they are absent. One script is different
+and it still needs no radio: `tests/test_widgets.py` builds the real window, thus it
+uses Qt when the machine has it and reports that it is not applicable when it does not.
+A package that is installed has precedence, except where a check asks for the
+replacement: `tests/test_worker.py` needs the false signal
 and the false thread, which the real Qt does not give. Thus the result of the suite
 does not change with the packages that your machine holds. A full run takes 1 to 2
 minutes. The end-to-end check trains a small model, thus its time changes with the
@@ -570,7 +578,7 @@ python tests/run_all.py --fast
 ```
 
 The flag `--fast` removes the end-to-end check. The other checks take approximately
-25 s and that time is stable. Use `--fast` while you work, and the full run before you
+33 s and that time is stable. Use `--fast` while you work, and the full run before you
 push. Each script also operates alone, and from any directory.
 
 ```bash
@@ -587,9 +595,10 @@ python tests/test_dsp.py
 | `tests/test_dsp.py` | 65 | The peak hold must find a burst that is in 1 window of 100, and also a burst at the end of a long buffer. One window alone must miss it. The artifact of the receiver must not make a peak at the middle of a hop. The corrected noise floor must not change with the dwell time. The markers must give the correct middle and the correct edges of a signal of a known width. A hop that failed must not change the noise floor. The badge must give the correct name in each condition, and a vote must name a device that the mean alone calls unknown. A signal that reaches the edge of the receiver window must be reported as wider than the window. A window that is full of signal must be reported as well, and an empty window must not be, which needs a floor that the sweep measured outside the window. |
 | `tests/test_snr_aug.py` | 11 | The function `_mix_noise` must give the exact signal-to-noise ratio, with an error of less than 0.1 dB. The function `_freq_shift` must change the phase of each sample only. |
 | `tests/test_model.py` | 17 | The sizes and the parameter count of `SpecCNN`, the votes of the segments, and a write and read cycle of `FingerprintModel`. The trainer and the graphical interface must calculate the same path for the meta file. The wrapper must read the sample rate of the training data from the meta, and a model that has none must give `None` and not 0 Hz. |
-| `tests/test_dataset.py` | 30 | The split by session, the energy gate, and the augmentation. A device segment must give a new image at each epoch, and a noise segment must never change. The val data must never change. A device class and the noise class must get the same DC treatment. The sample rate must come from the sidecars, and two rates in one dataset must give a warning. The tool `dataset_info` must give each warning. |
+| `tests/test_dataset.py` | 35 | The split by session, the energy gate, and the augmentation. A device segment must give a new image at each epoch, and a noise segment must never change. The val data must never change. A device class and the noise class must get the same DC treatment. The sample rate must come from the sidecars, and two rates in one dataset must give a warning. The tool `dataset_info` must give each warning. |
 | `tests/test_worker.py` | 25 | A false radio replaces the PlutoSDR. The sweep must tune to each hop and find the tone at its true frequency. The lock must hold one frequency. Skip, Jump to and the memory of the caught signals must operate. The record must write the correct file and the correct metadata, and each name must be different. Three checks hold the order of the imports: `terminal.py` must import torch before Qt, because Qt first stops the program on Windows. Four hold the setup of the radio: the program must ask the driver for one kernel buffer, before the buffer is made, and it must continue on a driver that does not offer the setting. |
 | `tests/test_prepare_clip.py` | 20 | A source of 100 Msps holds tones at known frequencies. A slice that holds no transmitter must be refused and not scaled up, and a carrier that never stops must count as a transmitter. A tone at the middle of the slice must arrive at 0 Hz, and a tone beside it must keep its distance. A tone outside the slice must not fold into it, even when it is 40 dB stronger. The phase ramp must not restart at a block boundary. The level must reach the target. The `.xml` of the pack must give the rate, and it must win against the flag. A second run must not write over a clip. |
+| `tests/test_widgets.py` | 13 | The real window, built with no radio and drawn to memory. The badge must carry the name of a device and read `clear` on a quiet capture. The band plan must be a second line and never the name. The badge must warn when the model and the radio disagree about the sample rate. A sweep of the wrong length must draw nothing. The markers must stay off until the user asks for them, they must land on the middle of a signal, and a window that is full of signal must hide them and say why in the title. The script needs a real Qt: on a machine that has none, for example the CI, it reports that and passes. |
 | `tests/test_end_to_end.py` | 12 | A synthetic dataset of two drones goes through the real trainer. Then the same `FingerprintModel` that the graphical interface loads must give the correct name to a capture of a session that it did not see, and it must report both drones when both transmit. One capture holds a signal for 26% of its length, which is the duty of a real video link, because a check at a generous duty passed while the program read `clear` on every real drone capture. |
 
 ### How to read the result
@@ -674,6 +683,24 @@ Measured on 2026-08-14 with this model: 0.4% on 500 held-out `noise` captures of
 room, and 24% on 100 live captures at 2470 MHz in a room with WiFi and no drone at all. A
 class that the model has never met becomes the class it most resembles. If your band
 carries WiFi or Bluetooth, record those as classes of their own.
+
+### Measure the model on a clip that was never on the air
+
+A recording campaign is expensive and a question about a signal you do not have is
+cheap. `tools/eval_clip.py` reads a prepared clip, cuts it into captures of the same
+length as the dataset, and asks the model for a badge.
+
+```bash
+python tools/eval_clip.py trained_model.pt transmitting/clips/my_clip.iq --expect DJI-MINI-3
+```
+
+A clip is clean and a capture is not, thus the program puts each capture into
+**recorded** noise at a stated SNR, with the function that makes the weak-signal copies
+of the trainer. The `clean` row adds no noise and it is the condition furthest from the
+air. Read the whole column.
+
+Give a clip of a class that the model knows in the same command. That row is the
+control: if the control fails, the path and not the model gave the answer.
 
 ### The held-out set, and the one rule it has
 

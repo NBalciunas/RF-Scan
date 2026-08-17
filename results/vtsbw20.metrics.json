@@ -1,0 +1,442 @@
+{
+  "model": "trained_model.pt",
+  "expect": "DJI-MINI-3",
+  "rule": {
+    "vote_thresh": 0.5,
+    "min_share": 0.1,
+    "unknown_thresh": 0.8
+  },
+  "noise_dir": "C:\\Users\\Nojus\\PycharmProjects\\RF-Scan\\fingerprint_data\\noise",
+  "noise_files": 40,
+  "captures": 100,
+  "cap_len": 500000,
+  "seed": 42,
+  "rows": [
+    {
+      "clip": "dji_bw10_1-2s.iq",
+      "snr_db": null,
+      "n": 100,
+      "floor_margin_db": null,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.875,
+      "share_p90": 0.9583333333333334,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw10_1-2s.iq",
+      "snr_db": 30.0,
+      "n": 100,
+      "floor_margin_db": 15.161538690060958,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.375,
+      "share_p90": 0.4166666666666667,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw10_1-2s.iq",
+      "snr_db": 20.0,
+      "n": 100,
+      "floor_margin_db": 25.161538690060958,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.4166666666666667,
+      "share_p90": 0.4583333333333333,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw10_1-2s.iq",
+      "snr_db": 10.0,
+      "n": 100,
+      "floor_margin_db": 35.16153869006096,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.375,
+      "share_p90": 0.4166666666666667,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw10_1-2s.iq",
+      "snr_db": 5.0,
+      "n": 100,
+      "floor_margin_db": 40.16153869006096,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.2916666666666667,
+      "share_p90": 0.375,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw10_4-5s.iq",
+      "snr_db": null,
+      "n": 100,
+      "floor_margin_db": null,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.875,
+      "share_p90": 0.9583333333333334,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw10_4-5s.iq",
+      "snr_db": 30.0,
+      "n": 100,
+      "floor_margin_db": 15.429153302042131,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.375,
+      "share_p90": 0.4583333333333333,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw10_4-5s.iq",
+      "snr_db": 20.0,
+      "n": 100,
+      "floor_margin_db": 25.42915330204213,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.4166666666666667,
+      "share_p90": 0.46250000000000036,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw10_4-5s.iq",
+      "snr_db": 10.0,
+      "n": 100,
+      "floor_margin_db": 35.42915330204213,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.375,
+      "share_p90": 0.4583333333333333,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw10_4-5s.iq",
+      "snr_db": 5.0,
+      "n": 100,
+      "floor_margin_db": 40.42915330204213,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.2916666666666667,
+      "share_p90": 0.375,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw10_5-6s.iq",
+      "snr_db": null,
+      "n": 100,
+      "floor_margin_db": null,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.875,
+      "share_p90": 0.9583333333333334,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw10_5-6s.iq",
+      "snr_db": 30.0,
+      "n": 100,
+      "floor_margin_db": 15.202779351134133,
+      "named_right": 99,
+      "clear": 0,
+      "named_wrong": 1,
+      "share_p50": 0.375,
+      "share_p90": 0.4166666666666667,
+      "names": {
+        "DJI-MINI-3": 99,
+        "Radiolink-AT9S-Pro": 1
+      }
+    },
+    {
+      "clip": "dji_bw10_5-6s.iq",
+      "snr_db": 20.0,
+      "n": 100,
+      "floor_margin_db": 25.202779351134133,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.4166666666666667,
+      "share_p90": 0.4583333333333333,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw10_5-6s.iq",
+      "snr_db": 10.0,
+      "n": 100,
+      "floor_margin_db": 35.20277935113413,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.375,
+      "share_p90": 0.4583333333333333,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw10_5-6s.iq",
+      "snr_db": 5.0,
+      "n": 100,
+      "floor_margin_db": 40.20277935113413,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.3333333333333333,
+      "share_p90": 0.4166666666666667,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw20_0-1s.iq",
+      "snr_db": null,
+      "n": 100,
+      "floor_margin_db": null,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.875,
+      "share_p90": 0.9583333333333334,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw20_0-1s.iq",
+      "snr_db": 30.0,
+      "n": 100,
+      "floor_margin_db": 12.644767264794112,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.2916666666666667,
+      "share_p90": 0.375,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw20_0-1s.iq",
+      "snr_db": 20.0,
+      "n": 100,
+      "floor_margin_db": 22.644767264794112,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.2916666666666667,
+      "share_p90": 0.375,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw20_0-1s.iq",
+      "snr_db": 10.0,
+      "n": 100,
+      "floor_margin_db": 32.64476726479411,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.2916666666666667,
+      "share_p90": 0.375,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw20_0-1s.iq",
+      "snr_db": 5.0,
+      "n": 100,
+      "floor_margin_db": 37.644767264794105,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.25,
+      "share_p90": 0.3333333333333333,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw20_2-3s.iq",
+      "snr_db": null,
+      "n": 100,
+      "floor_margin_db": null,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.875,
+      "share_p90": 0.9583333333333334,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw20_2-3s.iq",
+      "snr_db": 30.0,
+      "n": 100,
+      "floor_margin_db": 12.715418696307133,
+      "named_right": 98,
+      "clear": 0,
+      "named_wrong": 2,
+      "share_p50": 0.25,
+      "share_p90": 0.375,
+      "names": {
+        "DJI-MINI-3": 98,
+        "Radiolink-AT9S-Pro": 2
+      }
+    },
+    {
+      "clip": "dji_bw20_2-3s.iq",
+      "snr_db": 20.0,
+      "n": 100,
+      "floor_margin_db": 22.715418696307133,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.2916666666666667,
+      "share_p90": 0.375,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw20_2-3s.iq",
+      "snr_db": 10.0,
+      "n": 100,
+      "floor_margin_db": 32.71541869630713,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.27083333333333337,
+      "share_p90": 0.375,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw20_2-3s.iq",
+      "snr_db": 5.0,
+      "n": 100,
+      "floor_margin_db": 37.71541869630713,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.25,
+      "share_p90": 0.3333333333333333,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw20_6-7s.iq",
+      "snr_db": null,
+      "n": 100,
+      "floor_margin_db": null,
+      "named_right": 99,
+      "clear": 0,
+      "named_wrong": 1,
+      "share_p50": 0.8333333333333334,
+      "share_p90": 0.9583333333333334,
+      "names": {
+        "DJI-MINI-3": 99,
+        "Radiolink-AT9S-Pro": 1
+      }
+    },
+    {
+      "clip": "dji_bw20_6-7s.iq",
+      "snr_db": 30.0,
+      "n": 100,
+      "floor_margin_db": 12.37450067792198,
+      "named_right": 97,
+      "clear": 0,
+      "named_wrong": 3,
+      "share_p50": 0.2916666666666667,
+      "share_p90": 0.375,
+      "names": {
+        "DJI-MINI-3": 97,
+        "Radiolink-AT9S-Pro": 3
+      }
+    },
+    {
+      "clip": "dji_bw20_6-7s.iq",
+      "snr_db": 20.0,
+      "n": 100,
+      "floor_margin_db": 22.37450067792198,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.2916666666666667,
+      "share_p90": 0.375,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw20_6-7s.iq",
+      "snr_db": 10.0,
+      "n": 100,
+      "floor_margin_db": 32.37450067792198,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.2916666666666667,
+      "share_p90": 0.375,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    },
+    {
+      "clip": "dji_bw20_6-7s.iq",
+      "snr_db": 5.0,
+      "n": 100,
+      "floor_margin_db": 37.37450067792198,
+      "named_right": 100,
+      "clear": 0,
+      "named_wrong": 0,
+      "share_p50": 0.25,
+      "share_p90": 0.3333333333333333,
+      "names": {
+        "DJI-MINI-3": 100
+      }
+    }
+  ],
+  "git_commit": "82c408b",
+  "evaluated_at": "2026-08-17T10:27:59"
+}

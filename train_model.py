@@ -159,6 +159,26 @@ def file_to_segments(path: Path, seg_len: int, seg_hop: int, max_segs: int = 0,
     return np.stack([remove_dc(raw[i * seg_hop:i * seg_hop + seg_len]) for i in sel])
 
 
+def truncated_capture(path: Path):
+    """Give the (kept, expected) sample counts when a capture is shorter than its
+    sidecar says, and None when it is whole or when there is no sidecar.
+
+    §8 #20. `tofile` on a full disk writes a short file and `np.fromfile` reads it with
+    no complaint, thus a truncated capture trains the model in silence. The sidecar
+    holds the count that the record intended, thus the two can be compared without
+    reading the samples. `tools/dataset_info.py` reports the same thing, and a person
+    may run the trainer without it."""
+    j = path.with_suffix(".json")
+    if not j.exists():
+        return None
+    try:
+        want = int(json.loads(j.read_text())["n_samples"])
+    except Exception:
+        return None
+    got = path.stat().st_size // 8          # complex64 is 8 bytes
+    return (got, want) if got < want else None
+
+
 def augment_segments(segs, rng, noise_pool=None, aug_p=SNR_AUG_P,
                      snr_db=SNR_AUG_DB, f_shift=0.0):
     """Shift the segments in frequency, then put them into recorded noise.
@@ -370,6 +390,7 @@ def load_split(data_dir: Path, seg_len: int, seg_hop: int, rng, *,
         print("  [aug]  both run again at every epoch, not once at the load")
 
     Str, ytr, Atr, Xva, yva, Xwk, ywk = [], [], [], [], [], [], []
+    short = []                       # captures that the disk cut. §8 #20
     for lab, cls in enumerate(classes):
         files_by_sess = defaultdict(list)
         for f in (data_dir / cls).rglob("*.iq"):
@@ -399,6 +420,9 @@ def load_split(data_dir: Path, seg_len: int, seg_hop: int, rng, *,
             if max_files and len(files) > max_files:        # keep a random subset
                 files = [files[i] for i in rng.permutation(len(files))[:max_files]]
             for f in files:
+                cut = truncated_capture(f)
+                if cut:
+                    short.append((f, cut))
                 segs = file_to_segments(f, seg_len, seg_hop, max_segs_file, min_pdb)
                 if segs is None:
                     continue
@@ -436,6 +460,16 @@ def load_split(data_dir: Path, seg_len: int, seg_hop: int, rng, *,
         weak = f" + {n_wk:,} weak" if n_wk else ""
         print(f"  {cls:<10}: {n_tr:,} train / {n_va:,} val{weak}  (val = {held})")
 
+    if short:
+        # A warning and not a refusal. To leave the capture out would change the train
+        # set, thus a run would stop reproducing the model that is on the disk.
+        print(f"  [warn] {len(short)} capture(s) are shorter than the sidecar says. "
+              f"The disk cut them and they still train. See §8 #20.")
+        for f, (got, want) in short[:3]:
+            print(f"         {f.name}: {got:,} of {want:,} samples")
+        if len(short) > 3:
+            print(f"         and {len(short) - 3} more")
+
     if not Str or not Xva:
         raise RuntimeError("Not enough data to form both a train and a val split.")
     return (classes,
@@ -459,10 +493,15 @@ def print_confusion(model, loader, classes, device):
             pred = model(xb.to(device).float()).argmax(1).cpu().numpy()
             for t, p in zip(yb.numpy(), pred):
                 cm[int(t), int(p)] += 1
+    # The columns take their width from the longest class name. A fixed width put the
+    # header of `Radiolink-AT9S-Pro` into the column beside it, thus the table did not
+    # say which cell was which. The names of a dataset are not known here.
+    lab_w = max(len(c) for c in classes)
+    col_w = max(lab_w, len(f"{cm.max():,}")) + 2
     print("\nConfusion matrix (val — rows = true, cols = pred):")
-    print(" " * 11 + "".join(f"{c:>12}" for c in classes))
+    print(" " * lab_w + "".join(f"{c:>{col_w}}" for c in classes))
     for i, c in enumerate(classes):
-        print(f"{c:>10} " + "".join(f"{cm[i, j]:>12,}" for j in range(n)))
+        print(f"{c:<{lab_w}}" + "".join(f"{cm[i, j]:>{col_w},}" for j in range(n)))
     print("\nPer-class (val):")
     per_class = {}
     for i, c in enumerate(classes):
@@ -472,7 +511,8 @@ def print_confusion(model, loader, classes, device):
         f1   = 2 * prec * rec / (prec + rec) if (prec + rec) else 0.0
         per_class[c] = {"precision": prec, "recall": rec, "f1": f1,
                         "support": row, "predicted": col}
-        print(f"  {c:>10}: precision {prec:6.1%}   recall {rec:6.1%}   f1 {f1:6.1%}")
+        print(f"  {c:>{lab_w}}: precision {prec:6.1%}   recall {rec:6.1%}   "
+              f"f1 {f1:6.1%}")
     return cm.tolist(), per_class
 
 

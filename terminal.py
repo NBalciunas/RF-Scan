@@ -1290,7 +1290,7 @@ class SweepWorker(QtCore.QThread):
 
 class PlutoApp(QtWidgets.QMainWindow):
 
-    def __init__(self):
+    def __init__(self, connect=True):
         super().__init__()
         self.setWindowTitle("PlutoSDR Monitor  +  RF-Fingerprint detection (v2)")
         self.resize(1600, 950)
@@ -1336,7 +1336,23 @@ class PlutoApp(QtWidgets.QMainWindow):
             self.w_model_path.setText(DEFAULT_MODEL_PATH)
             self._load_model(DEFAULT_MODEL_PATH)
 
+        self.wf_data = self._make_waterfall_buf()
+        self.img.setImage(self.wf_data, autoLevels=False)
+        self._update_waterfall_rect()
+
         self.sdr = None
+        if connect:
+            self.connect_sdr()
+
+    # ── The SDR and the hops ──────────────────────────────────────────────────
+
+    def connect_sdr(self):
+        """Open the radio and start the sweep. Give True if the radio answers.
+
+        The construction and the connection are two operations, because a check must
+        build the window with no radio and then drive a handler with an array from a
+        file. `PlutoApp()` connects, `PlutoApp(connect=False)` does not, thus nothing
+        changes for the user."""
         try:
             self.sdr = adi.Pluto(SDR_URI)
             self._push_sdr_settings()
@@ -1347,14 +1363,10 @@ class PlutoApp(QtWidgets.QMainWindow):
                 "Check the URI, USB/network connection, and PlutoSDR firmware."
             )
             self.status_lbl.setText(f"SDR offline: {e}")
-            return
-
-        self.wf_data = self._make_waterfall_buf()
-        self.img.setImage(self.wf_data, autoLevels=False)
-        self._update_waterfall_rect()
+            self.sdr = None
+            return False
         self._start_worker()
-
-    # ── The SDR and the hops ──────────────────────────────────────────────────
+        return True
 
     def _recompute_hops(self):
         effective_bw = min(self.cfg["sample_rate"], self.cfg["rx_bw"])
@@ -1775,6 +1787,12 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.caught_lbl.setWordWrap(True)
         self.caught_lbl.setStyleSheet(_ss)
         vbox.addWidget(self.caught_lbl)
+        # The floor of the swept band. band_floor_db measures it at every lock and only
+        # the title of the narrowband plot used it. It is the one number that says
+        # whether the room is quiet, and a bench session asks that question first.
+        self.floor_lbl = QtWidgets.QLabel("Band floor: —")
+        self.floor_lbl.setStyleSheet(_ss)
+        vbox.addWidget(self.floor_lbl)
         self.hop_info_lbl = QtWidgets.QLabel("")
         self.hop_info_lbl.setStyleSheet(_ss)
         vbox.addWidget(self.hop_info_lbl)
@@ -1968,6 +1986,10 @@ class PlutoApp(QtWidgets.QMainWindow):
 
     def _on_zoom_ready(self, freqs, psd, held_freq, band_floor=None):
         self.zoom_curve.setData(freqs, psd)
+        if band_floor is None:
+            self.floor_lbl.setText("Band floor: — (no sweep in this mode)")
+        else:
+            self.floor_lbl.setText(f"Band floor: {_hl(f'{band_floor:.1f} dB')}")
         sr = self.cfg["sample_rate"]
         # Move the view only for a new lock. Thus the program does not cancel the
         # movements of the user at each frame.

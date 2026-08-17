@@ -29,6 +29,9 @@ SCRIPTS = [
     HERE / "test_dataset.py",
     HERE / "test_worker.py",
     HERE / "test_prepare_clip.py",
+    # It needs the real Qt. On a machine that has none, for example the CI, it says
+    # so and passes.
+    HERE / "test_widgets.py",
 ]
 SLOW = [HERE / "test_end_to_end.py"]
 

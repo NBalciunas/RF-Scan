@@ -134,7 +134,9 @@ def main():
             assert "Confusion matrix" in log, log[-400:]
             assert "Per-class (val)" in log, log[-400:]
             for cls in ("droneA", "droneB", "noise"):
-                assert f"{cls:>10}: precision" in log, cls
+                # The width of the column follows the longest class name since
+                # 2026-08-17, thus a check must not hold a width of its own.
+                assert f"{cls}: precision" in log, cls
 
         @c.check("the two synthetic drones are separated on the held-out session")
         def _():

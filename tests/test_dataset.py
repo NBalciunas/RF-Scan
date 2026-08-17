@@ -22,7 +22,8 @@ from _support import Checks, run
 # dataset_info moved to tools/ on 2026-08-14. The folder has no __init__.py and it
 # needs none: a namespace package works from the repo root that _support puts on
 # sys.path, which is what tests/test_prepare_clip.py does with transmitting/.
-from tools import dataset_info
+import train_model
+from tools import dataset_info, eval_clip
 from train_model import (load_split, file_to_specs, file_to_segments,
                          SegmentDataset, _seg_powers_db, _natkey, WEAK_VAL_DB,
                          _dataset_sample_rate)
@@ -439,6 +440,74 @@ def main():
             with contextlib.redirect_stdout(buf):
                 rc = dataset_info.report(Path(tmp) / "nothing_here")
             assert rc == 1 and "does not exist" in buf.getvalue()
+
+        @c.check("the trainer warns about a capture that the disk truncated")
+        def _():
+            # §8 #20 again, in the trainer this time. dataset_info has said it since
+            # 2026-08-13 and a person may run the trainer without it.
+            solo = Path(tempfile.mkdtemp(prefix="rfscan_short_"))
+            try:
+                d = solo / "fingerprint_data"
+                build_tree(d)
+                files = sorted(d.rglob("*.iq"))
+                for f in files:
+                    f.with_suffix(".json").write_text(json.dumps(
+                        {"sample_rate": 10e6, "n_samples": FILE_LEN}))
+                assert train_model.truncated_capture(files[0]) is None
+                victim = files[0]
+                np.fromfile(str(victim), dtype=np.complex64)[:FILE_LEN // 2].tofile(
+                    str(victim))
+                cut = train_model.truncated_capture(victim)
+                assert cut == (FILE_LEN // 2, FILE_LEN), cut
+                buf = io.StringIO()
+                with contextlib.redirect_stdout(buf):
+                    load_split(d, SEG_LEN, SEG_HOP, np.random.RandomState(0))
+                out = buf.getvalue()
+                assert "shorter than the sidecar" in out, out
+                assert victim.name in out, out
+            finally:
+                shutil.rmtree(solo, ignore_errors=True)
+
+        @c.check("a capture with no sidecar is not called truncated")
+        def _():
+            solo = Path(tempfile.mkdtemp(prefix="rfscan_short2_"))
+            try:
+                d = solo / "fingerprint_data"
+                build_tree(d)
+                assert train_model.truncated_capture(sorted(d.rglob("*.iq"))[0]) is None
+            finally:
+                shutil.rmtree(solo, ignore_errors=True)
+
+        # ── eval_clip, which reads a clip and not a capture ───────────────────
+        @c.check("eval_clip cuts a clip into captures that cover all of it")
+        def _():
+            clip = Path(tmp) / "clip.iq"
+            iq = _noise(50_000)
+            iq.tofile(str(clip))
+            caps = eval_clip.clip_captures(clip, 10, cap_len=4096)
+            assert caps.shape == (10, 4096), caps.shape
+            assert np.array_equal(caps[0], iq[:4096])
+            # The last capture ends at the end of the clip, thus the captures cover
+            # the whole second and not the start of it.
+            assert np.array_equal(caps[-1], iq[-4096:])
+
+        @c.check("eval_clip refuses a clip that is shorter than one capture")
+        def _():
+            clip = Path(tmp) / "short.iq"
+            _noise(1000).tofile(str(clip))
+            try:
+                eval_clip.clip_captures(clip, 4, cap_len=4096)
+            except SystemExit:
+                return
+            raise AssertionError("a short clip must stop the program")
+
+        @c.check("the noise pool of eval_clip leaves the validation session out")
+        def _():
+            root = Path(tmp) / "fingerprint_data" / "noise"
+            assert len(sorted(root.rglob("*.iq"))) == 4, "two sessions of two files"
+            pool = eval_clip.noise_pool(root, cap_len=4096)
+            assert len(pool) == 2, "session_2 validates the trainer, thus it stays out"
+            assert all(len(x) == 4096 for x in pool)
 
         return c.report()
     finally:
