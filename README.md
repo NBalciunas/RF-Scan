@@ -139,34 +139,27 @@ The following example shows the output of the trainer, with the confusion matrix
 python tests/run_all.py
 ```
 
-242 self-checks in 11 scripts, which also run on each push. They need numpy and torch
-only, thus no check needs a PlutoSDR. A full run takes 1 to 2 minutes, and `--fast`
-leaves approximately 33 s. A `defect #N` line is not a failure: it is a known defect, and
-it becomes `FIXED #N` the moment a correction operates.
+242 self-checks in 11 scripts, which also run on each push. They need numpy and torch only, thus no check needs a PlutoSDR.
+A full run takes 1 to 2 minutes, and `--fast`leaves approximately 33 s.
+A `defect #N` line is not a failure: it is a known defect, and it becomes `FIXED #N` the moment a correction operates.
 
-The end-to-end check is the most important one. It builds a dataset of two synthetic
-drones, it starts the real trainer, and it gives the result to the same wrapper that the
-interface loads.
+The end-to-end check is the most important one. 
+It builds a dataset of two synthetic drones, it starts the real trainer, and it gives the result to the same wrapper that the interface loads.
 
-The trainer counts segments and the program shows one badge for a whole capture, thus
-measure the model at the level that the user sees.
+The trainer counts segments and the program shows one badge for a whole capture, thus measure the model at the level that the user sees.
 
 ```bash
 python tools/evaluate.py trained_model.pt
 ```
 
-The tool calls `badge_for` from `terminal.py` and holds no second copy of the rule, thus
-the report and the program cannot disagree. `tools/eval_clip.py` asks the model about a
-prepared clip that was never on the air, at a stated signal-to-noise ratio.
+The tool calls `badge_for` from `terminal.py` and holds no second copy of the rule, thus the report and the program cannot disagree. `tools/eval_clip.py` asks the model about a prepared clip that was never on the air, at a stated signal-to-noise ratio.
 
-A validation session chooses the model, thus its accuracy is not a result that a report
-may quote. Move the last session of each class out, read it one time with `--data_dir
-./heldout_data`, and change nothing after you read it.
+A validation session chooses the model, thus its accuracy is not a result that a report may quote.
+Move the last session of each class out, read it one time with `--data_dir ./heldout_data`, and change nothing after you read it.
 
-A false alarm rate from your `noise` captures is the rate of that room. This model gave
-0.4% on 500 held-out `noise` captures of a quiet room, and 24% on 100 live captures in a
-room with WiFi and no drone. A class that the model never met becomes the class that it
-most resembles, thus record WiFi and Bluetooth as classes of their own.
+A false alarm rate from your `noise` captures is the rate of that room.
+This model gave 0.4% on 500 held-out `noise` captures of a quiet room, and 24% on 100 live captures in a room with WiFi and no drone.
+A class that the model never met becomes the class that it most resembles, thus record WiFi and Bluetooth as classes of their own.
 
 ### Measuring your radio
 
