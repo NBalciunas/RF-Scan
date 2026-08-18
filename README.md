@@ -119,20 +119,6 @@ Click **Browse…** and **Load / Reload Model** for another model, with no resta
 | `Unknown Device (71%)`         | A device transmits, but no class has a sufficient probability.                                                              |
 | `deviceA (50%) + droneB (40%)` | The votes of the segments found two transmitters in one capture.                                                            |
 
-## Examples
-
-The following example shows a lock on a drone control link, with the middle marker and the two edge markers.
-
-![A lock with the markers](docs/example-2.png)
-
-The following example shows the **Recording** panel during a device record.
-
-![The recording panel](docs/example-3.png)
-
-The following example shows the output of the trainer, with the confusion matrix and the figures of each class.
-
-![The output of the trainer](docs/example-4.png)
-
 ## Validation
 
 ```bash

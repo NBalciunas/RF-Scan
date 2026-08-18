@@ -1401,7 +1401,7 @@ class PlutoApp(QtWidgets.QMainWindow):
 
     def __init__(self, connect=True):
         super().__init__()
-        self.setWindowTitle("PlutoSDR Monitor  +  RF-Fingerprint detection (v2)")
+        self.setWindowTitle("RF Scan Terminal")
         self.resize(1600, 950)
 
         self.cfg = {
