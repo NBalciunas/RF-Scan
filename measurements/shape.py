@@ -1,4 +1,4 @@
-"""Is the artifact a constant at 0 Hz, or a narrow tone sitting on it?"""
+"""Is the artifact a constant at 0 Hz, or a narrow tone that sits on it?"""
 import numpy as np
 from pathlib import Path
 
@@ -18,7 +18,7 @@ for name in ["f2437_g70", "f2400_g10", "f2480_g70", "f2480_g40", "f1000_g70"]:
     med = np.median(np.delete(mag, range(-3, 4)))
     db = 10*np.log10(mag/med + 1e-30)
     prof = [db[i % NF] for i in range(-4, 5)]
-    # how many bins stay above 3 dB, walking out from 0
+    # how many bins stay above 3 dB, out from 0 in both directions
     width = 1
     for k in range(1, 20):
         if db[k] > 3 or db[-k] > 3: width += 1

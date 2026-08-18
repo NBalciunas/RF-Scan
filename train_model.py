@@ -463,7 +463,7 @@ def load_split(data_dir: Path, seg_len: int, seg_hop: int, rng, *,
 
     if short:
         # A warning and not a refusal. To leave the capture out would change the train
-        # set, thus a run would stop reproducing the model that is on the disk.
+        # set, thus a run no longer gives again the model that is on the disk.
         print(f"  [warn] {len(short)} capture(s) are shorter than the sidecar says. "
               f"The disk cut them and they still train. See §8 #20.")
         for f, (got, want) in short[:3]:
@@ -588,8 +588,9 @@ def _dataset_device_freqs(data_dir: Path, ambient_labels=AMBIENT_LABELS):
     somewhere else in the band must protect its own place too.
 
     The background classes are left out on purpose. `noise` and a WiFi class are
-    recorded on the channels of the room, thus keeping their frequencies would protect
-    a WiFi channel from the skip and stop the band plan across most of the band."""
+    recorded on the channels of the room. If the function kept their frequencies, a
+    WiFi channel would be protected from the skip, and the band plan would stop across
+    most of the band."""
     freqs = set()
     for j in Path(data_dir).rglob("*.json"):
         cls = j.parent.parent.name

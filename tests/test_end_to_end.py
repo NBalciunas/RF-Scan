@@ -45,8 +45,8 @@ def _capture(cls, rng, continuous=False, duty=0.60):
     """A device capture is bursts with silence between them, as a real one is.
 
     continuous=True fills the whole buffer with the transmission. That is what the
-    radio sees while the drone is actually sending, thus it is the right input for
-    the two-drone vote.
+    radio sees while the drone transmits, thus it is the right input for the
+    two-drone vote.
 
     duty is the part of the buffer that holds the transmission, in three bursts. The
     default of 0.60 is more than twice as generous as a real link: a DJI MINI 3

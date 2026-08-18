@@ -1,8 +1,8 @@
 """Drive Auto against the real radio with no window, and log what it decided.
 
 Receive only. It never records and it never transmits. It exists because the live
-path can only be judged from a radio, and a person watching a screen can not write
-down 500 events. See NOTES.md section 9.2 job 4.
+path can only be judged from a radio, and a person at a screen can not write down
+500 events. See NOTES.md section 9.2 job 4.
 
   python tools/job4_auto_run.py <model.pt> <seconds> <out.json>
 
@@ -78,7 +78,7 @@ def on_fp(res):
     # The share of every device vote, and not the badge alone. A run with no second
     # name on the badge has two possible causes: no second vote happened at all, or
     # FP_SECOND_NAME_SHARE suppressed one. Only the second says the limit of #41 was
-    # exercised, and the badge string can not tell them apart.
+    # exercised, and the badge string can not separate the two causes.
     dv = sorted((round(d["share"], 3), d["label"]) for d in T.device_votes(res))
     log("classify", badge=text, style=style, plan=res.get("band_plan") or "-",
         ambient=round(T.SweepWorker._ambient_prob(res), 3),

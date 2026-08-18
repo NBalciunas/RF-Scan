@@ -7,7 +7,7 @@ rests on data.
 
 **Run it twice, once with the antenna and once with a 50 ohm load.** The difference
 between the two runs is the signals in the room. What stays with the load belongs to
-the radio. One run alone can not tell them apart, and the run of 2026-08-10 was
+the radio. One run alone can not separate the two, and the run of 2026-08-10 was
 believed to be a load run when it was an antenna run. That error is the reason the
 termination is now a required argument: this program writes down what you tell it and
 can not verify it, so state it and state it correctly.

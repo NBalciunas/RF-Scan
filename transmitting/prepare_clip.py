@@ -267,8 +267,8 @@ def prepare(src, out, *, in_rate=IN_RATE, out_rate=OUT_RATE, offset_hz=0.0,
     # above, because OFDM has a longer tail. Thus one percentile target gives one
     # class a peak of 0.64 and the other a peak of 1.01.
     #
-    # The program stops instead of lowering this clip alone. A clip that is quieter
-    # than the others is the class cue that the whole level step exists to remove.
+    # The program stops, and it does not lower this clip alone. A clip that is
+    # quieter than the others is the class cue that the whole level step must remove.
     # Lower --peak for EVERY class of the campaign, and prepare them all again.
     if peak > PEAK_MAX:
         raise SystemExit(

@@ -59,8 +59,8 @@ def stub_hardware(force=()):
         """Say whether a stub is necessary, and do not import anything to find out.
 
         find_spec looks for the module and does not run it. An import would run it,
-        and importing Qt here would load the Qt libraries before terminal loads
-        torch, which is the failure of §8 #24. A probe must not have that effect."""
+        and an import of Qt here loads the Qt libraries before terminal loads torch,
+        which is the failure of §8 #24. A probe must not have that effect."""
         if name in force:
             sys.modules.pop(name, None)
             for k in [k for k in sys.modules if k.startswith(name + ".")]:

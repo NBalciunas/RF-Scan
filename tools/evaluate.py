@@ -67,8 +67,8 @@ def _write_json(args, fp, share, gate, rows, devices):
 
     The trainer writes `<out>.metrics.json` so that a result in the repository can be
     traced to a commit. A held-out result needs the same, and it needs it more: the
-    captures may be read one time only, thus a number that lives in a terminal alone
-    is one window close from gone.
+    captures may be read one time only, thus a number that stays in a terminal alone
+    is lost when the user closes that window.
     """
     cols = devices + ["unknown", "clear"]
     per_class, confusion = {}, {}

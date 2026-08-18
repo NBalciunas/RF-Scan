@@ -2,7 +2,7 @@
 
 These two discriminators separate a CONSTANT signal from a BURSTY one. They do not
 separate the radio from the air: a transmitter that never stops looks exactly like a
-spur of the receiver. Only a capture with a 50 ohm load can tell those apart. The run
+spur of the receiver. Only a capture with a 50 ohm load can separate the two. The run
 of 2026-08-10 called 2440 MHz a spur of the radio on antenna data, which the method
 does not support.
 

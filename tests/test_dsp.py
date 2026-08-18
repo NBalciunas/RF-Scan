@@ -348,10 +348,10 @@ def main():
         w.caught_changed = _Sig()
         _nk, f0, f1 = composite_geometry(cfg)
         want = f0 + ((drone_bin + 0.5) / n) * (f1 - f0)
-        # Judging one candidate costs a dwell of 5 s plus the sweep that finds the
-        # next, about 8 s. The clock has to move here or the defect can not appear:
-        # #40 is a race between that cost and the age of the memory, and a loop that
-        # takes no time at all wins a race that the radio loses.
+        # One candidate costs a dwell of 5 s plus the sweep that finds the next,
+        # about 8 s. The clock has to move here or the defect can not appear: #40
+        # occurs when that cost is more than the age of the memory, and a loop that
+        # takes no time at all never reaches that condition.
         per_lock_s = 8.2
         seen = []
         for _sweep in range(12):
@@ -377,7 +377,7 @@ def main():
     def _():
         # The other half of #40. Once nothing above the threshold is left unmasked
         # every candidate has had its turn, thus the memory must clear and the band
-        # must become visible again. Without this the scanner goes blind.
+        # must become visible again. Without this the scanner finds nothing.
         cfg  = _app_cfg()
         comp = _composite(cfg)
         comp[500] = -50.0
@@ -395,22 +395,22 @@ def main():
 
     @c.check("a round that never ends does not blind the scanner for ever")
     def _():
-        # The safety valve. A room that keeps making new emitters never completes a
-        # round, thus the wall clock must still empty the memory in the end.
+        # The safety valve. A room that makes new emitters without stop never
+        # completes a round, thus the wall clock must still empty the memory.
         cfg  = _app_cfg()
         w = _worker(cfg)
         w.caught_changed = _Sig()
         ttl = cfg.get("fp_memory_ttl_s", 30.0)
         old = time.time() - ttl * terminal.FP_MEMORY_TTL_ROUNDS - 1.0
         w._caught = [(2.44e9, old)]
-        w._round_done = False               # the round is still running
+        w._round_done = False               # the round is not complete
         w._prune_memory()
         assert w._caught == [], "the safety valve did not empty the memory"
 
     @c.check("the memory is not cleared by the wall clock inside a round")
     def _():
         # The regression that #40 was. An entry older than fp_memory_ttl_s must stay
-        # while the round is still running, or the loud emitters come back before the
+        # while the round is not complete, or the loud emitters come back before the
         # drone has had its turn.
         cfg = _app_cfg()
         w = _worker(cfg)

@@ -31,7 +31,7 @@ import adi
 # The except catches Exception, because that failure is an OSError and not an
 # ImportError, thus a narrow except does not give the fallback either.
 try:
-    import torch  # a check only — fp_spectrogram does the import of the model
+    import torch  # a check only. fp_spectrogram does the import of the model
     from fp_spectrogram import AMBIENT_LABELS
     _TORCH_OK = True
 except Exception:
@@ -91,7 +91,7 @@ FP_MEMORY_TTL_S      = 30.0      # a caught frequency stays in the memory this l
 FP_MEMORY_TTL_ROUNDS = 4.0       # the safety valve of the caught memory, in units of
                                  # fp_memory_ttl_s. The memory clears when the scan has
                                  # been round once, thus the wall clock only has to stop
-                                 # a round that never ends from blinding the scanner.
+                                 # a round that never ends. Such a round blinds the scanner.
                                  # See the defect #40.
 FP_MEMORY_GUARD_HZ   = 3_000_000 # a peak nearer than this to a caught frequency is the same
 FP_AUTO_DWELL_MS     = 5000      # Auto: hold this long before the program judges the lock
@@ -799,7 +799,7 @@ class SweepWorker(QtCore.QThread):
         """What the public band plan says about a frequency.
 
         Gives (name, width_hz), or (None, None). Two things about where the numbers
-        come from, and both are the difference between working and not.
+        come from, and both decide whether the function works.
 
         The width comes from the composite and not from the receiver window, because
         the widest service is wider than the window: a WiFi channel is 20 MHz and the
@@ -1056,19 +1056,19 @@ class SweepWorker(QtCore.QThread):
         A wall clock alone is not fair and it loses the drone. The search takes the
         loudest thing that the memory does not mask, thus the order of the search is
         the order of the levels in the room. Each candidate costs a dwell to judge.
-        With five emitters above the drone that is about 30 s of judging, and a
-        30 s timer returns the first of them to the search at the moment the drone
-        would have had its turn. The scan then cycles the loud background for ever
-        and never offers the drone to the classifier at all. Measured on 2026-08-18
+        Five emitters above the drone cost about 30 s to judge, and a 30 s timer
+        returns the first of them to the search at the moment the drone would have
+        had its turn. The scan then cycles the loud background always, and it never
+        offers the drone to the classifier at all. Measured on 2026-08-18
         over 119.3 s with the drone above the threshold on 84 of 84 sweeps. See the
         defect #40.
 
         The memory therefore holds a frequency until nothing above the threshold is
         left unmasked, which _detect_new_peak reports as `_round_done`. Every
-        candidate has had exactly one turn at that moment, thus clearing is fair.
+        candidate has had exactly one turn at that moment, thus a clear is fair.
 
-        The wall clock stays as a safety valve. A round that never ends, because the
-        room keeps making new emitters, must not blind the scanner for ever.
+        The wall clock stays as a safety valve. A round never ends when the room makes
+        new emitters without stop, and such a round must not blind the scanner.
         """
         if self._round_done:
             self._round_done = False

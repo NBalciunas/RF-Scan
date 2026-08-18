@@ -116,9 +116,10 @@ def main():
 
         @c.check("train_freqs holds the device frequencies and not the background ones")
         def _():
-            # §9.2 job 1. A wifi class sits on the channels of the room. Keeping its
-            # frequency would let near_known_device protect a WiFi channel from the
-            # skip, thus the band plan would stop across most of the band.
+            # §9.2 job 1. A wifi class sits on the channels of the room. If the
+            # trainer kept its frequency, near_known_device would protect a WiFi
+            # channel from the skip, thus the band plan would stop across most of
+            # the band.
             freq_tree = Path(tempfile.mkdtemp(prefix="rfscan_freq_"))
             try:
                 for cls, cf in (("droneA", 2440e6), ("wifi", 2462e6),
@@ -293,7 +294,7 @@ def main():
         @c.check("a device class and the noise class get the same DC treatment")
         def _():
             # The asymmetry that mattered: the device class is shifted and the noise
-            # class is not. Both must end with the DC row looking like any other.
+            # class is not. The DC row must look like any other row for both.
             (_cls, Str, ytr, Atr, *_r, pool), _o = _load(root, snr_aug_p=0.5,
                                                          f_shift=0.10)
             ds = SegmentDataset(Str, ytr, Atr, pool, seed=1,
@@ -320,7 +321,7 @@ def main():
         @c.check("dataset_info reads the seconds and the gain from the sidecars")
         def _():
             # The synthetic tree has no .json sidecars, thus the tool must say so
-            # instead of reporting a wrong duration.
+            # and must not report a wrong duration.
             tree = dataset_info.scan(root)
             s = tree["droneA"]["session_1"]
             assert s["no_sidecar"] == 2, s["no_sidecar"]

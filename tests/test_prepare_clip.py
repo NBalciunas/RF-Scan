@@ -202,8 +202,8 @@ def main():
             # OFDM has a longer tail than a hopping link: the DJI peak sits 4.4 dB
             # above its 99.9 percentile and the AT9S peak 0.5 to 1.4 dB above. Thus
             # one percentile target gave the DJI clips a peak of 1.01 and cut them,
-            # and it cut that class only. Lowering the one clip would make it quieter
-            # than the others, which is the cue the level step exists to remove.
+            # and it cut that class only. A lower level for that one clip makes it
+            # quieter than the others, which is the cue the level step must remove.
             src = _write(tmp, "hi.iq", _tones(N // 4, IN_RATE, [1e6], [0.02]))
             out = str(Path(tmp) / "hi_slice.iq")
             try:
