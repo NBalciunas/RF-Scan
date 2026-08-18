@@ -88,6 +88,11 @@ FP_PEAK_THRESH_DB    = 18.0      # dB of true SNR for a peak to cause a lock. Th
 FP_HOLD_SETTLE_MS    = 20        # wait for the radio before the program reads a capture
 FP_GONE_S            = 2.5       # release the lock if the signal stops for this time
 FP_MEMORY_TTL_S      = 30.0      # a caught frequency stays in the memory this long
+FP_MEMORY_TTL_ROUNDS = 4.0       # the safety valve of the caught memory, in units of
+                                 # fp_memory_ttl_s. The memory clears when the scan has
+                                 # been round once, thus the wall clock only has to stop
+                                 # a round that never ends from blinding the scanner.
+                                 # See the defect #40.
 FP_MEMORY_GUARD_HZ   = 3_000_000 # a peak nearer than this to a caught frequency is the same
 FP_AUTO_DWELL_MS     = 5000      # Auto: hold this long before the program judges the lock
 FP_AUTO_NOISE_PCT    = 85        # Auto: release the lock at this probability of noise
@@ -101,6 +106,14 @@ FP_PEAK_HITS         = 2         # sweeps that must agree before a peak causes a
                                  # 1 = lock on one sweep, as before. See the defect #31.
 FP_DEVICE_THRESH     = 0.4       # the badge shows a device at this probability. Below it, the
                                  # badge shows "clear". The votes use unknown_thresh.
+FP_SECOND_NAME_SHARE = 0.25      # a second name on the badge needs this share of the
+                                 # segments, where the first name needs MIN_SEG_SHARE of
+                                 # 0.10. The catch-all class of a model puts a weak vote
+                                 # into a strong single-drone capture, thus the badge
+                                 # named a drone that was not on the air. Measured on the
+                                 # air 2026-08-18: 12% and 17% against a drone at 33%,
+                                 # over 252 live classifications, and never once in 600
+                                 # captures of the dataset. See the defect #41.
 FP_HOLD_SHARE        = 0.05      # a vote at this share of the segments holds a lock. It is
                                  # below MIN_SEG_SHARE on purpose: to keep a lock costs one
                                  # dwell, and to drop one costs the drone. See the defect #30.
@@ -392,7 +405,7 @@ def has_ambient_class(classes):
     return any(str(c).lower() in AMBIENT_LABELS for c in (classes or []))
 
 
-def badge_for(result, device_thresh=None):
+def badge_for(result, device_thresh=None, second_share=None):
     """Turn a classifier result into the badge text and its style.
 
     The function is separate from the widget. Thus a check can prove the rule that
@@ -414,6 +427,12 @@ def badge_for(result, device_thresh=None):
          is the answer of last resort and a vote is a name. A lower device_thresh sent
          a named capture to "unknown device" while this test ran after the mean.
 
+    The two names do not cost the same. The first name needs MIN_SEG_SHARE, thus a
+    bursty link that holds a tenth of its capture is still named. A second name needs
+    FP_SECOND_NAME_SHARE, which is higher, because a second name is a claim that
+    another transmitter is in the room and the catch-all class of a model makes that
+    claim cheaply. See the defect #41.
+
     The percentage follows the statistic that decided. A badge from the votes gives
     the share of the segments, and a badge from the mean gives the probability.
 
@@ -421,6 +440,8 @@ def badge_for(result, device_thresh=None):
     """
     if device_thresh is None:
         device_thresh = FP_DEVICE_THRESH
+    if second_share is None:
+        second_share = FP_SECOND_NAME_SHARE
     probs = result.get("probs", {})
     p_dev = 1.0 - sum(probs.get(k, 0.0) for k in AMBIENT_LABELS)
     best, p_best = max(((c, p) for c, p in probs.items() if c not in AMBIENT_LABELS),
@@ -428,8 +449,12 @@ def badge_for(result, device_thresh=None):
                        default=(result.get("label", "unknown"),
                                 result.get("confidence", 0.0)))
     dets = device_votes(result)
-    if len(dets) >= 2:
-        return " + ".join(f"{d['label']} ({d['share']:.0%})" for d in dets), "device"
+    # device_votes gives the strongest first. The first name keeps its own limit and
+    # every name after it must reach second_share, thus one transmitter is named as
+    # it always was and a weak vote beside it no longer becomes a second drone.
+    named = dets[:1] + [d for d in dets[1:] if d["share"] >= second_share]
+    if len(named) >= 2:
+        return " + ".join(f"{d['label']} ({d['share']:.0%})" for d in named), "device"
     if p_dev >= device_thresh and p_best >= device_thresh:
         return f"{best} ({p_best:.0%})", "device"
     if dets:
@@ -735,6 +760,7 @@ class SweepWorker(QtCore.QThread):
         self._last_present_t = 0.0         # the last time that the signal was present
         self._last_infer_t   = 0.0         # the last time that the classifier ran
         self._caught         = []          # [(freq_hz, t_caught)]
+        self._round_done     = False       # the scan has been round, #40
         self._lock_t         = 0.0         # the time when the current lock started
         self._last_class     = None        # the last result from the classifier
         self._last_device_t  = 0.0         # the last time that a vote named a device
@@ -948,9 +974,15 @@ class SweepWorker(QtCore.QThread):
         idx = int(np.argmax(masked))
         if masked[idx] <= -1e8:                     # all the band is in the memory
             self._cand = None
+            self._round_done = True
             return None, -999.0
         freq = float(bin_freqs(f_min, f_max, total)[idx])
         snr  = float(composite[idx]) - med
+        # The round is over when the loudest thing left is not worth a lock. That is
+        # the moment every candidate of this band has had one turn, and it is what
+        # clears the memory. See _prune_memory and the defect #40.
+        self._round_done = snr < float(
+            self.cfg.get("fp_peak_thresh_db", FP_PEAK_THRESH_DB))
         need = int(self.cfg.get("peak_hits", FP_PEAK_HITS))
         guard = float(self.cfg.get("fp_memory_guard_hz", FP_MEMORY_GUARD_HZ))
         if self._cand is not None and abs(self._cand[0] - freq) <= guard:
@@ -1019,11 +1051,36 @@ class SweepWorker(QtCore.QThread):
         self.status_msg.emit(msg)
 
     def _prune_memory(self):
-        """Remove the frequencies that are in the memory for more than fp_memory_ttl_s.
-        The program can then find them again."""
+        """Clear the memory when the scan has been round once, not on a wall clock.
+
+        A wall clock alone is not fair and it loses the drone. The search takes the
+        loudest thing that the memory does not mask, thus the order of the search is
+        the order of the levels in the room. Each candidate costs a dwell to judge.
+        With five emitters above the drone that is about 30 s of judging, and a
+        30 s timer returns the first of them to the search at the moment the drone
+        would have had its turn. The scan then cycles the loud background for ever
+        and never offers the drone to the classifier at all. Measured on 2026-08-18
+        over 119.3 s with the drone above the threshold on 84 of 84 sweeps. See the
+        defect #40.
+
+        The memory therefore holds a frequency until nothing above the threshold is
+        left unmasked, which _detect_new_peak reports as `_round_done`. Every
+        candidate has had exactly one turn at that moment, thus clearing is fair.
+
+        The wall clock stays as a safety valve. A round that never ends, because the
+        room keeps making new emitters, must not blind the scanner for ever.
+        """
+        if self._round_done:
+            self._round_done = False
+            if self._caught:
+                self._caught = []
+                self.caught_changed.emit([])
+            return
         ttl = float(self.cfg.get("fp_memory_ttl_s", FP_MEMORY_TTL_S))
+        max_age = ttl * float(self.cfg.get("fp_memory_ttl_rounds",
+                                           FP_MEMORY_TTL_ROUNDS))
         now = time.time()
-        kept = [(f, t) for (f, t) in self._caught if now - t < ttl]
+        kept = [(f, t) for (f, t) in self._caught if now - t < max_age]
         if len(kept) != len(self._caught):
             self._caught = kept
             self.caught_changed.emit([f for f, _t in self._caught])
@@ -1132,7 +1189,8 @@ class SweepWorker(QtCore.QThread):
         The frequency does not move during the hold. Thus the narrowband plot is
         stable. The hold continues until the user clicks Skip, or until the signal
         stops. Then the program puts the frequency in the memory and continues the
-        sweep. A frequency in the memory expires after fp_memory_ttl_s."""
+        sweep. The memory clears when the scan has been round once, thus every signal
+        of the band gets one turn before any of them gets a second. See #40."""
         mode = "SCAN"
         self.cfg["skip_lock"] = False
         self.cfg["jump_to"] = None

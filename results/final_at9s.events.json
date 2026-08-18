@@ -1,0 +1,5316 @@
+[
+ {
+  "t": 3.24,
+  "kind": "sweep",
+  "floor_db": -29.6,
+  "peak_db": 49.8,
+  "peak_mhz": 2425.931,
+  "tx_band_db": 39.5,
+  "caught": 0
+ },
+ {
+  "t": 3.24,
+  "kind": "status",
+  "msg": "Scan: 3230 ms  |  18 hops"
+ },
+ {
+  "t": 6.43,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 33.8,
+  "peak_mhz": 2402.124,
+  "tx_band_db": 32.4,
+  "caught": 0
+ },
+ {
+  "t": 6.43,
+  "kind": "status",
+  "msg": "Scan: 3195 ms  |  18 hops"
+ },
+ {
+  "t": 9.63,
+  "kind": "sweep",
+  "floor_db": -30.7,
+  "peak_db": 39.7,
+  "peak_mhz": 2425.941,
+  "tx_band_db": 19.2,
+  "caught": 0
+ },
+ {
+  "t": 9.63,
+  "kind": "status",
+  "msg": "Scan: 3193 ms  |  18 hops"
+ },
+ {
+  "t": 12.82,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 51.5,
+  "peak_mhz": 2402.026,
+  "tx_band_db": 22.6,
+  "caught": 0
+ },
+ {
+  "t": 12.82,
+  "kind": "status",
+  "msg": "Scan: 3195 ms  |  18 hops"
+ },
+ {
+  "t": 16.02,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 41.2,
+  "peak_mhz": 2426.009,
+  "tx_band_db": 19.3,
+  "caught": 0
+ },
+ {
+  "t": 16.02,
+  "kind": "status",
+  "msg": "Scan: 3196 ms  |  18 hops"
+ },
+ {
+  "t": 19.22,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 52.1,
+  "peak_mhz": 2426.019,
+  "tx_band_db": 41.3,
+  "caught": 0
+ },
+ {
+  "t": 19.22,
+  "kind": "status",
+  "msg": "Scan: 3204 ms  |  18 hops"
+ },
+ {
+  "t": 19.22,
+  "kind": "caught",
+  "freqs_mhz": [
+   2426.019
+  ]
+ },
+ {
+  "t": 19.22,
+  "kind": "status",
+  "msg": "Passed Bluetooth LE advertising @ 2426.019 MHz, 1.3 MHz wide \u2014 still scanning"
+ },
+ {
+  "t": 22.44,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 48.5,
+  "peak_mhz": 2426.058,
+  "tx_band_db": 30.8,
+  "caught": 1
+ },
+ {
+  "t": 22.44,
+  "kind": "status",
+  "msg": "Scan: 3214 ms  |  18 hops"
+ },
+ {
+  "t": 25.64,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.95,
+  "tx_band_db": 19.1,
+  "caught": 1
+ },
+ {
+  "t": 25.64,
+  "kind": "status",
+  "msg": "Scan: 3203 ms  |  18 hops"
+ },
+ {
+  "t": 25.64,
+  "kind": "caught",
+  "freqs_mhz": [
+   2426.019,
+   2480.26
+  ]
+ },
+ {
+  "t": 25.64,
+  "kind": "status",
+  "msg": "Passed Bluetooth LE advertising @ 2480.260 MHz, 1.2 MHz wide \u2014 still scanning"
+ },
+ {
+  "t": 28.84,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 50.9,
+  "peak_mhz": 2402.026,
+  "tx_band_db": 18.6,
+  "caught": 2
+ },
+ {
+  "t": 28.84,
+  "kind": "status",
+  "msg": "Scan: 3197 ms  |  18 hops"
+ },
+ {
+  "t": 32.05,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 49.6,
+  "peak_mhz": 2402.172,
+  "tx_band_db": 26.6,
+  "caught": 2
+ },
+ {
+  "t": 32.05,
+  "kind": "status",
+  "msg": "Scan: 3209 ms  |  18 hops"
+ },
+ {
+  "t": 32.05,
+  "kind": "caught",
+  "freqs_mhz": [
+   2426.019,
+   2480.26,
+   2402.172
+  ]
+ },
+ {
+  "t": 32.05,
+  "kind": "status",
+  "msg": "Passed Bluetooth LE advertising @ 2402.172 MHz, 1.3 MHz wide \u2014 still scanning"
+ },
+ {
+  "t": 35.24,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 45.3,
+  "peak_mhz": 2480.084,
+  "tx_band_db": 34.9,
+  "caught": 3
+ },
+ {
+  "t": 35.24,
+  "kind": "status",
+  "msg": "Scan: 3193 ms  |  18 hops"
+ },
+ {
+  "t": 38.44,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.019,
+  "tx_band_db": 31.0,
+  "caught": 3
+ },
+ {
+  "t": 38.44,
+  "kind": "status",
+  "msg": "Scan: 3203 ms  |  18 hops"
+ },
+ {
+  "t": 41.64,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 52.4,
+  "peak_mhz": 2426.068,
+  "tx_band_db": 18.8,
+  "caught": 3
+ },
+ {
+  "t": 41.64,
+  "kind": "status",
+  "msg": "Scan: 3198 ms  |  18 hops"
+ },
+ {
+  "t": 44.84,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 46.8,
+  "peak_mhz": 2441.646,
+  "tx_band_db": 46.8,
+  "caught": 3
+ },
+ {
+  "t": 44.84,
+  "kind": "status",
+  "msg": "Scan: 3196 ms  |  18 hops"
+ },
+ {
+  "t": 48.05,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 54.8,
+  "peak_mhz": 2426.038,
+  "tx_band_db": 26.3,
+  "caught": 3
+ },
+ {
+  "t": 48.05,
+  "kind": "status",
+  "msg": "Scan: 3206 ms  |  18 hops"
+ },
+ {
+  "t": 51.26,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 46.3,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.6,
+  "caught": 3
+ },
+ {
+  "t": 51.26,
+  "kind": "status",
+  "msg": "Scan: 3218 ms  |  18 hops"
+ },
+ {
+  "t": 51.45,
+  "kind": "status",
+  "msg": "Locked +31 dB @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 51.66,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 46.2,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.5,
+  "caught": 3
+ },
+ {
+  "t": 51.7,
+  "kind": "classify",
+  "badge": "Clear (97% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.973,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 51.7,
+  "kind": "status",
+  "msg": "Locked @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 51.89,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 46.2,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.5,
+  "caught": 3
+ },
+ {
+  "t": 51.89,
+  "kind": "status",
+  "msg": "Locked @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 52.09,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 46.2,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.5,
+  "caught": 3
+ },
+ {
+  "t": 52.09,
+  "kind": "status",
+  "msg": "Locked @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 52.28,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 46.2,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.5,
+  "caught": 3
+ },
+ {
+  "t": 52.28,
+  "kind": "status",
+  "msg": "Locked @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 52.47,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 46.2,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.5,
+  "caught": 3
+ },
+ {
+  "t": 52.51,
+  "kind": "classify",
+  "badge": "Clear (97% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.975,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 52.51,
+  "kind": "status",
+  "msg": "Locked @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 52.71,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 46.2,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.5,
+  "caught": 3
+ },
+ {
+  "t": 52.71,
+  "kind": "status",
+  "msg": "Locked @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 52.9,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 46.2,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.5,
+  "caught": 3
+ },
+ {
+  "t": 52.9,
+  "kind": "status",
+  "msg": "Locked @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 53.09,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 46.2,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.5,
+  "caught": 3
+ },
+ {
+  "t": 53.09,
+  "kind": "status",
+  "msg": "Locked @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 53.28,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 46.2,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.5,
+  "caught": 3
+ },
+ {
+  "t": 53.32,
+  "kind": "classify",
+  "badge": "Clear (96% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.955,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 53.32,
+  "kind": "status",
+  "msg": "Locked @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 53.52,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 46.2,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.5,
+  "caught": 3
+ },
+ {
+  "t": 53.52,
+  "kind": "status",
+  "msg": "Locked @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 53.71,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 46.2,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.5,
+  "caught": 3
+ },
+ {
+  "t": 53.71,
+  "kind": "status",
+  "msg": "Locked @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 53.9,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 46.2,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.5,
+  "caught": 3
+ },
+ {
+  "t": 53.9,
+  "kind": "status",
+  "msg": "Locked @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 54.09,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 46.2,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.5,
+  "caught": 3
+ },
+ {
+  "t": 54.13,
+  "kind": "classify",
+  "badge": "Clear (97% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.966,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 54.13,
+  "kind": "status",
+  "msg": "Locked @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 54.32,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 46.2,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.5,
+  "caught": 3
+ },
+ {
+  "t": 54.32,
+  "kind": "status",
+  "msg": "Locked @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 54.52,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 46.2,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.5,
+  "caught": 3
+ },
+ {
+  "t": 54.52,
+  "kind": "status",
+  "msg": "Locked @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 54.71,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 46.2,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.5,
+  "caught": 3
+ },
+ {
+  "t": 54.71,
+  "kind": "status",
+  "msg": "Locked @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 54.9,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 46.3,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.7,
+  "caught": 3
+ },
+ {
+  "t": 54.94,
+  "kind": "classify",
+  "badge": "Clear (97% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.965,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 54.94,
+  "kind": "status",
+  "msg": "Locked @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 55.13,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 46.2,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.5,
+  "caught": 3
+ },
+ {
+  "t": 55.13,
+  "kind": "status",
+  "msg": "Locked @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 55.33,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 46.2,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.5,
+  "caught": 3
+ },
+ {
+  "t": 55.33,
+  "kind": "status",
+  "msg": "Locked @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 55.52,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 46.4,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.7,
+  "caught": 3
+ },
+ {
+  "t": 55.52,
+  "kind": "status",
+  "msg": "Locked @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 55.71,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 46.3,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.7,
+  "caught": 3
+ },
+ {
+  "t": 55.75,
+  "kind": "classify",
+  "badge": "Clear (96% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.962,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 55.75,
+  "kind": "status",
+  "msg": "Locked @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 55.94,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 46.2,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.5,
+  "caught": 3
+ },
+ {
+  "t": 55.94,
+  "kind": "status",
+  "msg": "Locked @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 56.13,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 46.4,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.7,
+  "caught": 3
+ },
+ {
+  "t": 56.14,
+  "kind": "status",
+  "msg": "Locked @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 56.33,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 46.4,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.7,
+  "caught": 3
+ },
+ {
+  "t": 56.33,
+  "kind": "status",
+  "msg": "Locked @ 2463.487 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 56.52,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 46.4,
+  "peak_mhz": 2479.996,
+  "tx_band_db": 18.7,
+  "caught": 3
+ },
+ {
+  "t": 56.56,
+  "kind": "classify",
+  "badge": "Clear (97% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.968,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 56.56,
+  "kind": "caught",
+  "freqs_mhz": [
+   2426.019,
+   2480.26,
+   2402.172,
+   2463.487
+  ]
+ },
+ {
+  "t": 56.56,
+  "kind": "status",
+  "msg": "Auto-skip: background 97% \u2265 85% after 5000 ms"
+ },
+ {
+  "t": 59.78,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 52.0,
+  "peak_mhz": 2426.019,
+  "tx_band_db": 49.2,
+  "caught": 4
+ },
+ {
+  "t": 59.78,
+  "kind": "status",
+  "msg": "Scan: 3218 ms  |  18 hops"
+ },
+ {
+  "t": 63.0,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 48.2,
+  "peak_mhz": 2437.649,
+  "tx_band_db": 48.2,
+  "caught": 4
+ },
+ {
+  "t": 63.0,
+  "kind": "status",
+  "msg": "Scan: 3225 ms  |  18 hops"
+ },
+ {
+  "t": 66.21,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 40.9,
+  "caught": 4
+ },
+ {
+  "t": 66.21,
+  "kind": "status",
+  "msg": "Scan: 3208 ms  |  18 hops"
+ },
+ {
+  "t": 66.4,
+  "kind": "status",
+  "msg": "Locked +48 dB @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 66.59,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 41.7,
+  "caught": 4
+ },
+ {
+  "t": 66.63,
+  "kind": "classify",
+  "badge": "Clear (80% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.802,
+  "dev_share": 0.042,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 66.63,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 66.82,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 34.3,
+  "caught": 4
+ },
+ {
+  "t": 66.82,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 67.01,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 67.01,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 67.2,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 67.2,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 67.39,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 48.2,
+  "caught": 4
+ },
+ {
+  "t": 67.43,
+  "kind": "classify",
+  "badge": "Clear (80% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.804,
+  "dev_share": 0.042,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 67.43,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 67.63,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 41.5,
+  "caught": 4
+ },
+ {
+  "t": 67.63,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 67.82,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 33.5,
+  "caught": 4
+ },
+ {
+  "t": 67.82,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 68.01,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 68.01,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 68.2,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 68.24,
+  "kind": "classify",
+  "badge": "Clear (80% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.797,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 68.24,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 68.44,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 46.6,
+  "caught": 4
+ },
+ {
+  "t": 68.44,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 68.63,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 68.63,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 68.83,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 33.6,
+  "caught": 4
+ },
+ {
+  "t": 68.83,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 69.02,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 69.05,
+  "kind": "classify",
+  "badge": "Clear (83% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.829,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 69.05,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 69.25,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 48.4,
+  "caught": 4
+ },
+ {
+  "t": 69.25,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 69.44,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 46.6,
+  "caught": 4
+ },
+ {
+  "t": 69.44,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 69.64,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 69.64,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 69.83,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 32.4,
+  "caught": 4
+ },
+ {
+  "t": 69.87,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.701,
+  "dev_share": 0.125,
+  "votes": [
+   [
+    "Radiolink-AT9S-Pro",
+    0.125
+   ]
+  ],
+  "second": null
+ },
+ {
+  "t": 69.87,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 70.07,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 70.07,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 70.26,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 48.3,
+  "caught": 4
+ },
+ {
+  "t": 70.26,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 70.45,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 46.5,
+  "caught": 4
+ },
+ {
+  "t": 70.45,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 70.64,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 70.68,
+  "kind": "classify",
+  "badge": "Clear (77% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.766,
+  "dev_share": 0.042,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 70.68,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 70.87,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 29.3,
+  "caught": 4
+ },
+ {
+  "t": 70.87,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 71.06,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 71.06,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 71.26,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 48.3,
+  "caught": 4
+ },
+ {
+  "t": 71.26,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 71.45,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 45.8,
+  "caught": 4
+ },
+ {
+  "t": 71.48,
+  "kind": "classify",
+  "badge": "Clear (76% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.759,
+  "dev_share": 0.083,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 71.48,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 71.68,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 71.68,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 71.88,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 28.0,
+  "caught": 4
+ },
+ {
+  "t": 71.88,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 72.07,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 72.07,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 72.26,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 48.3,
+  "caught": 4
+ },
+ {
+  "t": 72.29,
+  "kind": "classify",
+  "badge": "Clear (78% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.784,
+  "dev_share": 0.042,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 72.29,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 72.49,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 44.2,
+  "caught": 4
+ },
+ {
+  "t": 72.49,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 72.68,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 37.7,
+  "caught": 4
+ },
+ {
+  "t": 72.68,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 72.87,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 29.5,
+  "caught": 4
+ },
+ {
+  "t": 72.87,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 73.06,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 73.1,
+  "kind": "classify",
+  "badge": "Clear (83% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.834,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 73.1,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 73.3,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 50.2,
+  "caught": 4
+ },
+ {
+  "t": 73.3,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 73.49,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 44.7,
+  "caught": 4
+ },
+ {
+  "t": 73.49,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 73.68,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 37.8,
+  "caught": 4
+ },
+ {
+  "t": 73.68,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 73.87,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 29.5,
+  "caught": 4
+ },
+ {
+  "t": 73.91,
+  "kind": "classify",
+  "badge": "Clear (77% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.771,
+  "dev_share": 0.042,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 73.91,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 74.1,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 74.1,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 74.3,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 49.4,
+  "caught": 4
+ },
+ {
+  "t": 74.3,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 74.5,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 45.4,
+  "caught": 4
+ },
+ {
+  "t": 74.5,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 74.69,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 38.5,
+  "caught": 4
+ },
+ {
+  "t": 74.73,
+  "kind": "classify",
+  "badge": "Clear (76% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.758,
+  "dev_share": 0.083,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 74.73,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 74.93,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 24.2,
+  "caught": 4
+ },
+ {
+  "t": 74.93,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 75.12,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 75.12,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 75.31,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 49.0,
+  "caught": 4
+ },
+ {
+  "t": 75.31,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 75.5,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 45.5,
+  "caught": 4
+ },
+ {
+  "t": 75.54,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (17%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.705,
+  "dev_share": 0.167,
+  "votes": [
+   [
+    "Radiolink-AT9S-Pro",
+    0.167
+   ]
+  ],
+  "second": null
+ },
+ {
+  "t": 75.54,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 75.73,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 38.6,
+  "caught": 4
+ },
+ {
+  "t": 75.73,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 75.92,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 24.6,
+  "caught": 4
+ },
+ {
+  "t": 75.92,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 76.12,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 76.12,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 76.31,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 50.3,
+  "caught": 4
+ },
+ {
+  "t": 76.35,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (17%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.698,
+  "dev_share": 0.167,
+  "votes": [
+   [
+    "Radiolink-AT9S-Pro",
+    0.167
+   ]
+  ],
+  "second": null
+ },
+ {
+  "t": 76.35,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 76.54,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 45.5,
+  "caught": 4
+ },
+ {
+  "t": 76.54,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 76.73,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 38.9,
+  "caught": 4
+ },
+ {
+  "t": 76.73,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 76.93,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 25.4,
+  "caught": 4
+ },
+ {
+  "t": 76.93,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 77.12,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 77.15,
+  "kind": "classify",
+  "badge": "Clear (80% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.796,
+  "dev_share": 0.083,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 77.16,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 77.35,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 49.7,
+  "caught": 4
+ },
+ {
+  "t": 77.35,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 77.54,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 44.3,
+  "caught": 4
+ },
+ {
+  "t": 77.54,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 77.73,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 38.9,
+  "caught": 4
+ },
+ {
+  "t": 77.73,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 77.92,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 24.8,
+  "caught": 4
+ },
+ {
+  "t": 77.96,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (17%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.657,
+  "dev_share": 0.167,
+  "votes": [
+   [
+    "Radiolink-AT9S-Pro",
+    0.167
+   ]
+  ],
+  "second": null
+ },
+ {
+  "t": 77.96,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 78.16,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 78.16,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 78.35,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 49.6,
+  "caught": 4
+ },
+ {
+  "t": 78.35,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 78.54,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 45.2,
+  "caught": 4
+ },
+ {
+  "t": 78.54,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 78.73,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 38.8,
+  "caught": 4
+ },
+ {
+  "t": 78.76,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (21%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.636,
+  "dev_share": 0.208,
+  "votes": [
+   [
+    "Radiolink-AT9S-Pro",
+    0.208
+   ]
+  ],
+  "second": null
+ },
+ {
+  "t": 78.77,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 78.96,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 24.2,
+  "caught": 4
+ },
+ {
+  "t": 78.96,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 79.16,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 79.16,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 79.35,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 48.9,
+  "caught": 4
+ },
+ {
+  "t": 79.35,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 79.54,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 43.6,
+  "caught": 4
+ },
+ {
+  "t": 79.58,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.721,
+  "dev_share": 0.125,
+  "votes": [
+   [
+    "Radiolink-AT9S-Pro",
+    0.125
+   ]
+  ],
+  "second": null
+ },
+ {
+  "t": 79.58,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 79.77,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 35.7,
+  "caught": 4
+ },
+ {
+  "t": 79.77,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 79.97,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.6,
+  "caught": 4
+ },
+ {
+  "t": 79.97,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 80.16,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 80.16,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 80.35,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 48.8,
+  "caught": 4
+ },
+ {
+  "t": 80.39,
+  "kind": "classify",
+  "badge": "Clear (75% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.754,
+  "dev_share": 0.083,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 80.39,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 80.58,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 41.9,
+  "caught": 4
+ },
+ {
+  "t": 80.58,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 80.77,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 35.5,
+  "caught": 4
+ },
+ {
+  "t": 80.77,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 80.97,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 24.2,
+  "caught": 4
+ },
+ {
+  "t": 80.97,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 81.16,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 81.19,
+  "kind": "classify",
+  "badge": "Clear (82% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.825,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 81.19,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 81.39,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 49.4,
+  "caught": 4
+ },
+ {
+  "t": 81.39,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 81.58,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 41.8,
+  "caught": 4
+ },
+ {
+  "t": 81.58,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 81.77,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 35.4,
+  "caught": 4
+ },
+ {
+  "t": 81.77,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 81.96,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.3,
+  "caught": 4
+ },
+ {
+  "t": 82.0,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.683,
+  "dev_share": 0.125,
+  "votes": [
+   [
+    "Radiolink-AT9S-Pro",
+    0.125
+   ]
+  ],
+  "second": null
+ },
+ {
+  "t": 82.0,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 82.19,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 82.19,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 82.39,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 49.6,
+  "caught": 4
+ },
+ {
+  "t": 82.39,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 82.58,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 42.0,
+  "caught": 4
+ },
+ {
+  "t": 82.58,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 82.77,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 35.5,
+  "caught": 4
+ },
+ {
+  "t": 82.81,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (21%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.618,
+  "dev_share": 0.208,
+  "votes": [
+   [
+    "Radiolink-AT9S-Pro",
+    0.208
+   ]
+  ],
+  "second": null
+ },
+ {
+  "t": 82.81,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 83.0,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 83.0,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 83.19,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 83.19,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 83.38,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 49.7,
+  "caught": 4
+ },
+ {
+  "t": 83.38,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 83.58,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 83.61,
+  "kind": "classify",
+  "badge": "Clear (82% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.824,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 83.61,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 83.81,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 34.4,
+  "caught": 4
+ },
+ {
+  "t": 83.81,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 84.0,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 84.0,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 84.19,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 84.19,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 84.38,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 49.1,
+  "caught": 4
+ },
+ {
+  "t": 84.42,
+  "kind": "classify",
+  "badge": "Clear (76% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.759,
+  "dev_share": 0.083,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 84.42,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 84.61,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 41.8,
+  "caught": 4
+ },
+ {
+  "t": 84.61,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 84.8,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 34.8,
+  "caught": 4
+ },
+ {
+  "t": 84.8,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 84.99,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 84.99,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 85.18,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 85.22,
+  "kind": "classify",
+  "badge": "Clear (82% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.822,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 85.22,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 85.41,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 85.41,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 85.6,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 41.8,
+  "caught": 4
+ },
+ {
+  "t": 85.6,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 85.8,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 35.1,
+  "caught": 4
+ },
+ {
+  "t": 85.8,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 85.99,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 86.03,
+  "kind": "classify",
+  "badge": "Clear (83% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.826,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 86.03,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 86.22,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 86.22,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 86.41,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 86.41,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 86.6,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 41.3,
+  "caught": 4
+ },
+ {
+  "t": 86.6,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 86.79,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 35.4,
+  "caught": 4
+ },
+ {
+  "t": 86.83,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (21%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.645,
+  "dev_share": 0.208,
+  "votes": [
+   [
+    "Radiolink-AT9S-Pro",
+    0.208
+   ]
+  ],
+  "second": null
+ },
+ {
+  "t": 86.83,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 87.02,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 87.02,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 87.21,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 87.21,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 87.41,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 48.3,
+  "caught": 4
+ },
+ {
+  "t": 87.41,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 87.6,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 41.1,
+  "caught": 4
+ },
+ {
+  "t": 87.63,
+  "kind": "classify",
+  "badge": "Clear (73% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.728,
+  "dev_share": 0.083,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 87.64,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 87.83,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 32.3,
+  "caught": 4
+ },
+ {
+  "t": 87.83,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 88.02,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 88.02,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 88.21,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 88.21,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 88.4,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 49.5,
+  "caught": 4
+ },
+ {
+  "t": 88.44,
+  "kind": "classify",
+  "badge": "Clear (76% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.761,
+  "dev_share": 0.042,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 88.44,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 88.63,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 88.63,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 88.82,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 33.6,
+  "caught": 4
+ },
+ {
+  "t": 88.82,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 89.02,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 89.02,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 89.21,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 89.25,
+  "kind": "classify",
+  "badge": "Clear (81% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.807,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 89.25,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 89.44,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 46.7,
+  "caught": 4
+ },
+ {
+  "t": 89.44,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 89.64,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 89.64,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 89.83,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 32.4,
+  "caught": 4
+ },
+ {
+  "t": 89.83,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 90.02,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 90.06,
+  "kind": "classify",
+  "badge": "Clear (82% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.816,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 90.06,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 90.25,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 48.3,
+  "caught": 4
+ },
+ {
+  "t": 90.25,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 90.45,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 46.7,
+  "caught": 4
+ },
+ {
+  "t": 90.45,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 90.64,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 90.64,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 90.83,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 32.7,
+  "caught": 4
+ },
+ {
+  "t": 90.86,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (17%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.681,
+  "dev_share": 0.167,
+  "votes": [
+   [
+    "Radiolink-AT9S-Pro",
+    0.167
+   ]
+  ],
+  "second": null
+ },
+ {
+  "t": 90.86,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 91.06,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 91.06,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 91.26,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 48.4,
+  "caught": 4
+ },
+ {
+  "t": 91.26,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 91.45,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 46.4,
+  "caught": 4
+ },
+ {
+  "t": 91.45,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 91.64,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 91.67,
+  "kind": "classify",
+  "badge": "Clear (76% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.765,
+  "dev_share": 0.042,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 91.67,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 91.87,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 29.9,
+  "caught": 4
+ },
+ {
+  "t": 91.87,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 92.06,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 92.06,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 92.25,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 48.3,
+  "caught": 4
+ },
+ {
+  "t": 92.25,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 92.44,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 46.7,
+  "caught": 4
+ },
+ {
+  "t": 92.47,
+  "kind": "classify",
+  "badge": "Clear (74% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.735,
+  "dev_share": 0.083,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 92.47,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 92.67,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 92.67,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 92.86,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 30.2,
+  "caught": 4
+ },
+ {
+  "t": 92.86,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 93.05,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 93.05,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 93.24,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 48.6,
+  "caught": 4
+ },
+ {
+  "t": 93.28,
+  "kind": "classify",
+  "badge": "Clear (74% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.738,
+  "dev_share": 0.083,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 93.28,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 93.47,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 44.9,
+  "caught": 4
+ },
+ {
+  "t": 93.47,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 93.67,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 93.67,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 93.86,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 29.9,
+  "caught": 4
+ },
+ {
+  "t": 93.86,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 94.05,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 94.08,
+  "kind": "classify",
+  "badge": "Clear (80% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.805,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 94.08,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 94.28,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 50.0,
+  "caught": 4
+ },
+ {
+  "t": 94.28,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 94.47,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 44.6,
+  "caught": 4
+ },
+ {
+  "t": 94.47,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 94.66,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 94.66,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 94.85,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 29.6,
+  "caught": 4
+ },
+ {
+  "t": 94.89,
+  "kind": "classify",
+  "badge": "Clear (77% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.771,
+  "dev_share": 0.042,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 94.89,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 95.08,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.3,
+  "caught": 4
+ },
+ {
+  "t": 95.08,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 95.27,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 50.5,
+  "caught": 4
+ },
+ {
+  "t": 95.27,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 95.47,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 45.3,
+  "caught": 4
+ },
+ {
+  "t": 95.47,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 95.66,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 95.69,
+  "kind": "classify",
+  "badge": "Clear (81% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.814,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 95.69,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 95.88,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 95.88,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 96.08,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 96.08,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 96.27,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 48.6,
+  "caught": 4
+ },
+ {
+  "t": 96.27,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 96.46,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 46.8,
+  "caught": 4
+ },
+ {
+  "t": 96.49,
+  "kind": "classify",
+  "badge": "Clear (75% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.747,
+  "dev_share": 0.083,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 96.49,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 96.69,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 38.0,
+  "caught": 4
+ },
+ {
+  "t": 96.69,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 96.88,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 96.88,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 97.07,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 97.07,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 97.27,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 48.3,
+  "caught": 4
+ },
+ {
+  "t": 97.3,
+  "kind": "classify",
+  "badge": "Clear (75% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.747,
+  "dev_share": 0.042,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 97.3,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 97.5,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 45.5,
+  "caught": 4
+ },
+ {
+  "t": 97.5,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 97.69,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 37.9,
+  "caught": 4
+ },
+ {
+  "t": 97.69,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 97.88,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 97.88,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 98.07,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 98.11,
+  "kind": "classify",
+  "badge": "Clear (76% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.762,
+  "dev_share": 0.042,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 98.11,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 98.31,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 50.1,
+  "caught": 4
+ },
+ {
+  "t": 98.31,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 98.5,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 45.6,
+  "caught": 4
+ },
+ {
+  "t": 98.5,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 98.69,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 38.0,
+  "caught": 4
+ },
+ {
+  "t": 98.69,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 98.88,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 98.92,
+  "kind": "classify",
+  "badge": "Clear (83% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.828,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 98.92,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 99.11,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 99.11,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 99.3,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 49.0,
+  "caught": 4
+ },
+ {
+  "t": 99.3,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 99.5,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 45.3,
+  "caught": 4
+ },
+ {
+  "t": 99.5,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 99.69,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 39.1,
+  "caught": 4
+ },
+ {
+  "t": 99.73,
+  "kind": "classify",
+  "badge": "Clear (75% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.749,
+  "dev_share": 0.083,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 99.73,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 99.92,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 25.0,
+  "caught": 4
+ },
+ {
+  "t": 99.92,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 100.12,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 100.12,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 100.31,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 50.3,
+  "caught": 4
+ },
+ {
+  "t": 100.31,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 100.5,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 45.4,
+  "caught": 4
+ },
+ {
+  "t": 100.54,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (17%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.677,
+  "dev_share": 0.167,
+  "votes": [
+   [
+    "Radiolink-AT9S-Pro",
+    0.167
+   ]
+  ],
+  "second": null
+ },
+ {
+  "t": 100.54,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 100.73,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 38.9,
+  "caught": 4
+ },
+ {
+  "t": 100.73,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 100.92,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 24.7,
+  "caught": 4
+ },
+ {
+  "t": 100.92,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 101.11,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 101.11,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 101.3,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 50.3,
+  "caught": 4
+ },
+ {
+  "t": 101.34,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (17%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.674,
+  "dev_share": 0.167,
+  "votes": [
+   [
+    "Radiolink-AT9S-Pro",
+    0.167
+   ]
+  ],
+  "second": null
+ },
+ {
+  "t": 101.34,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 101.53,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 45.7,
+  "caught": 4
+ },
+ {
+  "t": 101.53,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 101.72,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 38.8,
+  "caught": 4
+ },
+ {
+  "t": 101.72,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 101.91,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 24.6,
+  "caught": 4
+ },
+ {
+  "t": 101.91,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 102.11,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 102.14,
+  "kind": "classify",
+  "badge": "Clear (78% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.778,
+  "dev_share": 0.083,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 102.14,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 102.34,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 47.9,
+  "caught": 4
+ },
+ {
+  "t": 102.34,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 102.53,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 45.0,
+  "caught": 4
+ },
+ {
+  "t": 102.53,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 102.73,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 38.6,
+  "caught": 4
+ },
+ {
+  "t": 102.73,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 102.92,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 25.0,
+  "caught": 4
+ },
+ {
+  "t": 102.96,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (17%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.647,
+  "dev_share": 0.167,
+  "votes": [
+   [
+    "Radiolink-AT9S-Pro",
+    0.167
+   ]
+  ],
+  "second": null
+ },
+ {
+  "t": 102.96,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 103.15,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 103.15,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 103.34,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 49.8,
+  "caught": 4
+ },
+ {
+  "t": 103.34,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 103.54,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 45.7,
+  "caught": 4
+ },
+ {
+  "t": 103.54,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 103.73,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 38.8,
+  "caught": 4
+ },
+ {
+  "t": 103.77,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (29%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.56,
+  "dev_share": 0.292,
+  "votes": [
+   [
+    "Radiolink-AT9S-Pro",
+    0.292
+   ]
+  ],
+  "second": null
+ },
+ {
+  "t": 103.77,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 103.96,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 24.3,
+  "caught": 4
+ },
+ {
+  "t": 103.96,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 104.16,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 104.16,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 104.35,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 49.3,
+  "caught": 4
+ },
+ {
+  "t": 104.35,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 104.54,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 44.4,
+  "caught": 4
+ },
+ {
+  "t": 104.57,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.736,
+  "dev_share": 0.125,
+  "votes": [
+   [
+    "Radiolink-AT9S-Pro",
+    0.125
+   ]
+  ],
+  "second": null
+ },
+ {
+  "t": 104.57,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 104.77,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 35.6,
+  "caught": 4
+ },
+ {
+  "t": 104.77,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 104.96,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.8,
+  "caught": 4
+ },
+ {
+  "t": 104.96,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 105.15,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 105.15,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 105.34,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 49.2,
+  "caught": 4
+ },
+ {
+  "t": 105.38,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.715,
+  "dev_share": 0.125,
+  "votes": [
+   [
+    "Radiolink-AT9S-Pro",
+    0.125
+   ]
+  ],
+  "second": null
+ },
+ {
+  "t": 105.38,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 105.57,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 41.4,
+  "caught": 4
+ },
+ {
+  "t": 105.57,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 105.76,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 35.3,
+  "caught": 4
+ },
+ {
+  "t": 105.76,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 105.95,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.9,
+  "caught": 4
+ },
+ {
+  "t": 105.95,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 106.15,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 106.18,
+  "kind": "classify",
+  "badge": "Clear (83% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.833,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 106.18,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 106.37,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 49.7,
+  "caught": 4
+ },
+ {
+  "t": 106.37,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 106.56,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 43.3,
+  "caught": 4
+ },
+ {
+  "t": 106.56,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 106.75,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 34.8,
+  "caught": 4
+ },
+ {
+  "t": 106.75,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 106.95,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.7,
+  "caught": 4
+ },
+ {
+  "t": 106.98,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (21%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.664,
+  "dev_share": 0.208,
+  "votes": [
+   [
+    "Radiolink-AT9S-Pro",
+    0.208
+   ]
+  ],
+  "second": null
+ },
+ {
+  "t": 106.98,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 107.18,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 107.18,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 107.37,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 49.7,
+  "caught": 4
+ },
+ {
+  "t": 107.37,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 107.56,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 42.9,
+  "caught": 4
+ },
+ {
+  "t": 107.56,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 107.75,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 34.6,
+  "caught": 4
+ },
+ {
+  "t": 107.78,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.705,
+  "dev_share": 0.125,
+  "votes": [
+   [
+    "Radiolink-AT9S-Pro",
+    0.125
+   ]
+  ],
+  "second": null
+ },
+ {
+  "t": 107.78,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 107.98,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 24.3,
+  "caught": 4
+ },
+ {
+  "t": 107.98,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 108.17,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 108.17,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 108.36,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 49.6,
+  "caught": 4
+ },
+ {
+  "t": 108.36,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 108.56,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 43.2,
+  "caught": 4
+ },
+ {
+  "t": 108.59,
+  "kind": "classify",
+  "badge": "Clear (73% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.734,
+  "dev_share": 0.083,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 108.59,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 108.79,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 35.4,
+  "caught": 4
+ },
+ {
+  "t": 108.79,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 108.98,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 108.98,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 109.17,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 109.17,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 109.36,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 49.8,
+  "caught": 4
+ },
+ {
+  "t": 109.4,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.7,
+  "dev_share": 0.125,
+  "votes": [
+   [
+    "Radiolink-AT9S-Pro",
+    0.125
+   ]
+  ],
+  "second": null
+ },
+ {
+  "t": 109.4,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 109.59,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 42.0,
+  "caught": 4
+ },
+ {
+  "t": 109.59,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 109.78,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 36.2,
+  "caught": 4
+ },
+ {
+  "t": 109.78,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 109.97,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 25.3,
+  "caught": 4
+ },
+ {
+  "t": 109.97,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 110.17,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 110.2,
+  "kind": "classify",
+  "badge": "Clear (75% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.752,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 110.2,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 110.4,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 49.9,
+  "caught": 4
+ },
+ {
+  "t": 110.4,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 110.59,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 41.0,
+  "caught": 4
+ },
+ {
+  "t": 110.59,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 110.78,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 36.1,
+  "caught": 4
+ },
+ {
+  "t": 110.78,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 110.97,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 24.3,
+  "caught": 4
+ },
+ {
+  "t": 111.0,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.699,
+  "dev_share": 0.125,
+  "votes": [
+   [
+    "Radiolink-AT9S-Pro",
+    0.125
+   ]
+  ],
+  "second": null
+ },
+ {
+  "t": 111.0,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 111.2,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 111.2,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 111.39,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 49.4,
+  "caught": 4
+ },
+ {
+  "t": 111.39,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 111.58,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 41.7,
+  "caught": 4
+ },
+ {
+  "t": 111.58,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 111.77,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 35.1,
+  "caught": 4
+ },
+ {
+  "t": 111.8,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (21%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.645,
+  "dev_share": 0.208,
+  "votes": [
+   [
+    "Radiolink-AT9S-Pro",
+    0.208
+   ]
+  ],
+  "second": null
+ },
+ {
+  "t": 111.8,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 112.0,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 112.0,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 112.19,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 112.19,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 112.38,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 49.5,
+  "caught": 4
+ },
+ {
+  "t": 112.38,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 112.57,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 40.4,
+  "caught": 4
+ },
+ {
+  "t": 112.61,
+  "kind": "classify",
+  "badge": "Clear (78% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.784,
+  "dev_share": 0.042,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 112.61,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 112.8,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 34.6,
+  "caught": 4
+ },
+ {
+  "t": 112.8,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 112.99,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 112.99,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 113.18,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 113.18,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 113.38,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 49.8,
+  "caught": 4
+ },
+ {
+  "t": 113.41,
+  "kind": "classify",
+  "badge": "Clear (73% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.735,
+  "dev_share": 0.083,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 113.41,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 113.61,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 40.9,
+  "caught": 4
+ },
+ {
+  "t": 113.61,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 113.8,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 34.3,
+  "caught": 4
+ },
+ {
+  "t": 113.8,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 113.99,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 113.99,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 114.18,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 114.21,
+  "kind": "classify",
+  "badge": "Clear (82% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.817,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 114.21,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 114.42,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 114.42,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 114.61,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 41.6,
+  "caught": 4
+ },
+ {
+  "t": 114.61,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 114.8,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 34.8,
+  "caught": 4
+ },
+ {
+  "t": 114.8,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 115.0,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 115.03,
+  "kind": "classify",
+  "badge": "Clear (84% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.835,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 115.03,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 115.22,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 115.22,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 115.42,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 45.9,
+  "caught": 4
+ },
+ {
+  "t": 115.42,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 115.61,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 41.0,
+  "caught": 4
+ },
+ {
+  "t": 115.61,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 115.8,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 35.1,
+  "caught": 4
+ },
+ {
+  "t": 115.83,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (25%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.619,
+  "dev_share": 0.25,
+  "votes": [
+   [
+    "Radiolink-AT9S-Pro",
+    0.25
+   ]
+  ],
+  "second": null
+ },
+ {
+  "t": 115.84,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 116.03,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 116.03,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 116.22,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 116.22,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 116.41,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 46.6,
+  "caught": 4
+ },
+ {
+  "t": 116.41,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 116.61,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 40.9,
+  "caught": 4
+ },
+ {
+  "t": 116.64,
+  "kind": "classify",
+  "badge": "Clear (75% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.748,
+  "dev_share": 0.083,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 116.64,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 116.83,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 32.2,
+  "caught": 4
+ },
+ {
+  "t": 116.83,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 117.03,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 117.03,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 117.22,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 117.22,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 117.41,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 117.44,
+  "kind": "classify",
+  "badge": "Clear (85% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.847,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 117.44,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 117.64,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 117.64,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 117.83,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 31.9,
+  "caught": 4
+ },
+ {
+  "t": 117.83,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 118.02,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 118.02,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 118.21,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 118.25,
+  "kind": "classify",
+  "badge": "Clear (81% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.807,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 118.25,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 118.44,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 45.9,
+  "caught": 4
+ },
+ {
+  "t": 118.44,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 118.63,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 118.63,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 118.82,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 32.5,
+  "caught": 4
+ },
+ {
+  "t": 118.82,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 119.02,
+  "kind": "sweep",
+  "floor_db": -31.1,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.5,
+  "caught": 4
+ },
+ {
+  "t": 119.05,
+  "kind": "classify",
+  "badge": "Clear (80% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.802,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 119.05,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 119.25,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 48.1,
+  "caught": 4
+ },
+ {
+  "t": 119.25,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 119.44,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 46.6,
+  "caught": 4
+ },
+ {
+  "t": 119.44,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 119.63,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.4,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 23.4,
+  "caught": 4
+ },
+ {
+  "t": 119.63,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 119.83,
+  "kind": "sweep",
+  "floor_db": -31.0,
+  "peak_db": 51.3,
+  "peak_mhz": 2426.077,
+  "tx_band_db": 32.4,
+  "caught": 4
+ },
+ {
+  "t": 119.87,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (17%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.71,
+  "dev_share": 0.167,
+  "votes": [
+   [
+    "Radiolink-AT9S-Pro",
+    0.167
+   ]
+  ],
+  "second": null
+ },
+ {
+  "t": 119.87,
+  "kind": "status",
+  "msg": "Locked @ 2438.019 MHz \u2014 Skip to advance"
+ }
+]

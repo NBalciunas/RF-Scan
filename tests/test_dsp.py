@@ -20,6 +20,7 @@ from _support import Checks, run, stub_hardware
 stub_hardware()          # this must run before the import of terminal
 
 import terminal
+import fp_spectrogram
 from terminal import (SweepWorker, signal_extent, signal_clipped, compute_hop_freqs,
                       composite_geometry, badge_for, device_votes, device_share,
                       has_ambient_class,
@@ -42,6 +43,20 @@ def _app_cfg():
     return cfg
 
 
+class _Sig:
+    """Stand in for a pyqtSignal on a worker that never ran QObject.__init__.
+
+    _prune_memory tells the window that the caught list moved. The hand-made worker
+    below has no Qt behind it, thus the signal has to be something that records the
+    call and does nothing else."""
+
+    def __init__(self):
+        self.calls = []
+
+    def emit(self, *a):
+        self.calls.append(a)
+
+
 def _worker(cfg, psd_bias_db=0.0):
     """Make a SweepWorker without QThread.__init__, thus without Qt.
 
@@ -55,6 +70,7 @@ def _worker(cfg, psd_bias_db=0.0):
     # _detect_new_peak writes the candidate here. A QObject that never ran its
     # __init__ refuses a new attribute, thus every attribute it writes must exist.
     w._cand = None
+    w._round_done = False
     return w
 
 
@@ -310,6 +326,100 @@ def main():
         n_keep, f0, f1 = composite_geometry(cfg)
         want = f0 + (1500 / len(comp)) * (f1 - f0)
         assert abs(second - want) < 20e3
+
+    @c.check("the scan reaches a weak drone under five loud emitters, the defect #40")
+    def _():
+        # The room of 2026-08-18. The drone reads 32.7 dB and five emitters of the
+        # room read 36 to 42, thus the drone is last in a search that takes the
+        # loudest first. It must still get its turn, and it must get it before any
+        # of the five gets a second one.
+        cfg  = _app_cfg()
+        comp = _composite(cfg)
+        n = len(comp)
+        # Spread them over the band. The guard of the memory is 3 MHz, thus the
+        # signals must be further apart than that or they mask each other.
+        loud = dict(zip([int(n * f) for f in (0.08, 0.22, 0.36, 0.50, 0.64)],
+                        [-70 + v for v in (42.1, 40.4, 39.7, 38.9, 38.6)]))
+        drone_bin = int(n * 0.85)
+        for b, v in loud.items():
+            comp[b] = v
+        comp[drone_bin] = -70 + 32.7
+        w = _worker(cfg)
+        w.caught_changed = _Sig()
+        _nk, f0, f1 = composite_geometry(cfg)
+        want = f0 + ((drone_bin + 0.5) / n) * (f1 - f0)
+        # Judging one candidate costs a dwell of 5 s plus the sweep that finds the
+        # next, about 8 s. The clock has to move here or the defect can not appear:
+        # #40 is a race between that cost and the age of the memory, and a loop that
+        # takes no time at all wins a race that the radio loses.
+        per_lock_s = 8.2
+        seen = []
+        for _sweep in range(12):
+            w._prune_memory()
+            f, db = w._detect_new_peak(comp)
+            if f is None or db < cfg.get("fp_peak_thresh_db",
+                                          terminal.FP_PEAK_THRESH_DB):
+                continue
+            seen.append(f)
+            if abs(f - want) < 40e3:
+                break
+            w._remember(f)                  # judged, released, and put in the memory
+            w._caught = [(cf, ct - per_lock_s) for (cf, ct) in w._caught]
+        assert seen, "the scan found nothing at all"
+        assert abs(seen[-1] - want) < 40e3,             "the scan never reached the drone; it visited %s" % (
+                [round(x/1e6, 1) for x in seen],)
+        assert len(seen) == len(set(round(x/1e6, 1) for x in seen)),             "a frequency got a second turn before the drone got its first: %s" % (
+                [round(x/1e6, 1) for x in seen],)
+        c.note("the drone is reached after %d other signals, none of them twice"
+               % (len(seen) - 1))
+
+    @c.check("the memory clears when the scan has been round once")
+    def _():
+        # The other half of #40. Once nothing above the threshold is left unmasked
+        # every candidate has had its turn, thus the memory must clear and the band
+        # must become visible again. Without this the scanner goes blind.
+        cfg  = _app_cfg()
+        comp = _composite(cfg)
+        comp[500] = -50.0
+        w = _worker(cfg)
+        w.caught_changed = _Sig()
+        f, _db = w._detect_new_peak(comp)
+        w._remember(f)
+        assert w._caught, "the frequency was not remembered"
+        w._detect_new_peak(comp)            # nothing is left above the threshold
+        assert w._round_done, "the round did not end with the band empty"
+        w._prune_memory()
+        assert w._caught == [], "the memory did not clear at the end of the round"
+        again, _db2 = w._detect_new_peak(comp)
+        assert abs(again - f) < 40e3, "the signal was not found again after the round"
+
+    @c.check("a round that never ends does not blind the scanner for ever")
+    def _():
+        # The safety valve. A room that keeps making new emitters never completes a
+        # round, thus the wall clock must still empty the memory in the end.
+        cfg  = _app_cfg()
+        w = _worker(cfg)
+        w.caught_changed = _Sig()
+        ttl = cfg.get("fp_memory_ttl_s", 30.0)
+        old = time.time() - ttl * terminal.FP_MEMORY_TTL_ROUNDS - 1.0
+        w._caught = [(2.44e9, old)]
+        w._round_done = False               # the round is still running
+        w._prune_memory()
+        assert w._caught == [], "the safety valve did not empty the memory"
+
+    @c.check("the memory is not cleared by the wall clock inside a round")
+    def _():
+        # The regression that #40 was. An entry older than fp_memory_ttl_s must stay
+        # while the round is still running, or the loud emitters come back before the
+        # drone has had its turn.
+        cfg = _app_cfg()
+        w = _worker(cfg)
+        w.caught_changed = _Sig()
+        ttl = cfg.get("fp_memory_ttl_s", 30.0)
+        w._caught = [(2.44e9, time.time() - ttl - 1.0)]
+        w._round_done = False
+        w._prune_memory()
+        assert len(w._caught) == 1, "the wall clock emptied the memory inside a round"
 
     @c.check("a hop that failed does not poison the noise floor")
     def _():
@@ -695,6 +805,36 @@ def main():
         text, _k = badge_for(_res({"droneA": 0.93, "droneB": 0.02, "noise": 0.05},
                                   dets=[("droneA", 0.8)]))
         assert text == "droneA (93%)", text
+
+    @c.check("a weak second vote does not become a second drone, the defect #41")
+    def _():
+        # The room of 2026-08-18. The DJI held 33% of the segments and the catch-all
+        # class of the model held 12% and 17% beside it, thus the badge named a drone
+        # that was not on the air. The first name is unchanged and the second is gone.
+        for weak in (0.12, 0.17):
+            text, kind = badge_for(_res({"droneA": 0.33, "droneB": 0.12, "noise": 0.55},
+                                        dets=[("droneA", 0.33), ("droneB", weak)]))
+            assert "droneB" not in text, (weak, text)
+            assert text == "droneA (33%)", (weak, text)
+            assert kind == "device", (weak, kind)
+
+    @c.check("a second drone that really holds the capture is still named")
+    def _():
+        # The other side of #41. The limit must not cost §8 #22, which exists so that
+        # two transmitters in one capture are both reported.
+        text, kind = badge_for(_res({"droneA": 0.45, "droneB": 0.40, "noise": 0.15},
+                                    dets=[("droneA", 0.5), ("droneB", 0.4)]))
+        assert text == "droneA (50%) + droneB (40%)", text
+        assert kind == "device", kind
+
+    @c.check("the second-name limit sits above what was measured and below a real one")
+    def _():
+        # A constant with no measurement behind it is a guess. The false second names
+        # of the air read 0.12 and 0.17 and a real second drone reads 0.4 and more.
+        assert terminal.FP_SECOND_NAME_SHARE > 0.17, terminal.FP_SECOND_NAME_SHARE
+        assert terminal.FP_SECOND_NAME_SHARE < 0.40, terminal.FP_SECOND_NAME_SHARE
+        # And it must be above the limit that the first name uses, never below it.
+        assert terminal.FP_SECOND_NAME_SHARE > fp_spectrogram.MIN_SEG_SHARE
 
     @c.check("a noise vote never becomes one of the two names")
     def _():

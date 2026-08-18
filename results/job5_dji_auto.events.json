@@ -1,0 +1,1433 @@
+[
+ {
+  "t": 3.22,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.7,
+  "peak_mhz": 2465.023,
+  "tx_band_db": 32.0,
+  "caught": 0
+ },
+ {
+  "t": 3.22,
+  "kind": "status",
+  "msg": "Scan: 3210 ms  |  18 hops"
+ },
+ {
+  "t": 6.42,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 40.7,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.4,
+  "caught": 0
+ },
+ {
+  "t": 6.42,
+  "kind": "status",
+  "msg": "Scan: 3199 ms  |  18 hops"
+ },
+ {
+  "t": 9.6,
+  "kind": "sweep",
+  "floor_db": -30.7,
+  "peak_db": 37.9,
+  "peak_mhz": 2426.068,
+  "tx_band_db": 33.2,
+  "caught": 0
+ },
+ {
+  "t": 9.6,
+  "kind": "status",
+  "msg": "Scan: 3186 ms  |  18 hops"
+ },
+ {
+  "t": 9.6,
+  "kind": "caught",
+  "freqs_mhz": [
+   2426.068
+  ]
+ },
+ {
+  "t": 9.6,
+  "kind": "status",
+  "msg": "Passed Bluetooth LE advertising @ 2426.068 MHz, 1.4 MHz wide \u2014 still scanning"
+ },
+ {
+  "t": 12.8,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 41.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 30.5,
+  "caught": 1
+ },
+ {
+  "t": 12.8,
+  "kind": "status",
+  "msg": "Scan: 3195 ms  |  18 hops"
+ },
+ {
+  "t": 16.0,
+  "kind": "sweep",
+  "floor_db": -30.7,
+  "peak_db": 38.6,
+  "peak_mhz": 2402.143,
+  "tx_band_db": 31.3,
+  "caught": 1
+ },
+ {
+  "t": 16.0,
+  "kind": "status",
+  "msg": "Scan: 3201 ms  |  18 hops"
+ },
+ {
+  "t": 19.21,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 36.3,
+  "peak_mhz": 2457.029,
+  "tx_band_db": 31.7,
+  "caught": 1
+ },
+ {
+  "t": 19.21,
+  "kind": "status",
+  "msg": "Scan: 3206 ms  |  18 hops"
+ },
+ {
+  "t": 22.41,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 42.0,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 32.9,
+  "caught": 1
+ },
+ {
+  "t": 22.41,
+  "kind": "status",
+  "msg": "Scan: 3205 ms  |  18 hops"
+ },
+ {
+  "t": 22.6,
+  "kind": "status",
+  "msg": "Locked +41 dB @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 22.79,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 42.0,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.0,
+  "caught": 1
+ },
+ {
+  "t": 22.84,
+  "kind": "classify",
+  "badge": "Clear (98% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.975,
+  "dev_share": 0.0
+ },
+ {
+  "t": 22.84,
+  "kind": "status",
+  "msg": "Locked @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 23.03,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 42.0,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.0,
+  "caught": 1
+ },
+ {
+  "t": 23.03,
+  "kind": "status",
+  "msg": "Locked @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 23.23,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 42.1,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.0,
+  "caught": 1
+ },
+ {
+  "t": 23.23,
+  "kind": "status",
+  "msg": "Locked @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 23.42,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 42.0,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.0,
+  "caught": 1
+ },
+ {
+  "t": 23.42,
+  "kind": "status",
+  "msg": "Locked @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 23.62,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 42.0,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.0,
+  "caught": 1
+ },
+ {
+  "t": 23.66,
+  "kind": "classify",
+  "badge": "Clear (97% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.972,
+  "dev_share": 0.0
+ },
+ {
+  "t": 23.66,
+  "kind": "status",
+  "msg": "Locked @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 23.86,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 42.0,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.0,
+  "caught": 1
+ },
+ {
+  "t": 23.86,
+  "kind": "status",
+  "msg": "Locked @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 24.05,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 42.0,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.0,
+  "caught": 1
+ },
+ {
+  "t": 24.05,
+  "kind": "status",
+  "msg": "Locked @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 24.25,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 42.0,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.0,
+  "caught": 1
+ },
+ {
+  "t": 24.25,
+  "kind": "status",
+  "msg": "Locked @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 24.44,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 42.0,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.0,
+  "caught": 1
+ },
+ {
+  "t": 24.48,
+  "kind": "classify",
+  "badge": "Clear (97% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.971,
+  "dev_share": 0.0
+ },
+ {
+  "t": 24.48,
+  "kind": "status",
+  "msg": "Locked @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 24.67,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 42.0,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.0,
+  "caught": 1
+ },
+ {
+  "t": 24.67,
+  "kind": "status",
+  "msg": "Locked @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 24.87,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 42.0,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.0,
+  "caught": 1
+ },
+ {
+  "t": 24.87,
+  "kind": "status",
+  "msg": "Locked @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 25.06,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 42.0,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.0,
+  "caught": 1
+ },
+ {
+  "t": 25.06,
+  "kind": "status",
+  "msg": "Locked @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 25.25,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 42.0,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.0,
+  "caught": 1
+ },
+ {
+  "t": 25.29,
+  "kind": "classify",
+  "badge": "Clear (97% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.973,
+  "dev_share": 0.0
+ },
+ {
+  "t": 25.29,
+  "kind": "status",
+  "msg": "Locked @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 25.49,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 42.0,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.0,
+  "caught": 1
+ },
+ {
+  "t": 25.49,
+  "kind": "status",
+  "msg": "Locked @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 25.68,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 42.0,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.0,
+  "caught": 1
+ },
+ {
+  "t": 25.68,
+  "kind": "status",
+  "msg": "Locked @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 25.87,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 42.0,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.0,
+  "caught": 1
+ },
+ {
+  "t": 25.87,
+  "kind": "status",
+  "msg": "Locked @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 26.06,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 42.0,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.0,
+  "caught": 1
+ },
+ {
+  "t": 26.1,
+  "kind": "classify",
+  "badge": "Clear (97% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.972,
+  "dev_share": 0.0
+ },
+ {
+  "t": 26.1,
+  "kind": "status",
+  "msg": "Locked @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 26.3,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 42.1,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.0,
+  "caught": 1
+ },
+ {
+  "t": 26.3,
+  "kind": "status",
+  "msg": "Locked @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 26.49,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 42.1,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.1,
+  "caught": 1
+ },
+ {
+  "t": 26.49,
+  "kind": "status",
+  "msg": "Locked @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 26.69,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 42.1,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.1,
+  "caught": 1
+ },
+ {
+  "t": 26.69,
+  "kind": "status",
+  "msg": "Locked @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 26.88,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 42.0,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.0,
+  "caught": 1
+ },
+ {
+  "t": 26.91,
+  "kind": "classify",
+  "badge": "Clear (96% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.958,
+  "dev_share": 0.0
+ },
+ {
+  "t": 26.91,
+  "kind": "status",
+  "msg": "Locked @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 27.11,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 42.1,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.0,
+  "caught": 1
+ },
+ {
+  "t": 27.11,
+  "kind": "status",
+  "msg": "Locked @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 27.3,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 42.1,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.0,
+  "caught": 1
+ },
+ {
+  "t": 27.3,
+  "kind": "status",
+  "msg": "Locked @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 27.49,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 42.0,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.0,
+  "caught": 1
+ },
+ {
+  "t": 27.49,
+  "kind": "status",
+  "msg": "Locked @ 2457.029 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 27.69,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 42.0,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 33.0,
+  "caught": 1
+ },
+ {
+  "t": 27.72,
+  "kind": "classify",
+  "badge": "Clear (96% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.964,
+  "dev_share": 0.0
+ },
+ {
+  "t": 27.72,
+  "kind": "caught",
+  "freqs_mhz": [
+   2426.068,
+   2457.029
+  ]
+ },
+ {
+  "t": 27.72,
+  "kind": "status",
+  "msg": "Auto-skip: background 96% \u2265 85% after 5000 ms"
+ },
+ {
+  "t": 30.91,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 39.7,
+  "peak_mhz": 2459.023,
+  "tx_band_db": 30.6,
+  "caught": 2
+ },
+ {
+  "t": 30.91,
+  "kind": "status",
+  "msg": "Scan: 3184 ms  |  18 hops"
+ },
+ {
+  "t": 34.11,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 41.7,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 31.0,
+  "caught": 2
+ },
+ {
+  "t": 34.11,
+  "kind": "status",
+  "msg": "Scan: 3198 ms  |  18 hops"
+ },
+ {
+  "t": 37.3,
+  "kind": "sweep",
+  "floor_db": -30.7,
+  "peak_db": 33.9,
+  "peak_mhz": 2402.075,
+  "tx_band_db": 32.3,
+  "caught": 2
+ },
+ {
+  "t": 37.3,
+  "kind": "status",
+  "msg": "Scan: 3192 ms  |  18 hops"
+ },
+ {
+  "t": 40.49,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 40.1,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 32.4,
+  "caught": 2
+ },
+ {
+  "t": 40.49,
+  "kind": "status",
+  "msg": "Scan: 3193 ms  |  18 hops"
+ },
+ {
+  "t": 40.49,
+  "kind": "caught",
+  "freqs_mhz": [
+   2457.029
+  ]
+ },
+ {
+  "t": 43.68,
+  "kind": "sweep",
+  "floor_db": -30.4,
+  "peak_db": 38.7,
+  "peak_mhz": 2426.068,
+  "tx_band_db": 31.5,
+  "caught": 1
+ },
+ {
+  "t": 43.68,
+  "kind": "status",
+  "msg": "Scan: 3187 ms  |  18 hops"
+ },
+ {
+  "t": 43.68,
+  "kind": "caught",
+  "freqs_mhz": [
+   2457.029,
+   2426.068
+  ]
+ },
+ {
+  "t": 43.68,
+  "kind": "status",
+  "msg": "Passed Bluetooth LE advertising @ 2426.068 MHz, 1.4 MHz wide \u2014 still scanning"
+ },
+ {
+  "t": 46.88,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 37.7,
+  "peak_mhz": 2459.023,
+  "tx_band_db": 30.6,
+  "caught": 2
+ },
+ {
+  "t": 46.88,
+  "kind": "status",
+  "msg": "Scan: 3196 ms  |  18 hops"
+ },
+ {
+  "t": 50.08,
+  "kind": "sweep",
+  "floor_db": -30.4,
+  "peak_db": 39.9,
+  "peak_mhz": 2480.015,
+  "tx_band_db": 29.8,
+  "caught": 2
+ },
+ {
+  "t": 50.08,
+  "kind": "status",
+  "msg": "Scan: 3199 ms  |  18 hops"
+ },
+ {
+  "t": 53.28,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 41.1,
+  "peak_mhz": 2465.023,
+  "tx_band_db": 32.4,
+  "caught": 2
+ },
+ {
+  "t": 53.28,
+  "kind": "status",
+  "msg": "Scan: 3201 ms  |  18 hops"
+ },
+ {
+  "t": 56.47,
+  "kind": "sweep",
+  "floor_db": -30.4,
+  "peak_db": 41.2,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 32.8,
+  "caught": 2
+ },
+ {
+  "t": 56.47,
+  "kind": "status",
+  "msg": "Scan: 3195 ms  |  18 hops"
+ },
+ {
+  "t": 59.67,
+  "kind": "sweep",
+  "floor_db": -30.2,
+  "peak_db": 35.5,
+  "peak_mhz": 2402.182,
+  "tx_band_db": 31.8,
+  "caught": 2
+ },
+ {
+  "t": 59.67,
+  "kind": "status",
+  "msg": "Scan: 3198 ms  |  18 hops"
+ },
+ {
+  "t": 59.67,
+  "kind": "caught",
+  "freqs_mhz": [
+   2426.068
+  ]
+ },
+ {
+  "t": 62.87,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 41.6,
+  "peak_mhz": 2459.023,
+  "tx_band_db": 31.2,
+  "caught": 1
+ },
+ {
+  "t": 62.87,
+  "kind": "status",
+  "msg": "Scan: 3193 ms  |  18 hops"
+ },
+ {
+  "t": 66.06,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 38.7,
+  "peak_mhz": 2480.025,
+  "tx_band_db": 29.6,
+  "caught": 1
+ },
+ {
+  "t": 66.06,
+  "kind": "status",
+  "msg": "Scan: 3192 ms  |  18 hops"
+ },
+ {
+  "t": 69.25,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 42.4,
+  "peak_mhz": 2426.009,
+  "tx_band_db": 31.4,
+  "caught": 1
+ },
+ {
+  "t": 69.25,
+  "kind": "status",
+  "msg": "Scan: 3195 ms  |  18 hops"
+ },
+ {
+  "t": 69.25,
+  "kind": "caught",
+  "freqs_mhz": [
+   2426.068,
+   2479.976
+  ]
+ },
+ {
+  "t": 69.25,
+  "kind": "status",
+  "msg": "Passed Bluetooth LE advertising @ 2479.976 MHz, 1.1 MHz wide \u2014 still scanning"
+ },
+ {
+  "t": 72.47,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 38.5,
+  "peak_mhz": 2426.068,
+  "tx_band_db": 31.4,
+  "caught": 2
+ },
+ {
+  "t": 72.47,
+  "kind": "status",
+  "msg": "Scan: 3218 ms  |  18 hops"
+ },
+ {
+  "t": 75.66,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 40.5,
+  "peak_mhz": 2402.124,
+  "tx_band_db": 31.6,
+  "caught": 2
+ },
+ {
+  "t": 75.66,
+  "kind": "status",
+  "msg": "Scan: 3192 ms  |  18 hops"
+ },
+ {
+  "t": 75.66,
+  "kind": "caught",
+  "freqs_mhz": [
+   2479.976
+  ]
+ },
+ {
+  "t": 78.87,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 42.8,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 29.9,
+  "caught": 1
+ },
+ {
+  "t": 78.87,
+  "kind": "status",
+  "msg": "Scan: 3201 ms  |  18 hops"
+ },
+ {
+  "t": 82.05,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 38.9,
+  "peak_mhz": 2480.162,
+  "tx_band_db": 29.8,
+  "caught": 1
+ },
+ {
+  "t": 82.05,
+  "kind": "status",
+  "msg": "Scan: 3187 ms  |  18 hops"
+ },
+ {
+  "t": 85.27,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.1,
+  "peak_mhz": 2426.019,
+  "tx_band_db": 31.6,
+  "caught": 1
+ },
+ {
+  "t": 85.27,
+  "kind": "status",
+  "msg": "Scan: 3220 ms  |  18 hops"
+ },
+ {
+  "t": 88.51,
+  "kind": "sweep",
+  "floor_db": -30.7,
+  "peak_db": 38.7,
+  "peak_mhz": 2426.019,
+  "tx_band_db": 32.4,
+  "caught": 1
+ },
+ {
+  "t": 88.51,
+  "kind": "status",
+  "msg": "Scan: 3238 ms  |  18 hops"
+ },
+ {
+  "t": 88.51,
+  "kind": "caught",
+  "freqs_mhz": [
+   2479.976,
+   2426.019
+  ]
+ },
+ {
+  "t": 88.51,
+  "kind": "status",
+  "msg": "Passed Bluetooth LE advertising @ 2426.019 MHz, 1.3 MHz wide \u2014 still scanning"
+ },
+ {
+  "t": 91.72,
+  "kind": "sweep",
+  "floor_db": -30.3,
+  "peak_db": 41.4,
+  "peak_mhz": 2402.163,
+  "tx_band_db": 32.3,
+  "caught": 2
+ },
+ {
+  "t": 91.72,
+  "kind": "status",
+  "msg": "Scan: 3205 ms  |  18 hops"
+ },
+ {
+  "t": 94.91,
+  "kind": "sweep",
+  "floor_db": -30.7,
+  "peak_db": 41.9,
+  "peak_mhz": 2426.048,
+  "tx_band_db": 30.3,
+  "caught": 2
+ },
+ {
+  "t": 94.91,
+  "kind": "status",
+  "msg": "Scan: 3190 ms  |  18 hops"
+ },
+ {
+  "t": 94.91,
+  "kind": "caught",
+  "freqs_mhz": [
+   2479.976,
+   2426.019,
+   2402.182
+  ]
+ },
+ {
+  "t": 94.91,
+  "kind": "status",
+  "msg": "Passed Bluetooth LE advertising @ 2402.182 MHz, 1.1 MHz wide \u2014 still scanning"
+ },
+ {
+  "t": 98.1,
+  "kind": "sweep",
+  "floor_db": -30.9,
+  "peak_db": 38.4,
+  "peak_mhz": 2480.084,
+  "tx_band_db": 30.9,
+  "caught": 3
+ },
+ {
+  "t": 98.1,
+  "kind": "status",
+  "msg": "Scan: 3194 ms  |  18 hops"
+ },
+ {
+  "t": 101.3,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 41.2,
+  "peak_mhz": 2425.921,
+  "tx_band_db": 32.2,
+  "caught": 3
+ },
+ {
+  "t": 101.3,
+  "kind": "status",
+  "msg": "Scan: 3193 ms  |  18 hops"
+ },
+ {
+  "t": 101.3,
+  "kind": "caught",
+  "freqs_mhz": [
+   2426.019,
+   2402.182
+  ]
+ },
+ {
+  "t": 104.49,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 42.2,
+  "peak_mhz": 2426.019,
+  "tx_band_db": 32.5,
+  "caught": 2
+ },
+ {
+  "t": 104.49,
+  "kind": "status",
+  "msg": "Scan: 3189 ms  |  18 hops"
+ },
+ {
+  "t": 107.67,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 107.67,
+  "kind": "status",
+  "msg": "Scan: 3182 ms  |  18 hops"
+ },
+ {
+  "t": 107.86,
+  "kind": "status",
+  "msg": "Locked +34 dB @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 108.06,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 108.1,
+  "kind": "classify",
+  "badge": "Clear (97% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.975,
+  "dev_share": 0.0
+ },
+ {
+  "t": 108.1,
+  "kind": "status",
+  "msg": "Locked @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 108.29,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 108.29,
+  "kind": "status",
+  "msg": "Locked @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 108.49,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 108.49,
+  "kind": "status",
+  "msg": "Locked @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 108.68,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 108.68,
+  "kind": "status",
+  "msg": "Locked @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 108.87,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 108.91,
+  "kind": "classify",
+  "badge": "Clear (98% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.975,
+  "dev_share": 0.0
+ },
+ {
+  "t": 108.91,
+  "kind": "status",
+  "msg": "Locked @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 109.11,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 109.11,
+  "kind": "status",
+  "msg": "Locked @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 109.3,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 109.3,
+  "kind": "status",
+  "msg": "Locked @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 109.49,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 109.49,
+  "kind": "status",
+  "msg": "Locked @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 109.68,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 109.72,
+  "kind": "classify",
+  "badge": "Clear (94% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.938,
+  "dev_share": 0.0
+ },
+ {
+  "t": 109.72,
+  "kind": "status",
+  "msg": "Locked @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 109.92,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 109.92,
+  "kind": "status",
+  "msg": "Locked @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 110.12,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 110.12,
+  "kind": "status",
+  "msg": "Locked @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 110.31,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 110.31,
+  "kind": "status",
+  "msg": "Locked @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 110.5,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 110.54,
+  "kind": "classify",
+  "badge": "Clear (96% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.958,
+  "dev_share": 0.0
+ },
+ {
+  "t": 110.54,
+  "kind": "status",
+  "msg": "Locked @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 110.73,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 110.73,
+  "kind": "status",
+  "msg": "Locked @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 110.93,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 110.93,
+  "kind": "status",
+  "msg": "Locked @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 111.12,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 111.12,
+  "kind": "status",
+  "msg": "Locked @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 111.31,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 111.35,
+  "kind": "classify",
+  "badge": "Clear (98% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.983,
+  "dev_share": 0.0
+ },
+ {
+  "t": 111.35,
+  "kind": "status",
+  "msg": "Locked @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 111.54,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 111.54,
+  "kind": "status",
+  "msg": "Locked @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 111.74,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 111.74,
+  "kind": "status",
+  "msg": "Locked @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 111.93,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 111.93,
+  "kind": "status",
+  "msg": "Locked @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 112.12,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 112.16,
+  "kind": "classify",
+  "badge": "Clear (98% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.978,
+  "dev_share": 0.0
+ },
+ {
+  "t": 112.16,
+  "kind": "status",
+  "msg": "Locked @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 112.35,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 112.35,
+  "kind": "status",
+  "msg": "Locked @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 112.55,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 112.55,
+  "kind": "status",
+  "msg": "Locked @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 112.74,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 42.4,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 112.74,
+  "kind": "status",
+  "msg": "Locked @ 2458.838 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 112.93,
+  "kind": "sweep",
+  "floor_db": -30.7,
+  "peak_db": 42.5,
+  "peak_mhz": 2425.96,
+  "tx_band_db": 32.8,
+  "caught": 2
+ },
+ {
+  "t": 112.97,
+  "kind": "classify",
+  "badge": "Clear (97% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.973,
+  "dev_share": 0.0
+ },
+ {
+  "t": 112.97,
+  "kind": "caught",
+  "freqs_mhz": [
+   2426.019,
+   2402.182,
+   2458.838
+  ]
+ },
+ {
+  "t": 112.97,
+  "kind": "status",
+  "msg": "Auto-skip: background 97% \u2265 85% after 5000 ms"
+ },
+ {
+  "t": 116.16,
+  "kind": "sweep",
+  "floor_db": -30.2,
+  "peak_db": 42.8,
+  "peak_mhz": 2425.911,
+  "tx_band_db": 30.7,
+  "caught": 3
+ },
+ {
+  "t": 116.16,
+  "kind": "status",
+  "msg": "Scan: 3193 ms  |  18 hops"
+ },
+ {
+  "t": 119.34,
+  "kind": "sweep",
+  "floor_db": -29.3,
+  "peak_db": 49.2,
+  "peak_mhz": 2480.113,
+  "tx_band_db": 31.3,
+  "caught": 3
+ },
+ {
+  "t": 119.34,
+  "kind": "status",
+  "msg": "Scan: 3180 ms  |  18 hops"
+ },
+ {
+  "t": 119.34,
+  "kind": "caught",
+  "freqs_mhz": [
+   2402.182,
+   2458.838
+  ]
+ }
+]

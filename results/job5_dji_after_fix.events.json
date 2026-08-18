@@ -1,0 +1,3089 @@
+[
+ {
+  "t": 3.25,
+  "kind": "sweep",
+  "floor_db": -30.7,
+  "peak_db": 52.4,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 35.7,
+  "caught": 0
+ },
+ {
+  "t": 3.25,
+  "kind": "status",
+  "msg": "Scan: 3238 ms  |  18 hops"
+ },
+ {
+  "t": 6.45,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 50.7,
+  "peak_mhz": 2402.045,
+  "tx_band_db": 34.8,
+  "caught": 0
+ },
+ {
+  "t": 6.45,
+  "kind": "status",
+  "msg": "Scan: 3204 ms  |  18 hops"
+ },
+ {
+  "t": 6.45,
+  "kind": "caught",
+  "freqs_mhz": [
+   2402.045
+  ]
+ },
+ {
+  "t": 6.45,
+  "kind": "status",
+  "msg": "Passed Bluetooth LE advertising @ 2402.045 MHz, 1.4 MHz wide \u2014 still scanning"
+ },
+ {
+  "t": 9.67,
+  "kind": "sweep",
+  "floor_db": -30.7,
+  "peak_db": 50.2,
+  "peak_mhz": 2426.019,
+  "tx_band_db": 33.3,
+  "caught": 1
+ },
+ {
+  "t": 9.67,
+  "kind": "status",
+  "msg": "Scan: 3219 ms  |  18 hops"
+ },
+ {
+  "t": 12.9,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 40.2,
+  "peak_mhz": 2426.019,
+  "tx_band_db": 32.5,
+  "caught": 1
+ },
+ {
+  "t": 12.9,
+  "kind": "status",
+  "msg": "Scan: 3226 ms  |  18 hops"
+ },
+ {
+  "t": 12.9,
+  "kind": "caught",
+  "freqs_mhz": [
+   2402.045,
+   2426.019
+  ]
+ },
+ {
+  "t": 12.9,
+  "kind": "status",
+  "msg": "Passed Bluetooth LE advertising @ 2426.019 MHz, 1.8 MHz wide \u2014 still scanning"
+ },
+ {
+  "t": 16.1,
+  "kind": "sweep",
+  "floor_db": -30.7,
+  "peak_db": 52.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 35.4,
+  "caught": 2
+ },
+ {
+  "t": 16.1,
+  "kind": "status",
+  "msg": "Scan: 3201 ms  |  18 hops"
+ },
+ {
+  "t": 19.32,
+  "kind": "sweep",
+  "floor_db": -30.7,
+  "peak_db": 46.1,
+  "peak_mhz": 2479.976,
+  "tx_band_db": 35.4,
+  "caught": 2
+ },
+ {
+  "t": 19.32,
+  "kind": "status",
+  "msg": "Scan: 3217 ms  |  18 hops"
+ },
+ {
+  "t": 22.53,
+  "kind": "sweep",
+  "floor_db": -30.8,
+  "peak_db": 42.3,
+  "peak_mhz": 2463.02,
+  "tx_band_db": 35.4,
+  "caught": 2
+ },
+ {
+  "t": 22.53,
+  "kind": "status",
+  "msg": "Scan: 3217 ms  |  18 hops"
+ },
+ {
+  "t": 25.73,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 47.4,
+  "peak_mhz": 2479.976,
+  "tx_band_db": 33.8,
+  "caught": 2
+ },
+ {
+  "t": 25.73,
+  "kind": "status",
+  "msg": "Scan: 3197 ms  |  18 hops"
+ },
+ {
+  "t": 28.95,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 50.1,
+  "peak_mhz": 2426.068,
+  "tx_band_db": 32.8,
+  "caught": 2
+ },
+ {
+  "t": 28.95,
+  "kind": "status",
+  "msg": "Scan: 3218 ms  |  18 hops"
+ },
+ {
+  "t": 32.17,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 52.3,
+  "peak_mhz": 2401.928,
+  "tx_band_db": 35.7,
+  "caught": 2
+ },
+ {
+  "t": 32.17,
+  "kind": "status",
+  "msg": "Scan: 3219 ms  |  18 hops"
+ },
+ {
+  "t": 35.37,
+  "kind": "sweep",
+  "floor_db": -30.4,
+  "peak_db": 48.7,
+  "peak_mhz": 2402.163,
+  "tx_band_db": 35.6,
+  "caught": 2
+ },
+ {
+  "t": 35.37,
+  "kind": "status",
+  "msg": "Scan: 3200 ms  |  18 hops"
+ },
+ {
+  "t": 38.56,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 54.5,
+  "peak_mhz": 2425.784,
+  "tx_band_db": 35.1,
+  "caught": 2
+ },
+ {
+  "t": 38.56,
+  "kind": "status",
+  "msg": "Scan: 3194 ms  |  18 hops"
+ },
+ {
+  "t": 41.77,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 50.4,
+  "peak_mhz": 2426.068,
+  "tx_band_db": 32.4,
+  "caught": 2
+ },
+ {
+  "t": 41.77,
+  "kind": "status",
+  "msg": "Scan: 3202 ms  |  18 hops"
+ },
+ {
+  "t": 44.96,
+  "kind": "sweep",
+  "floor_db": -30.7,
+  "peak_db": 44.1,
+  "peak_mhz": 2480.045,
+  "tx_band_db": 33.9,
+  "caught": 2
+ },
+ {
+  "t": 44.96,
+  "kind": "status",
+  "msg": "Scan: 3191 ms  |  18 hops"
+ },
+ {
+  "t": 48.16,
+  "kind": "sweep",
+  "floor_db": -30.7,
+  "peak_db": 52.2,
+  "peak_mhz": 2426.058,
+  "tx_band_db": 35.1,
+  "caught": 2
+ },
+ {
+  "t": 48.16,
+  "kind": "status",
+  "msg": "Scan: 3203 ms  |  18 hops"
+ },
+ {
+  "t": 51.36,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 47.8,
+  "peak_mhz": 2402.163,
+  "tx_band_db": 34.2,
+  "caught": 2
+ },
+ {
+  "t": 51.36,
+  "kind": "status",
+  "msg": "Scan: 3196 ms  |  18 hops"
+ },
+ {
+  "t": 54.55,
+  "kind": "sweep",
+  "floor_db": -30.7,
+  "peak_db": 40.3,
+  "peak_mhz": 2425.902,
+  "tx_band_db": 34.8,
+  "caught": 2
+ },
+ {
+  "t": 54.55,
+  "kind": "status",
+  "msg": "Scan: 3197 ms  |  18 hops"
+ },
+ {
+  "t": 57.75,
+  "kind": "sweep",
+  "floor_db": -30.4,
+  "peak_db": 51.2,
+  "peak_mhz": 2468.874,
+  "tx_band_db": 32.3,
+  "caught": 2
+ },
+ {
+  "t": 57.75,
+  "kind": "status",
+  "msg": "Scan: 3191 ms  |  18 hops"
+ },
+ {
+  "t": 60.96,
+  "kind": "sweep",
+  "floor_db": -30.1,
+  "peak_db": 45.4,
+  "peak_mhz": 2480.133,
+  "tx_band_db": 32.3,
+  "caught": 2
+ },
+ {
+  "t": 60.96,
+  "kind": "status",
+  "msg": "Scan: 3208 ms  |  18 hops"
+ },
+ {
+  "t": 64.15,
+  "kind": "sweep",
+  "floor_db": -28.3,
+  "peak_db": 49.8,
+  "peak_mhz": 2406.688,
+  "tx_band_db": 32.7,
+  "caught": 2
+ },
+ {
+  "t": 64.15,
+  "kind": "status",
+  "msg": "Scan: 3198 ms  |  18 hops"
+ },
+ {
+  "t": 67.35,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 41.1,
+  "peak_mhz": 2426.009,
+  "tx_band_db": 35.0,
+  "caught": 2
+ },
+ {
+  "t": 67.35,
+  "kind": "status",
+  "msg": "Scan: 3200 ms  |  18 hops"
+ },
+ {
+  "t": 70.56,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 34.9,
+  "peak_mhz": 2479.507,
+  "tx_band_db": 34.4,
+  "caught": 2
+ },
+ {
+  "t": 70.56,
+  "kind": "status",
+  "msg": "Scan: 3207 ms  |  18 hops"
+ },
+ {
+  "t": 73.76,
+  "kind": "sweep",
+  "floor_db": -30.7,
+  "peak_db": 50.7,
+  "peak_mhz": 2401.86,
+  "tx_band_db": 33.0,
+  "caught": 2
+ },
+ {
+  "t": 73.76,
+  "kind": "status",
+  "msg": "Scan: 3203 ms  |  18 hops"
+ },
+ {
+  "t": 73.76,
+  "kind": "caught",
+  "freqs_mhz": [
+   2402.045,
+   2426.019,
+   2479.585
+  ]
+ },
+ {
+  "t": 73.76,
+  "kind": "status",
+  "msg": "Passed Bluetooth LE advertising @ 2479.585 MHz, 1.0 MHz wide \u2014 still scanning"
+ },
+ {
+  "t": 76.97,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 48.1,
+  "peak_mhz": 2480.064,
+  "tx_band_db": 33.3,
+  "caught": 3
+ },
+ {
+  "t": 76.97,
+  "kind": "status",
+  "msg": "Scan: 3202 ms  |  18 hops"
+ },
+ {
+  "t": 80.16,
+  "kind": "sweep",
+  "floor_db": -30.7,
+  "peak_db": 49.7,
+  "peak_mhz": 2425.892,
+  "tx_band_db": 35.1,
+  "caught": 3
+ },
+ {
+  "t": 80.16,
+  "kind": "status",
+  "msg": "Scan: 3196 ms  |  18 hops"
+ },
+ {
+  "t": 83.37,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 49.4,
+  "peak_mhz": 2425.98,
+  "tx_band_db": 34.6,
+  "caught": 3
+ },
+ {
+  "t": 83.37,
+  "kind": "status",
+  "msg": "Scan: 3207 ms  |  18 hops"
+ },
+ {
+  "t": 86.58,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.0,
+  "caught": 3
+ },
+ {
+  "t": 86.58,
+  "kind": "status",
+  "msg": "Scan: 3209 ms  |  18 hops"
+ },
+ {
+  "t": 86.77,
+  "kind": "status",
+  "msg": "Locked +35 dB @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 86.96,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.5,
+  "caught": 3
+ },
+ {
+  "t": 87.0,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (44%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.501,
+  "dev_share": 0.458
+ },
+ {
+  "t": 87.0,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 87.2,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 31.0,
+  "caught": 3
+ },
+ {
+  "t": 87.2,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 87.39,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.1,
+  "caught": 3
+ },
+ {
+  "t": 87.39,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 87.59,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.6,
+  "caught": 3
+ },
+ {
+  "t": 87.59,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 87.79,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 35.0,
+  "caught": 3
+ },
+ {
+  "t": 87.82,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (38%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.582,
+  "dev_share": 0.375
+ },
+ {
+  "t": 87.82,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 88.02,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.5,
+  "caught": 3
+ },
+ {
+  "t": 88.02,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 88.21,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 31.0,
+  "caught": 3
+ },
+ {
+  "t": 88.21,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 88.4,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.7,
+  "caught": 3
+ },
+ {
+  "t": 88.4,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 88.6,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.2,
+  "caught": 3
+ },
+ {
+  "t": 88.63,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (38%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.604,
+  "dev_share": 0.375
+ },
+ {
+  "t": 88.63,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 88.83,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 35.3,
+  "caught": 3
+ },
+ {
+  "t": 88.83,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 89.02,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.0,
+  "caught": 3
+ },
+ {
+  "t": 89.02,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 89.21,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 31.0,
+  "caught": 3
+ },
+ {
+  "t": 89.22,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 89.41,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.3,
+  "caught": 3
+ },
+ {
+  "t": 89.44,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (29%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.693,
+  "dev_share": 0.292
+ },
+ {
+  "t": 89.44,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 89.64,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.5,
+  "caught": 3
+ },
+ {
+  "t": 89.64,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 89.83,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.0,
+  "caught": 3
+ },
+ {
+  "t": 89.83,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 90.02,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.6,
+  "caught": 3
+ },
+ {
+  "t": 90.02,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 90.22,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 31.5,
+  "caught": 3
+ },
+ {
+  "t": 90.25,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (44%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.525,
+  "dev_share": 0.458
+ },
+ {
+  "t": 90.25,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 90.45,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.8,
+  "caught": 3
+ },
+ {
+  "t": 90.45,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 90.64,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.1,
+  "caught": 3
+ },
+ {
+  "t": 90.64,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 90.83,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 35.0,
+  "caught": 3
+ },
+ {
+  "t": 90.83,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 91.02,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.6,
+  "caught": 3
+ },
+ {
+  "t": 91.06,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (40%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.562,
+  "dev_share": 0.417
+ },
+ {
+  "t": 91.06,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 91.25,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 31.5,
+  "caught": 3
+ },
+ {
+  "t": 91.25,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 91.44,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.9,
+  "caught": 3
+ },
+ {
+  "t": 91.44,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 91.64,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.9,
+  "caught": 3
+ },
+ {
+  "t": 91.64,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 91.83,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.9,
+  "caught": 3
+ },
+ {
+  "t": 91.86,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (29%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.678,
+  "dev_share": 0.292
+ },
+ {
+  "t": 91.86,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 92.06,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.9,
+  "caught": 3
+ },
+ {
+  "t": 92.06,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 92.26,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.2,
+  "caught": 3
+ },
+ {
+  "t": 92.26,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 92.45,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.2,
+  "caught": 3
+ },
+ {
+  "t": 92.45,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 92.64,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.7,
+  "caught": 3
+ },
+ {
+  "t": 92.68,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (33%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.632,
+  "dev_share": 0.333
+ },
+ {
+  "t": 92.68,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 92.87,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.9,
+  "caught": 3
+ },
+ {
+  "t": 92.87,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 93.07,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.5,
+  "caught": 3
+ },
+ {
+  "t": 93.07,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 93.26,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.4,
+  "caught": 3
+ },
+ {
+  "t": 93.26,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 93.45,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.2,
+  "caught": 3
+ },
+ {
+  "t": 93.48,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (29%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.67,
+  "dev_share": 0.292
+ },
+ {
+  "t": 93.48,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 93.68,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 35.0,
+  "caught": 3
+ },
+ {
+  "t": 93.68,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 93.87,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.7,
+  "caught": 3
+ },
+ {
+  "t": 93.87,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 94.06,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.0,
+  "caught": 3
+ },
+ {
+  "t": 94.06,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 94.25,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 31.5,
+  "caught": 3
+ },
+ {
+  "t": 94.29,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (38%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.578,
+  "dev_share": 0.375
+ },
+ {
+  "t": 94.29,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 94.48,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 35.2,
+  "caught": 3
+ },
+ {
+  "t": 94.48,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 94.68,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.6,
+  "caught": 3
+ },
+ {
+  "t": 94.68,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 94.87,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.4,
+  "caught": 3
+ },
+ {
+  "t": 94.87,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 95.06,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 37.1,
+  "caught": 3
+ },
+ {
+  "t": 95.09,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (41%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.517,
+  "dev_share": 0.417
+ },
+ {
+  "t": 95.09,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 95.29,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 31.9,
+  "caught": 3
+ },
+ {
+  "t": 95.29,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 95.48,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.0,
+  "caught": 3
+ },
+ {
+  "t": 95.48,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 95.67,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.1,
+  "caught": 3
+ },
+ {
+  "t": 95.67,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 95.86,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.8,
+  "caught": 3
+ },
+ {
+  "t": 95.9,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (38%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.609,
+  "dev_share": 0.375
+ },
+ {
+  "t": 95.9,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 96.09,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.2,
+  "caught": 3
+ },
+ {
+  "t": 96.09,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 96.29,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.9,
+  "caught": 3
+ },
+ {
+  "t": 96.29,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 96.48,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.1,
+  "caught": 3
+ },
+ {
+  "t": 96.48,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 96.67,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.4,
+  "caught": 3
+ },
+ {
+  "t": 96.71,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (38%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.599,
+  "dev_share": 0.375
+ },
+ {
+  "t": 96.71,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 96.9,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.7,
+  "caught": 3
+ },
+ {
+  "t": 96.9,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 97.1,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.5,
+  "caught": 3
+ },
+ {
+  "t": 97.1,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 97.29,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.0,
+  "caught": 3
+ },
+ {
+  "t": 97.29,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 97.48,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.1,
+  "caught": 3
+ },
+ {
+  "t": 97.52,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (29%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.695,
+  "dev_share": 0.292
+ },
+ {
+  "t": 97.52,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 97.71,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.7,
+  "caught": 3
+ },
+ {
+  "t": 97.71,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 97.9,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.6,
+  "caught": 3
+ },
+ {
+  "t": 97.9,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 98.1,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.2,
+  "caught": 3
+ },
+ {
+  "t": 98.1,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 98.29,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.9,
+  "caught": 3
+ },
+ {
+  "t": 98.32,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (33%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.601,
+  "dev_share": 0.333
+ },
+ {
+  "t": 98.32,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 98.52,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 37.4,
+  "caught": 3
+ },
+ {
+  "t": 98.52,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 98.71,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.3,
+  "caught": 3
+ },
+ {
+  "t": 98.71,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 98.9,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.9,
+  "caught": 3
+ },
+ {
+  "t": 98.9,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 99.09,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.2,
+  "caught": 3
+ },
+ {
+  "t": 99.13,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (42%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.53,
+  "dev_share": 0.417
+ },
+ {
+  "t": 99.13,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 99.32,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 31.5,
+  "caught": 3
+ },
+ {
+  "t": 99.32,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 99.51,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.9,
+  "caught": 3
+ },
+ {
+  "t": 99.51,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 99.71,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.4,
+  "caught": 3
+ },
+ {
+  "t": 99.71,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 99.9,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.5,
+  "caught": 3
+ },
+ {
+  "t": 99.93,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (43%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.484,
+  "dev_share": 0.458
+ },
+ {
+  "t": 99.93,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 100.13,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.6,
+  "caught": 3
+ },
+ {
+  "t": 100.13,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 100.33,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.3,
+  "caught": 3
+ },
+ {
+  "t": 100.33,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 100.52,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.6,
+  "caught": 3
+ },
+ {
+  "t": 100.52,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 100.71,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.2,
+  "caught": 3
+ },
+ {
+  "t": 100.74,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (42%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.547,
+  "dev_share": 0.458
+ },
+ {
+  "t": 100.74,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 100.94,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.7,
+  "caught": 3
+ },
+ {
+  "t": 100.94,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 101.13,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.3,
+  "caught": 3
+ },
+ {
+  "t": 101.13,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 101.33,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.0,
+  "caught": 3
+ },
+ {
+  "t": 101.33,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 101.52,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.2,
+  "caught": 3
+ },
+ {
+  "t": 101.55,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (33%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.619,
+  "dev_share": 0.333
+ },
+ {
+  "t": 101.55,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 101.75,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.8,
+  "caught": 3
+ },
+ {
+  "t": 101.75,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 101.94,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.6,
+  "caught": 3
+ },
+ {
+  "t": 101.94,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 102.13,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 31.9,
+  "caught": 3
+ },
+ {
+  "t": 102.13,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 102.32,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.2,
+  "caught": 3
+ },
+ {
+  "t": 102.36,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (42%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.508,
+  "dev_share": 0.417
+ },
+ {
+  "t": 102.36,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 102.55,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.5,
+  "caught": 3
+ },
+ {
+  "t": 102.55,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 102.74,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 35.0,
+  "caught": 3
+ },
+ {
+  "t": 102.74,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 102.94,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.8,
+  "caught": 3
+ },
+ {
+  "t": 102.94,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 103.13,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 31.9,
+  "caught": 3
+ },
+ {
+  "t": 103.16,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (42%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.5,
+  "dev_share": 0.417
+ },
+ {
+  "t": 103.16,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 103.36,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.5,
+  "caught": 3
+ },
+ {
+  "t": 103.36,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 103.55,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.5,
+  "caught": 3
+ },
+ {
+  "t": 103.55,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 103.74,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 35.1,
+  "caught": 3
+ },
+ {
+  "t": 103.74,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 103.94,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 35.1,
+  "caught": 3
+ },
+ {
+  "t": 103.97,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (33%) + Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.566,
+  "dev_share": 0.333
+ },
+ {
+  "t": 103.97,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 104.17,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.3,
+  "caught": 3
+ },
+ {
+  "t": 104.17,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 104.36,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.3,
+  "caught": 3
+ },
+ {
+  "t": 104.36,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 104.55,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.7,
+  "caught": 3
+ },
+ {
+  "t": 104.55,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 104.75,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.8,
+  "caught": 3
+ },
+ {
+  "t": 104.78,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (33%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.62,
+  "dev_share": 0.333
+ },
+ {
+  "t": 104.78,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 104.97,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.9,
+  "caught": 3
+ },
+ {
+  "t": 104.97,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 105.17,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 31.3,
+  "caught": 3
+ },
+ {
+  "t": 105.17,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 105.36,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.2,
+  "caught": 3
+ },
+ {
+  "t": 105.36,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 105.55,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.8,
+  "caught": 3
+ },
+ {
+  "t": 105.58,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (42%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.573,
+  "dev_share": 0.417
+ },
+ {
+  "t": 105.58,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 105.78,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 35.3,
+  "caught": 3
+ },
+ {
+  "t": 105.78,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 105.97,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.9,
+  "caught": 3
+ },
+ {
+  "t": 105.97,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 106.16,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.3,
+  "caught": 3
+ },
+ {
+  "t": 106.16,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 106.36,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.7,
+  "caught": 3
+ },
+ {
+  "t": 106.39,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (33%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.653,
+  "dev_share": 0.333
+ },
+ {
+  "t": 106.39,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 106.58,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.3,
+  "caught": 3
+ },
+ {
+  "t": 106.58,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 106.78,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.2,
+  "caught": 3
+ },
+ {
+  "t": 106.78,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 106.97,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.1,
+  "caught": 3
+ },
+ {
+  "t": 106.97,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 107.16,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 31.8,
+  "caught": 3
+ },
+ {
+  "t": 107.2,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (42%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.585,
+  "dev_share": 0.417
+ },
+ {
+  "t": 107.2,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 107.39,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.8,
+  "caught": 3
+ },
+ {
+  "t": 107.39,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 107.59,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.6,
+  "caught": 3
+ },
+ {
+  "t": 107.59,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 107.78,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.8,
+  "caught": 3
+ },
+ {
+  "t": 107.78,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 107.97,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 37.6,
+  "caught": 3
+ },
+ {
+  "t": 108.01,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (33%) + Radiolink-AT9S-Pro (17%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.487,
+  "dev_share": 0.333
+ },
+ {
+  "t": 108.01,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 108.21,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 36.7,
+  "caught": 3
+ },
+ {
+  "t": 108.21,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 108.4,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 40.2,
+  "peak_mhz": 2443.865,
+  "tx_band_db": 40.2,
+  "caught": 3
+ },
+ {
+  "t": 108.4,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 108.59,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.0,
+  "caught": 3
+ },
+ {
+  "t": 108.59,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 108.78,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 35.1,
+  "caught": 3
+ },
+ {
+  "t": 108.82,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (42%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.557,
+  "dev_share": 0.417
+ },
+ {
+  "t": 108.82,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 109.01,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.6,
+  "caught": 3
+ },
+ {
+  "t": 109.01,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 109.21,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 31.3,
+  "caught": 3
+ },
+ {
+  "t": 109.21,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 109.4,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.3,
+  "caught": 3
+ },
+ {
+  "t": 109.4,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 109.59,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.6,
+  "caught": 3
+ },
+ {
+  "t": 109.63,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (33%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.622,
+  "dev_share": 0.333
+ },
+ {
+  "t": 109.63,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 109.82,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.3,
+  "caught": 3
+ },
+ {
+  "t": 109.82,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 110.02,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.1,
+  "caught": 3
+ },
+ {
+  "t": 110.02,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 110.21,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 30.8,
+  "caught": 3
+ },
+ {
+  "t": 110.21,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 110.4,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.6,
+  "caught": 3
+ },
+ {
+  "t": 110.44,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (29%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.663,
+  "dev_share": 0.292
+ },
+ {
+  "t": 110.44,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 110.63,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.9,
+  "caught": 3
+ },
+ {
+  "t": 110.63,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 110.82,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 35.2,
+  "caught": 3
+ },
+ {
+  "t": 110.83,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 111.02,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.1,
+  "caught": 3
+ },
+ {
+  "t": 111.02,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 111.21,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 31.3,
+  "caught": 3
+ },
+ {
+  "t": 111.25,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (41%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.571,
+  "dev_share": 0.417
+ },
+ {
+  "t": 111.25,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 111.44,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.5,
+  "caught": 3
+ },
+ {
+  "t": 111.44,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 111.64,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.8,
+  "caught": 3
+ },
+ {
+  "t": 111.64,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 111.83,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.1,
+  "caught": 3
+ },
+ {
+  "t": 111.83,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 112.02,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.8,
+  "caught": 3
+ },
+ {
+  "t": 112.06,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (42%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.568,
+  "dev_share": 0.417
+ },
+ {
+  "t": 112.06,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 112.25,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.0,
+  "caught": 3
+ },
+ {
+  "t": 112.25,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 112.44,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.6,
+  "caught": 3
+ },
+ {
+  "t": 112.44,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 112.64,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.9,
+  "caught": 3
+ },
+ {
+  "t": 112.64,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 112.83,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.9,
+  "caught": 3
+ },
+ {
+  "t": 112.86,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (38%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.598,
+  "dev_share": 0.375
+ },
+ {
+  "t": 112.86,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 113.06,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.8,
+  "caught": 3
+ },
+ {
+  "t": 113.06,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 113.26,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 31.5,
+  "caught": 3
+ },
+ {
+  "t": 113.26,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 113.45,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.4,
+  "caught": 3
+ },
+ {
+  "t": 113.45,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 113.64,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.7,
+  "caught": 3
+ },
+ {
+  "t": 113.67,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (38%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.608,
+  "dev_share": 0.375
+ },
+ {
+  "t": 113.67,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 113.87,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.6,
+  "caught": 3
+ },
+ {
+  "t": 113.87,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 114.06,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.0,
+  "caught": 3
+ },
+ {
+  "t": 114.06,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 114.26,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.0,
+  "caught": 3
+ },
+ {
+  "t": 114.26,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 114.45,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.5,
+  "caught": 3
+ },
+ {
+  "t": 114.48,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (29%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.682,
+  "dev_share": 0.292
+ },
+ {
+  "t": 114.48,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 114.68,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.2,
+  "caught": 3
+ },
+ {
+  "t": 114.68,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 114.87,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.7,
+  "caught": 3
+ },
+ {
+  "t": 114.87,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 115.06,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.6,
+  "caught": 3
+ },
+ {
+  "t": 115.06,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 115.25,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.1,
+  "caught": 3
+ },
+ {
+  "t": 115.29,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (38%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.591,
+  "dev_share": 0.375
+ },
+ {
+  "t": 115.29,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 115.48,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.3,
+  "caught": 3
+ },
+ {
+  "t": 115.48,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 115.68,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.5,
+  "caught": 3
+ },
+ {
+  "t": 115.68,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 115.87,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.2,
+  "caught": 3
+ },
+ {
+  "t": 115.87,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 116.06,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.7,
+  "caught": 3
+ },
+ {
+  "t": 116.1,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (42%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.575,
+  "dev_share": 0.417
+ },
+ {
+  "t": 116.1,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 116.3,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 31.7,
+  "caught": 3
+ },
+ {
+  "t": 116.3,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 116.49,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.0,
+  "caught": 3
+ },
+ {
+  "t": 116.49,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 116.68,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.0,
+  "caught": 3
+ },
+ {
+  "t": 116.68,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 116.88,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.8,
+  "caught": 3
+ },
+ {
+  "t": 116.91,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (33%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.585,
+  "dev_share": 0.333
+ },
+ {
+  "t": 116.91,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 117.1,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.3,
+  "caught": 3
+ },
+ {
+  "t": 117.1,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 117.3,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 31.3,
+  "caught": 3
+ },
+ {
+  "t": 117.3,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 117.49,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.3,
+  "caught": 3
+ },
+ {
+  "t": 117.49,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 117.68,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.6,
+  "caught": 3
+ },
+ {
+  "t": 117.71,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (43%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.541,
+  "dev_share": 0.458
+ },
+ {
+  "t": 117.71,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 117.91,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 35.4,
+  "caught": 3
+ },
+ {
+  "t": 117.91,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 118.1,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.6,
+  "caught": 3
+ },
+ {
+  "t": 118.1,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 118.29,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 31.2,
+  "caught": 3
+ },
+ {
+  "t": 118.29,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 118.49,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.1,
+  "caught": 3
+ },
+ {
+  "t": 118.52,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (33%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.657,
+  "dev_share": 0.333
+ },
+ {
+  "t": 118.52,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 118.72,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.9,
+  "caught": 3
+ },
+ {
+  "t": 118.72,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 118.91,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.8,
+  "caught": 3
+ },
+ {
+  "t": 118.91,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 119.1,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 32.7,
+  "caught": 3
+ },
+ {
+  "t": 119.1,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 119.3,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 31.6,
+  "caught": 3
+ },
+ {
+  "t": 119.33,
+  "kind": "classify",
+  "badge": "DJI-MINI-3 (44%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.51,
+  "dev_share": 0.458
+ },
+ {
+  "t": 119.33,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 119.53,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 33.5,
+  "caught": 3
+ },
+ {
+  "t": 119.53,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 119.72,
+  "kind": "sweep",
+  "floor_db": -30.6,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.8,
+  "caught": 3
+ },
+ {
+  "t": 119.72,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 119.91,
+  "kind": "sweep",
+  "floor_db": -30.5,
+  "peak_db": 39.0,
+  "peak_mhz": 2402.006,
+  "tx_band_db": 34.6,
+  "caught": 3
+ },
+ {
+  "t": 119.91,
+  "kind": "status",
+  "msg": "Locked @ 2439.545 MHz \u2014 Skip to advance"
+ }
+]

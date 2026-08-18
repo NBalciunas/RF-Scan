@@ -23,7 +23,7 @@ The program has one signal chain. Each step gives its result to the next step.
 | 1. Sweep | The program divides the span into hops. It tunes to each hop, it waits for the settle time, and it reads one buffer. It asks the driver for one kernel buffer, thus that read holds the frequency that it tuned to. With the four buffers that libiio keeps by default, the read held the frequency of the hop three places earlier. |
 | 2. Spectrum | For each hop the program calculates 1024-bin FFTs across the full buffer. It removes the mean of each window first, thus the artifact of the receiver at 0 Hz does not become a false peak. It keeps the maximum value of each bin, thus a short burst stays visible. |
 | 3. Composite | The program keeps the central bins of each hop and joins the parts end to end. One linear map gives the frequency of each bin. |
-| 4. Peak | The program finds the strongest peak that is not in the memory of the caught signals. A peak above the threshold causes a lock. |
+| 4. Peak | The program finds the strongest peak that is not in the memory of the caught signals. A peak above the threshold causes a lock. The memory holds each frequency until the scan has been round once, thus the search is fair and not only greedy. |
 | 5. Lock | The radio holds that one frequency. The frequency does not move during the hold. |
 | 6. Segments | The program cuts the held IQ data into segments of 4096 samples, with a step of 2048 samples. |
 | 7. Spectrogram | A high pass removes the artifact of the receiver near 0 Hz. Each segment then becomes a 256-point STFT image of the log magnitude. The program replaces the 0 Hz row with the median row, thus no class can be recognized by that row. The program normalizes each image with its own mean and standard deviation, thus the result does not change with the gain. |
@@ -32,9 +32,12 @@ The program has one signal chain. Each step gives its result to the next step.
 
 The program releases the lock in three conditions: the user clicks **Skip lock**, the
 signal stops for 2.5 s, or the Auto mode finds that the signal is background. Then the
-frequency goes into the memory of the caught signals for 30 s. Thus the scanner moves
+frequency goes into the memory of the caught signals. Thus the scanner moves
 through all the signals in the band, and it does not hold the strongest signal only.
-An entry in the memory expires. Thus the program can find that signal again.
+The memory clears when the scan has been round once, which is the moment no signal
+above the threshold is left outside it. Thus every signal of the band gets one turn
+before any signal gets a second one, and the program finds a weak transmitter that
+sits under the loud background of the room.
 
 ### The monitor
 
@@ -44,7 +47,8 @@ An entry in the memory expires. Thus the program can find that signal again.
 - A sweep with a configurable center, span, overlap, dwell time and settle time. The
   plot shows a line at each hop boundary.
 - A peak-hold spectrum. Thus a short burst is visible at its true amplitude.
-- A lock state machine with a caught list, a time-out, a Skip button and a Jump-to
+- A lock state machine with a caught list that clears one round at a time, a Skip
+  button and a Jump-to
   button.
 - The band plan of 2.4 GHz, which needs no model and no training data. The program
   names a signal WiFi when it sits at a channel centre **and** it is 11 MHz or wider,
@@ -526,7 +530,7 @@ The band plan and the warnings are rows of the **Status** section.
 | `deviceA (93%)` | The named device transmits. The limit is 40%. |
 | `deviceA (29%)` | One vote of the segments names the device, though the mean of the capture is below the limit. A bursty link reads this way. |
 | `Unknown Device (71%)` | A device transmits, but no single class has a sufficient probability and no vote names one. |
-| `deviceA (50%) + droneB (40%)` | The votes of the segments found two transmitters in one capture. A segment votes at 50%, and a class needs 10% of all the segments. |
+| `deviceA (50%) + droneB (40%)` | The votes of the segments found two transmitters in one capture. A segment votes at 50%. The first name needs 10% of all the segments and a second name needs 25%, because a second name says that another transmitter is in the room and a weak vote must not make that claim. |
 
 The percentage follows the value that decided: a share of the segments when the votes
 decided, and a probability when the mean decided.
@@ -580,7 +584,7 @@ the result of the project.
 
 ### The self-checks
 
-The project has 235 self-checks in 11 scripts. One command runs all of them. The same
+The project has 242 self-checks in 11 scripts. One command runs all of them. The same
 command runs on each push, through `.github/workflows/tests.yml`.
 
 ```bash
@@ -617,7 +621,7 @@ python tests/test_dsp.py
 | `fp_spectrogram.py` | 1 | The function `segment_vote` must find two transmitters in one buffer, and it must give no name to a buffer with a low probability. |
 | `tests/test_geometry.py` | 9 | The frequency of a tone must return through the map of the composite. The parts must join without a gap. The band must be the band that you asked for. |
 | `tests/test_spectrogram.py` | 18 | The size of the image, the normalization, the frequency of each row, and the segment cutter. A gain of 60 dB must not move the image. The high pass must remove the artifact of the receiver and keep a signal that is near it, and the 0 Hz row of the image must carry nothing for any input. Three of the checks use an artifact that is calibrated against the PlutoSDR, because a constant offset is not what a radio makes. |
-| `tests/test_dsp.py` | 69 | The peak hold must find a burst that is in 1 window of 100, and also a burst at the end of a long buffer. One window alone must miss it. The artifact of the receiver must not make a peak at the middle of a hop. The corrected noise floor must not change with the dwell time. The markers must give the correct middle and the correct edges of a signal of a known width. A hop that failed must not change the noise floor. The badge must give the correct name in each condition, and a vote must name a device that the mean alone calls unknown. A named background class, for example WiFi, must never read as a device. A signal that reaches the edge of the receiver window must be reported as wider than the window. A window that is full of signal must be reported as well, and an empty window must not be, which needs a floor that the sweep measured outside the window. |
+| `tests/test_dsp.py` | 77 | The peak hold must find a burst that is in 1 window of 100, and also a burst at the end of a long buffer. One window alone must miss it. The artifact of the receiver must not make a peak at the middle of a hop. The corrected noise floor must not change with the dwell time. The markers must give the correct middle and the correct edges of a signal of a known width. A hop that failed must not change the noise floor. The badge must give the correct name in each condition, and a vote must name a device that the mean alone calls unknown. A named background class, for example WiFi, must never read as a device. A signal that reaches the edge of the receiver window must be reported as wider than the window. A window that is full of signal must be reported as well, and an empty window must not be, which needs a floor that the sweep measured outside the window. |
 | `tests/test_snr_aug.py` | 11 | The function `_mix_noise` must give the exact signal-to-noise ratio, with an error of less than 0.1 dB. The function `_freq_shift` must change the phase of each sample only. |
 | `tests/test_model.py` | 17 | The sizes and the parameter count of `SpecCNN`, the votes of the segments, and a write and read cycle of `FingerprintModel`. The trainer and the graphical interface must calculate the same path for the meta file. The wrapper must read the sample rate of the training data from the meta, and a model that has none must give `None` and not 0 Hz. |
 | `tests/test_dataset.py` | 35 | The split by session, the energy gate, and the augmentation. A device segment must give a new image at each epoch, and a noise segment must never change. The val data must never change. A device class and the noise class must get the same DC treatment. The sample rate must come from the sidecars, and two rates in one dataset must give a warning. The tool `dataset_info` must give each warning. |

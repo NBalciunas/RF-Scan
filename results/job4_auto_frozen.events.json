@@ -1,0 +1,2887 @@
+[
+ {
+  "t": 3.23,
+  "kind": "bandfloor",
+  "db": -23.7
+ },
+ {
+  "t": 3.23,
+  "kind": "status",
+  "msg": "Scan: 3219 ms  |  18 hops"
+ },
+ {
+  "t": 6.43,
+  "kind": "status",
+  "msg": "Scan: 3201 ms  |  18 hops"
+ },
+ {
+  "t": 9.64,
+  "kind": "status",
+  "msg": "Scan: 3209 ms  |  18 hops"
+ },
+ {
+  "t": 12.83,
+  "kind": "status",
+  "msg": "Scan: 3191 ms  |  18 hops"
+ },
+ {
+  "t": 16.02,
+  "kind": "status",
+  "msg": "Scan: 3194 ms  |  18 hops"
+ },
+ {
+  "t": 19.23,
+  "kind": "status",
+  "msg": "Scan: 3208 ms  |  18 hops"
+ },
+ {
+  "t": 22.42,
+  "kind": "status",
+  "msg": "Scan: 3192 ms  |  18 hops"
+ },
+ {
+  "t": 25.62,
+  "kind": "status",
+  "msg": "Scan: 3193 ms  |  18 hops"
+ },
+ {
+  "t": 25.8,
+  "kind": "status",
+  "msg": "Locked +43 dB @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 26.04,
+  "kind": "classify",
+  "badge": "Clear (94% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.944,
+  "dev_share": 0.042,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 26.04,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 26.23,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 26.43,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 26.62,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 26.85,
+  "kind": "classify",
+  "badge": "Clear (98% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.984,
+  "dev_share": 0.0,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 26.85,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 27.04,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 27.23,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 27.43,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 27.66,
+  "kind": "classify",
+  "badge": "Clear (94% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.941,
+  "dev_share": 0.042,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 27.66,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 27.85,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 28.04,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 28.23,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 28.46,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.809,
+  "dev_share": 0.125,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 28.46,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 28.66,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 28.85,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 29.04,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 29.27,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.724,
+  "dev_share": 0.125,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 29.27,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 29.47,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 29.66,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 29.85,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 30.08,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.747,
+  "dev_share": 0.125,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 30.08,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 30.27,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 30.46,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 30.66,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 30.89,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (17%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.727,
+  "dev_share": 0.167,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 30.89,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 31.08,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 31.27,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 31.47,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 31.7,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.787,
+  "dev_share": 0.125,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 31.7,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 31.89,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 32.08,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 32.28,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 32.51,
+  "kind": "classify",
+  "badge": "Clear (95% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.949,
+  "dev_share": 0.042,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 32.51,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 32.7,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 32.89,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 33.08,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 33.31,
+  "kind": "classify",
+  "badge": "Clear (99% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.989,
+  "dev_share": 0.0,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 33.31,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 33.51,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 33.7,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 33.89,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 34.12,
+  "kind": "classify",
+  "badge": "Clear (88% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.884,
+  "dev_share": 0.042,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 34.12,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 34.31,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 34.51,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 34.7,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 34.93,
+  "kind": "classify",
+  "badge": "Clear (96% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.958,
+  "dev_share": 0.042,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 34.93,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 35.13,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 35.32,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 35.51,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 35.74,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (17%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.854,
+  "dev_share": 0.167,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 35.74,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 35.94,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 36.13,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 36.32,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 36.55,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (17%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.789,
+  "dev_share": 0.167,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 36.55,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 36.75,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 36.94,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 37.13,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 37.37,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (21%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.732,
+  "dev_share": 0.208,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 37.37,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 37.56,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 37.75,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 37.94,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 38.17,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (25%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.66,
+  "dev_share": 0.25,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 38.17,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 38.37,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 38.56,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 38.75,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 38.98,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (42%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.557,
+  "dev_share": 0.417,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 38.98,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 39.17,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 39.36,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 39.56,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 39.79,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (21%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.744,
+  "dev_share": 0.208,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 39.79,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 39.99,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 40.18,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 40.38,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 40.62,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (17%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.8,
+  "dev_share": 0.167,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 40.62,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 40.81,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 41.0,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 41.2,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 41.43,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.812,
+  "dev_share": 0.125,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 41.43,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 41.63,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 41.83,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 42.03,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 42.28,
+  "kind": "classify",
+  "badge": "Clear (82% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.822,
+  "dev_share": 0.083,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 42.28,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 42.48,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 42.68,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 42.87,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 43.1,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.807,
+  "dev_share": 0.125,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 43.11,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 43.3,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 43.52,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 43.73,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 44.08,
+  "kind": "classify",
+  "badge": "Clear (97% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.968,
+  "dev_share": 0.0,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 44.08,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 44.3,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 44.52,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 44.79,
+  "kind": "classify",
+  "badge": "Clear (84% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.845,
+  "dev_share": 0.042,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 44.79,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 45.01,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 45.22,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 45.42,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 45.68,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.728,
+  "dev_share": 0.125,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 45.68,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 45.88,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 46.09,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 46.31,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 46.56,
+  "kind": "classify",
+  "badge": "Clear (87% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.872,
+  "dev_share": 0.083,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 46.56,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 46.77,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 46.98,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 47.18,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 47.44,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.859,
+  "dev_share": 0.125,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 47.44,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 47.65,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 47.86,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 48.07,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 48.32,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (29%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.722,
+  "dev_share": 0.292,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 48.32,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 48.53,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 48.73,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 48.94,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 49.18,
+  "kind": "classify",
+  "badge": "Clear (96% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.956,
+  "dev_share": 0.042,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 49.18,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 49.39,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 49.6,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 49.8,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 50.04,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (17%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.754,
+  "dev_share": 0.167,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 50.04,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 50.25,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 50.45,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 50.67,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 50.93,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.834,
+  "dev_share": 0.125,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 50.93,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 51.14,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 51.34,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 51.55,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 51.82,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.848,
+  "dev_share": 0.125,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 51.82,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 52.03,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 52.24,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 52.45,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 52.7,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.878,
+  "dev_share": 0.125,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 52.7,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 52.9,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 53.1,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 53.3,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 53.55,
+  "kind": "classify",
+  "badge": "Clear (77% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.771,
+  "dev_share": 0.083,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 53.55,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 53.76,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 53.96,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 54.17,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 54.41,
+  "kind": "classify",
+  "badge": "Clear (90% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.897,
+  "dev_share": 0.083,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 54.41,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 54.62,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 54.83,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 55.03,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 55.27,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (21%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.741,
+  "dev_share": 0.208,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 55.27,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 55.48,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 55.68,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 55.87,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 56.11,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (21%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.742,
+  "dev_share": 0.208,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 56.11,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 56.32,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 56.52,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 56.72,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 56.96,
+  "kind": "classify",
+  "badge": "Clear (96% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.958,
+  "dev_share": 0.0,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 56.96,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 57.16,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 57.36,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 57.56,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 57.8,
+  "kind": "classify",
+  "badge": "Clear (97% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.971,
+  "dev_share": 0.0,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 57.8,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 58.01,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 58.21,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 58.4,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 58.64,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (17%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.793,
+  "dev_share": 0.167,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 58.64,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 58.85,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 59.04,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 59.24,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 59.49,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (21%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.73,
+  "dev_share": 0.208,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 59.49,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 59.69,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 59.89,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 60.09,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 60.33,
+  "kind": "classify",
+  "badge": "Clear (92% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.915,
+  "dev_share": 0.042,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 60.33,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 60.53,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 60.73,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 60.93,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 61.18,
+  "kind": "classify",
+  "badge": "Clear (95% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.949,
+  "dev_share": 0.0,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 61.18,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 61.39,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 61.59,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 61.79,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 62.04,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (21%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.714,
+  "dev_share": 0.208,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 62.04,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 62.25,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 62.44,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 62.64,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 62.88,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (17%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.832,
+  "dev_share": 0.167,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 62.88,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 63.09,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 63.29,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 63.49,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 63.73,
+  "kind": "classify",
+  "badge": "Clear (92% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.922,
+  "dev_share": 0.083,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 63.73,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 63.93,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 64.15,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 64.35,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 64.58,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (29%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.708,
+  "dev_share": 0.292,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 64.58,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 64.78,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 64.98,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 65.17,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 65.4,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (25%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.755,
+  "dev_share": 0.25,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 65.4,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 65.6,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 65.79,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 65.98,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 66.22,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.864,
+  "dev_share": 0.125,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 66.22,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 66.41,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 66.6,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 66.8,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 67.03,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (33%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.701,
+  "dev_share": 0.333,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 67.03,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 67.23,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 67.42,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 67.61,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 67.85,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (17%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.824,
+  "dev_share": 0.167,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 67.85,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 68.04,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 68.24,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 68.43,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 68.66,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.826,
+  "dev_share": 0.125,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 68.66,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 68.86,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 69.06,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 69.25,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 69.48,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.842,
+  "dev_share": 0.125,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 69.48,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 69.68,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 69.87,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 70.06,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 70.29,
+  "kind": "classify",
+  "badge": "Clear (91% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.905,
+  "dev_share": 0.0,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 70.29,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 70.48,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 70.67,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 70.87,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 71.1,
+  "kind": "classify",
+  "badge": "Clear (98% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.983,
+  "dev_share": 0.0,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 71.1,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 71.3,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 71.49,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 71.68,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 71.92,
+  "kind": "classify",
+  "badge": "Clear (95% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.947,
+  "dev_share": 0.042,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 71.92,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 72.12,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 72.31,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 72.5,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 72.73,
+  "kind": "classify",
+  "badge": "Clear (97% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.967,
+  "dev_share": 0.0,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 72.73,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 72.93,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 73.12,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 73.31,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 73.55,
+  "kind": "classify",
+  "badge": "Clear (94% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.939,
+  "dev_share": 0.0,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 73.55,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 73.75,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 73.94,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 74.13,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 74.37,
+  "kind": "classify",
+  "badge": "Clear (93% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.927,
+  "dev_share": 0.0,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 74.37,
+  "kind": "status",
+  "msg": "Locked @ 2458.865 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 74.56,
+  "kind": "status",
+  "msg": "Auto-skip: background 93% \u2265 85% after 5000 ms"
+ },
+ {
+  "t": 77.76,
+  "kind": "status",
+  "msg": "Scan: 3195 ms  |  18 hops"
+ },
+ {
+  "t": 80.97,
+  "kind": "status",
+  "msg": "Scan: 3206 ms  |  18 hops"
+ },
+ {
+  "t": 84.18,
+  "kind": "status",
+  "msg": "Scan: 3217 ms  |  18 hops"
+ },
+ {
+  "t": 87.39,
+  "kind": "status",
+  "msg": "Scan: 3209 ms  |  18 hops"
+ },
+ {
+  "t": 90.59,
+  "kind": "status",
+  "msg": "Scan: 3195 ms  |  18 hops"
+ },
+ {
+  "t": 90.78,
+  "kind": "status",
+  "msg": "Locked +44 dB @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 91.02,
+  "kind": "classify",
+  "badge": "Clear (86% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.863,
+  "dev_share": 0.083,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 91.02,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 91.22,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 91.41,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 91.61,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 91.85,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.837,
+  "dev_share": 0.125,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 91.85,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 92.05,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 92.24,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 92.44,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 92.68,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.814,
+  "dev_share": 0.125,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 92.68,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 92.87,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 93.07,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 93.27,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 93.5,
+  "kind": "classify",
+  "badge": "Clear (95% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.946,
+  "dev_share": 0.0,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 93.5,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 93.7,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 93.9,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 94.1,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 94.34,
+  "kind": "classify",
+  "badge": "Clear (95% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.951,
+  "dev_share": 0.0,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 94.34,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 94.53,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 94.73,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 94.93,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 95.18,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (17%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.804,
+  "dev_share": 0.167,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 95.18,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 95.37,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 95.57,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 95.76,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 96.0,
+  "kind": "classify",
+  "badge": "Clear (90% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.903,
+  "dev_share": 0.042,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 96.0,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 96.19,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 96.39,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 96.59,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 96.83,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.839,
+  "dev_share": 0.125,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 96.83,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 97.02,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 97.22,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 97.41,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 97.65,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (17%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.777,
+  "dev_share": 0.167,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 97.65,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 97.85,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 98.05,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 98.24,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 98.48,
+  "kind": "classify",
+  "badge": "Clear (95% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.947,
+  "dev_share": 0.0,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 98.48,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 98.67,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 98.87,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 99.06,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 99.3,
+  "kind": "classify",
+  "badge": "Clear (86% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.861,
+  "dev_share": 0.083,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 99.3,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 99.49,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 99.69,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 99.89,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 100.13,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (25%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.7,
+  "dev_share": 0.25,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 100.13,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 100.33,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 100.53,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 100.72,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 100.96,
+  "kind": "classify",
+  "badge": "Clear (93% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.926,
+  "dev_share": 0.042,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 100.96,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 101.16,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 101.36,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 101.55,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 101.79,
+  "kind": "classify",
+  "badge": "Clear (87% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.871,
+  "dev_share": 0.083,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 101.79,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 101.99,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 102.18,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 102.37,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 102.61,
+  "kind": "classify",
+  "badge": "Clear (87% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.874,
+  "dev_share": 0.083,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 102.61,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 102.81,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 103.0,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 103.2,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 103.43,
+  "kind": "classify",
+  "badge": "Clear (87% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.874,
+  "dev_share": 0.083,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 103.43,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 103.63,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 103.82,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 104.02,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 104.26,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (29%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.666,
+  "dev_share": 0.292,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 104.26,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 104.45,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 104.65,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 104.85,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 105.08,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.836,
+  "dev_share": 0.125,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 105.08,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 105.28,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 105.47,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 105.67,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 105.9,
+  "kind": "classify",
+  "badge": "Clear (90% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.902,
+  "dev_share": 0.042,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 105.9,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 106.1,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 106.29,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 106.49,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 106.73,
+  "kind": "classify",
+  "badge": "Clear (94% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.939,
+  "dev_share": 0.0,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 106.73,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 106.93,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 107.12,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 107.32,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 107.56,
+  "kind": "classify",
+  "badge": "Clear (90% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.9,
+  "dev_share": 0.042,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 107.56,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 107.76,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 107.95,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 108.15,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 108.39,
+  "kind": "classify",
+  "badge": "Clear (94% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.943,
+  "dev_share": 0.0,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 108.39,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 108.59,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 108.78,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 108.98,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 109.22,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (38%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.585,
+  "dev_share": 0.375,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 109.22,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 109.42,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 109.62,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 109.81,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 110.06,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (17%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.757,
+  "dev_share": 0.167,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 110.06,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 110.26,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 110.46,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 110.65,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 110.89,
+  "kind": "classify",
+  "badge": "Clear (91% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.905,
+  "dev_share": 0.042,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 110.89,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 111.08,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 111.28,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 111.48,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 111.71,
+  "kind": "classify",
+  "badge": "Clear (87% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.867,
+  "dev_share": 0.083,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 111.71,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 111.91,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 112.11,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 112.31,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 112.54,
+  "kind": "classify",
+  "badge": "Clear (92% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.918,
+  "dev_share": 0.0,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 112.54,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 112.74,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 112.94,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 113.14,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 113.39,
+  "kind": "classify",
+  "badge": "Clear (93% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.931,
+  "dev_share": 0.0,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 113.39,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 113.59,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 113.79,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 113.99,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 114.23,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (38%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.645,
+  "dev_share": 0.375,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 114.23,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 114.43,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 114.62,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 114.82,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 115.05,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.787,
+  "dev_share": 0.125,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 115.05,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 115.25,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 115.45,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 115.64,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 115.88,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.81,
+  "dev_share": 0.125,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 115.88,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 116.07,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 116.27,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 116.47,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 116.7,
+  "kind": "classify",
+  "badge": "Clear (86% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.858,
+  "dev_share": 0.083,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 116.7,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 116.9,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 117.09,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 117.29,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 117.53,
+  "kind": "classify",
+  "badge": "Clear (93% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.925,
+  "dev_share": 0.0,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 117.53,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 117.72,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 117.92,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 118.11,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 118.35,
+  "kind": "classify",
+  "badge": "Clear (93% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.931,
+  "dev_share": 0.0,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 118.35,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 118.54,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 118.74,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 118.93,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 119.17,
+  "kind": "classify",
+  "badge": "Radiolink-AT9S-Pro (12%)",
+  "style": "device",
+  "plan": "-",
+  "ambient": 0.835,
+  "dev_share": 0.125,
+  "freq_mhz": 0.0
+ },
+ {
+  "t": 119.17,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 119.37,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 119.57,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 119.77,
+  "kind": "status",
+  "msg": "Locked @ 2438.147 MHz \u2014 Skip to advance"
+ }
+]
