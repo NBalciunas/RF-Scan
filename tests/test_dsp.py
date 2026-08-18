@@ -22,6 +22,7 @@ stub_hardware()          # this must run before the import of terminal
 import terminal
 from terminal import (SweepWorker, signal_extent, signal_clipped, compute_hop_freqs,
                       composite_geometry, badge_for, device_votes, device_share,
+                      has_ambient_class,
                       peak_hold_bias_db,
                       band_floor_db, window_filled, window_state, lock_snr_db,
                       band_plan_name, occupied_span, near_known_device,
@@ -365,12 +366,24 @@ def main():
                 "detections": [{"label": l, "share": s, "confidence": 0.9}
                                for l, s in dets]}
 
+    @c.check("any background class satisfies the model warning, not 'noise' alone")
+    def _():
+        # The fifth site of AMBIENT_LABELS, found 2026-08-18. The warning named the
+        # class 'noise' while the auto-skip and p_dev had summed the whole set since
+        # job 1, thus a model with 'wifi' alone was warned about wrongly.
+        assert has_ambient_class(["droneA", "noise"])
+        assert has_ambient_class(["droneA", "wifi"])
+        assert has_ambient_class(["droneA", "Bluetooth"])      # the case is ignored
+        assert not has_ambient_class(["droneA", "droneB"])
+        assert not has_ambient_class([])
+        assert not has_ambient_class(None)
+
     @c.check("a quiet channel reads 'clear' and not 'unknown device'")
     def _():
         # 67% noise is a clear channel. The strongest class alone would call it a
-        # device, which is why presence uses 1 - P(noise).
+        # device, which is why presence uses 1 - sum(P(ambient)).
         text, kind = badge_for(_res({"droneA": 0.20, "droneB": 0.13, "noise": 0.67}))
-        assert text == "Clear (67% Noise)", text
+        assert text == "Clear (67% Background)", text
         assert kind == "none", kind
 
     @c.check("a confident device is named")
@@ -746,14 +759,15 @@ def main():
         # The other half of #29: the votes give presence, thus they must not invent
         # it. An empty channel has no vote above min_share and reads clear.
         text, kind = badge_for(_res({"droneA": 0.05, "droneB": 0.03, "noise": 0.92}))
-        assert text == "Clear (92% Noise)", text
+        assert text == "Clear (92% Background)", text
         assert kind == "none", kind
 
-    @c.check("a model with no noise class can never read 'clear'")
+    @c.check("a model with no background class can never read 'clear'")
     def _():
-        # p_dev is 1 - P(noise), and P(noise) is 0 when the class does not exist,
-        # thus presence is always 100% whatever the radio hears. The panel and the
-        # badge both warn about it. See the defect #12.
+        # p_dev is 1 - sum(P(ambient)), and that sum is 0 when the model has none of
+        # the background classes, thus presence is always 100% whatever the radio
+        # hears. The panel warns about it, through has_ambient_class. See the defects
+        # #12 and #39.
         for probs in ({"droneA": 0.51, "droneB": 0.49},
                       {"droneA": 0.95, "droneB": 0.05},
                       {"droneA": 0.34, "droneB": 0.33, "droneC": 0.33}):

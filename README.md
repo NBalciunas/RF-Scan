@@ -31,7 +31,7 @@ The program has one signal chain. Each step gives its result to the next step.
 | 9. Result | The badge shows the name of the device, or `Clear`, or two names. |
 
 The program releases the lock in three conditions: the user clicks **Skip lock**, the
-signal stops for 2.5 s, or the Auto mode finds that the signal is noise. Then the
+signal stops for 2.5 s, or the Auto mode finds that the signal is background. Then the
 frequency goes into the memory of the caught signals for 30 s. Thus the scanner moves
 through all the signals in the band, and it does not hold the strongest signal only.
 An entry in the memory expires. Thus the program can find that signal again.
@@ -74,7 +74,7 @@ An entry in the memory expires. Thus the program can find that signal again.
 - A switch that sets the classifier to off.
 - A report of two or more transmitters in one capture, through the votes of the
   segments.
-- The Auto mode releases a lock that the classifier calls noise.
+- The Auto mode releases a lock that the classifier calls background.
 - The program loads a new model without a restart.
 
 ### The recorder
@@ -167,7 +167,7 @@ The panel on the right side has four mode buttons:
 
 | Mode | Function |
 |---|---|
-| Auto | The program sweeps, it locks each new signal, and it releases the lock automatically if the classifier calls the signal noise. This is the default mode. |
+| Auto | The program sweeps, it locks each new signal, and it releases the lock automatically if the classifier calls the signal background. This is the default mode. |
 | Locking | The same operation, but the lock continues until you click **Skip lock**. |
 | Wideband | The program sweeps the band only. There is no lock. |
 | Narrowband | The radio holds one frequency only. Use this mode for a device record. |
@@ -202,7 +202,7 @@ The **Band plan** row is a second opinion about the held signal, from the public
 the name on the badge: if the two disagree, that is information for you.
 
 The **Warning** row is not visible while there is nothing to report. It gives
-`no noise class` when the model has no background class, and `sample rate` when the model
+`no background class` when the model has none of them, and `sample rate` when the model
 was trained at a rate that the radio does not give now.
 
 The **Window** row of that section says how the signal sits in the receiver window. It
@@ -522,7 +522,7 @@ The band plan and the warnings are rows of the **Status** section.
 
 | Badge | Meaning |
 |---|---|
-| `Clear (82% Noise)` | There is no device. |
+| `Clear (82% Background)` | There is no device. The percentage is every background class together, thus `noise` and `wifi` count as one number. |
 | `deviceA (93%)` | The named device transmits. The limit is 40%. |
 | `deviceA (29%)` | One vote of the segments names the device, though the mean of the capture is below the limit. A bursty link reads this way. |
 | `Unknown Device (71%)` | A device transmits, but no single class has a sufficient probability and no vote names one. |
@@ -580,7 +580,7 @@ the result of the project.
 
 ### The self-checks
 
-The project has 234 self-checks in 11 scripts. One command runs all of them. The same
+The project has 235 self-checks in 11 scripts. One command runs all of them. The same
 command runs on each push, through `.github/workflows/tests.yml`.
 
 ```bash

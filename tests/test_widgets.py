@@ -136,13 +136,13 @@ def main():
         win._on_fingerprint_ready(dev)
         assert not win.warn_lbl.isVisible(), win.warn_lbl.text()
 
-    @c.check("a model with no noise class warns, and the warning row hides again")
+    @c.check("a model with no background class warns, and the row hides again")
     def _():
-        win._no_noise_class = True
+        win._no_ambient_class = True
         win._on_fingerprint_ready(dev)
         assert win.warn_lbl.isVisible(), "the warning row must be visible"
-        assert "no noise class" in win.warn_lbl.text(), win.warn_lbl.text()
-        win._no_noise_class = False
+        assert "no background class" in win.warn_lbl.text(), win.warn_lbl.text()
+        win._no_ambient_class = False
         win._on_fingerprint_ready(dev)
         assert not win.warn_lbl.isVisible(), win.warn_lbl.text()
 

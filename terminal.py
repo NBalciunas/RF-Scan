@@ -355,7 +355,7 @@ def signal_extent(freqs, psd, min_snr_db=MARK_MIN_SNR_DB,
 
 
 def device_votes(result):
-    """Give the non-noise detections of a classifier result, strongest first.
+    """Give the non-ambient detections of a classifier result, strongest first.
 
     The votes answer "is a device there", where the mean of the buffer answers "how
     much of this capture is the device". The two disagree for every transmitter that
@@ -380,6 +380,18 @@ def device_share(result):
     return max((d["share"] for d in device_votes(result)), default=0.0)
 
 
+def has_ambient_class(classes):
+    """Say whether a class list holds a background class.
+
+    Auto releases on the sum of AMBIENT_LABELS and p_dev subtracts the same sum, thus
+    any one of them is enough. A model with a `wifi` class and no `noise` class
+    releases a lock and says 'Clear' correctly, and it must not be warned about.
+
+    The function is separate from the window, thus a check reaches it without Qt.
+    """
+    return any(str(c).lower() in AMBIENT_LABELS for c in (classes or []))
+
+
 def badge_for(result, device_thresh=None):
     """Turn a classifier result into the badge text and its style.
 
@@ -387,9 +399,11 @@ def badge_for(result, device_thresh=None):
     decides what the user reads.
 
     Presence and identity are two different questions.
-      1. p_dev = 1 - P(noise) is the mean over the segments of the buffer. It answers
-         "how much of this capture is the device", and that is presence only for a
-         transmitter that does not stop.
+      1. p_dev = 1 - sum(P(ambient)) is the mean over the segments of the buffer. It
+         answers "how much of this capture is the device", and that is presence only
+         for a transmitter that does not stop. The badge says "Background" and not
+         "Noise", because the sum covers every class of AMBIENT_LABELS and the model
+         can name which one.
       2. The votes of the segments answer presence for every other transmitter. A
          capture of a 26% duty video link is 74% silence, thus the mean reads noise
          while a quarter of the segments name the drone. The votes therefore have
@@ -422,7 +436,7 @@ def badge_for(result, device_thresh=None):
         return f"{dets[0]['label']} ({dets[0]['share']:.0%})", "device"
     if p_dev >= device_thresh:
         return f"Unknown Device ({p_dev:.0%})", "other"
-    return f"Clear ({1.0 - p_dev:.0%} Noise)", "none"
+    return f"Clear ({1.0 - p_dev:.0%} Background)", "none"
 
 
 def signal_clipped(freqs, psd, edge_frac=MARK_CLIP_EDGE_FRAC, **kw):
@@ -1213,7 +1227,7 @@ class SweepWorker(QtCore.QThread):
                 if self.cfg.get("op_mode") == "auto":
                     dwell = float(self.cfg.get("auto_dwell_ms", FP_AUTO_DWELL_MS)) / 1000.0
                     thr   = float(self.cfg.get("auto_noise_pct", FP_AUTO_NOISE_PCT)) / 100.0
-                    noise_p = self._ambient_prob(self._last_class)
+                    ambient_p = self._ambient_prob(self._last_class)
                     # A device that was seen recently holds the lock against the mean.
                     # A bursty link puts most of its capture below the noise floor and
                     # is silent between its bursts, thus the current buffer alone
@@ -1222,9 +1236,9 @@ class SweepWorker(QtCore.QThread):
                     if (self._last_class is not None
                             and time.time() - self._last_device_t >= hold
                             and time.time() - self._lock_t >= dwell
-                            and noise_p >= thr):
+                            and ambient_p >= thr):
                         self._release_lock(
-                            f"Auto-skip: noise {noise_p:.0%} ≥ {thr:.0%} "
+                            f"Auto-skip: background {ambient_p:.0%} ≥ {thr:.0%} "
                             f"after {dwell*1000:.0f} ms")
                         mode = "SCAN"
                         continue
@@ -1639,9 +1653,10 @@ class PlutoApp(QtWidgets.QMainWindow):
         self.w_auto_dwell.setToolTip("Hold each lock this long before you judge it")
         self.w_auto_noise = QtWidgets.QSpinBox()
         self.w_auto_noise.setRange(1, 100)
-        self.w_auto_noise.setSuffix(" % noise")
+        self.w_auto_noise.setSuffix(" % background")
         self.w_auto_noise.setValue(FP_AUTO_NOISE_PCT)
-        self.w_auto_noise.setToolTip("Release the lock at this probability of noise")
+        self.w_auto_noise.setToolTip(
+            "Release the lock at this summed probability of the background classes")
         for w in (self.w_auto_dwell, self.w_auto_noise):
             w.setFixedHeight(26)
             w.setEnabled(True)              # Auto is the default mode
@@ -1985,11 +2000,10 @@ class PlutoApp(QtWidgets.QMainWindow):
             self.det_badge.setText("SCANNING")
             self._set_badge_style("none")
             short = os.path.basename(path)
-            self._no_noise_class = not any(c.lower() == "noise"
-                                           for c in engine.classes)
-            warn = ("<br>⚠ No 'noise' class — Auto mode's auto-skip will never "
+            self._no_ambient_class = not has_ambient_class(engine.classes)
+            warn = ("<br>⚠ No background class — Auto mode's auto-skip will never "
                     "trigger, and the badge can never say 'Clear'"
-                    if self._no_noise_class else "")
+                    if self._no_ambient_class else "")
             if self._sr_mismatch():
                 warn += (f"<br>⚠ Trained at {engine.sample_rate/1e6:.3f} Msps, the "
                          f"radio gives {float(self.cfg['sample_rate'])/1e6:.3f} Msps "
@@ -1997,7 +2011,7 @@ class PlutoApp(QtWidgets.QMainWindow):
             # The row of the panel now, and not at the first result. A model that can
             # not say 'Clear' must say so before it reads anything.
             self._show_warnings(
-                (["no noise class"] if self._no_noise_class else [])
+                (["no background class"] if self._no_ambient_class else [])
                 + (["sample rate"] if self._sr_mismatch() else []))
             self.model_info_lbl.setText(
                 f"{_hl(short)} loaded successfully<br>"
@@ -2041,8 +2055,8 @@ class PlutoApp(QtWidgets.QMainWindow):
         plan = result.get("band_plan")
         self.bandplan_lbl.setText(f"Band plan: {_hl(plan) if plan else '—'}")
         warns = []
-        if getattr(self, "_no_noise_class", False):
-            warns.append("no noise class")
+        if getattr(self, "_no_ambient_class", False):
+            warns.append("no background class")
         if self._sr_mismatch():
             warns.append("sample rate")
         self._show_warnings(warns)
