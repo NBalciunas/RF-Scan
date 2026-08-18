@@ -79,7 +79,7 @@ Two sessions are the minimum, because the trainer holds one full session out. Th
 python tools/dataset_info.py
 ```
 
-The tool counts each class and each session, and it gives a warning for each condition that makes a training run useless: a class with one session, no `noise` class, mixed RXgains, a capture with no `.json` file, or one device class only.
+The tool counts each class and each session, and it gives a warning for each condition that makes a training run useless: a class with one session, no `noise` class, mixed RX gains, a capture with no `.json` file, or one device class only.
 
 The drone classes of this project come from the [RFUAV](https://github.com/kitoweeknd/RFUAV) dataset, which a USRP B210 replays and the PlutoSDR receives. Give each clip to `transmitting/prepare_clip.py` first, because a file source in GNU Radio sends a clip of 100 Msps at the rate of the sink, and nothing reports that the signal is now 10 times too slow and 10 times too narrow.
 
@@ -126,7 +126,7 @@ python tests/run_all.py
 ```
 
 242 self-checks in 11 scripts, which also run on each push. They need numpy and torch only, thus no check needs a PlutoSDR.
-A full run takes 1 to 2 minutes, and `--fast`leaves approximately 33 s.
+A full run takes 1 to 2 minutes, and `--fast` leaves approximately 33 s.
 A `defect #N` line is not a failure: it is a known defect, and it becomes `FIXED #N` the moment a correction operates.
 
 The end-to-end check is the most important one. 
@@ -157,8 +157,8 @@ The part that disappears with the load is your room, and the part that stays bel
 
 - The PlutoSDR receives 20 MHz at the maximum, and 3.8 GHz at the highest. The hops of a wider sweep are not simultaneous, thus a burst in another hop is lost.
 - The receiver is zero-IF. The high pass that removes its artifact at 0 Hz also removes a carrier that sits exactly on the tuned frequency.
-- The classifier knows your classes only. An unknown transmitter becomes`Unknown Device`, or the class that it most resembles.
-- Every class of this project left one USRP B210, and the program does not keep the phase. Thus it names the type of the drone, and not one individual unit.
+- The classifier knows your classes only. An unknown transmitter becomes `Unknown Device`, or the class that it most resembles.
+- Every class of this project left one USRP B210, and the program does not keep the phase. Thus, it names the type of the drone, and not one individual unit.
 - The votes of the segments separate two transmitters in time only. Two signals in one segment stay together.
 - A signal below 18 dB of signal-to-noise ratio does not cause a lock.
 - The monitor is a graphical program. There is no command-line interface for it.
