@@ -1,29 +1,18 @@
 # RF Scan
 
-RF Scan is a signal monitor for the PlutoSDR. It sweeps a radio band, it holds each
-signal that goes above the noise floor, and a small CNN reads the raw IQ data and gives
-the transmitter a name. The same program records the training data, thus the record path
-and the detect path always prepare the data in the same way.
-
-The first application is the 2.4 GHz band. The program separates a drone control link or
-a drone video link from WiFi, from Bluetooth and from the background noise.
+RF Scan is a signal monitor for the PlutoSDR.
+It sweeps a radio band, it holds each signal that goes above the noise floor, and a small CNN reads the raw IQ data and gives the transmitter a name.
+The same program records the training data, thus the record path and the detect path always prepare the data in the same way
 
 ## Features
 
-- Sweep a band, and see a spectrum and a waterfall for the full band and for the held
-  signal.
-- Hold one signal at a time, and give every signal of the band a turn before any signal
-  gets a second one.
-- Name the transmitter with a CNN that reads the raw IQ data.
-- Report two transmitters in one capture, from the votes of the 0.4 ms segments.
-- Measure the middle and the two edges of the held signal, and see when it runs off the
-  receiver window.
-- Name WiFi and Bluetooth from the band plan of 2.4 GHz, with no model at all.
-- Record a device, the noise of the band, and the noise at the frequency of the device.
-- Train a model from a folder of captures, and read the confusion matrix of each run.
-- Load a new model without a restart.
-- Replay a clip of the RFUAV dataset through a USRP B210, at the correct rate.
-- Measure the artifact and the spurs of your own PlutoSDR.
+- Four modes. Wideband sweeps the span, Narrowband holds one frequency, Locking holds each new signal until you release it, and Auto releases the lock itself when the classifier calls the signal background.
+- A spectrum and a waterfall for the full band, and a second pair for the held frequency.
+  A peak hold keeps a short burst at its true amplitude, and markers give the middle and the two edges of the held signal.
+- Record raw IQ frames. A device, the noise of the band, and the noise at the frequency of the device, each with a metadata file and a session number.
+- Train a model from those captures. One full session stays out of the training data, and the run reports a confusion matrix and a weak-signal accuracy.
+- Load a model and read the names live. The badge names the transmitter of each held signal, and another model loads without a restart of the sweep.
+- Change every value in the window: the sample rate, the bandwidth, the RX gain, the centre frequency, the span, the overlap, the dwell time, the settle time, the scale of the waterfalls, the two limits of the Auto mode, and the rate and the limit of the recorder.
 
 ## Installation
 
@@ -153,8 +142,7 @@ The interface loads `trained_model.pt` and its `.meta.json` at the start. Click
 
 ## Examples
 
-The following example shows a lock on a drone control link, with the middle marker and
-the two edge markers.
+The following example shows a lock on a drone control link, with the middle marker and the two edge markers.
 
 ![A lock with the markers](docs/example-2.png)
 
@@ -162,8 +150,7 @@ The following example shows the **Recording** panel during a device record.
 
 ![The recording panel](docs/example-3.png)
 
-The following example shows the output of the trainer, with the confusion matrix and the
-figures of each class.
+The following example shows the output of the trainer, with the confusion matrix and the figures of each class.
 
 ![The output of the trainer](docs/example-4.png)
 
@@ -204,24 +191,17 @@ most resembles, thus record WiFi and Bluetooth as classes of their own.
 
 ### Measuring your radio
 
-`measurements/` holds the programs that measure the PlutoSDR itself, and the results that
-my own radio gave. Nothing there is part of the application. For your own radio: capture
-with a 50 ohm load, capture again with an antenna, and `pick_w.py` then gives your value
-of `DC_HP_WIN` for `fp_spectrogram.py`. The part that disappears with the load is your
-room, and the part that stays belongs to your radio.
+`measurements/` holds the programs that measure the PlutoSDR itself, and the results that my own radio gave.
+Nothing there is part of the application. For your own radio: capture with a 50 ohm load, capture again with an antenna, and `pick_w.py` then gives your value of `DC_HP_WIN` for `fp_spectrogram.py`.
+The part that disappears with the load is your room, and the part that stays belongs to your radio.
 
 ## Limitations
 
-- The PlutoSDR receives 20 MHz at the maximum, and 3.8 GHz at the highest. The hops of a
-  wider sweep are not simultaneous, thus a burst in another hop is lost.
-- The receiver is zero-IF. The high pass that removes its artifact at 0 Hz also removes a
-  carrier that sits exactly on the tuned frequency.
-- The classifier knows your classes only. An unknown transmitter becomes
-  `Unknown Device`, or the class that it most resembles.
-- Every class of this project left one USRP B210, and the program does not keep the
-  phase. Thus it names the type of the drone, and not one individual unit.
-- The votes of the segments separate two transmitters in time only. Two signals in one
-  segment stay together.
+- The PlutoSDR receives 20 MHz at the maximum, and 3.8 GHz at the highest. The hops of a wider sweep are not simultaneous, thus a burst in another hop is lost.
+- The receiver is zero-IF. The high pass that removes its artifact at 0 Hz also removes a carrier that sits exactly on the tuned frequency.
+- The classifier knows your classes only. An unknown transmitter becomes`Unknown Device`, or the class that it most resembles.
+- Every class of this project left one USRP B210, and the program does not keep the phase. Thus it names the type of the drone, and not one individual unit.
+- The votes of the segments separate two transmitters in time only. Two signals in one segment stay together.
 - A signal below 18 dB of signal-to-noise ratio does not cause a lock.
 - The monitor is a graphical program. There is no command-line interface for it.
 
