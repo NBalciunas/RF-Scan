@@ -166,13 +166,15 @@ The part that disappears with the load is your room, and the part that stays bel
 
 ## Limitations
 
-- Without the modification of [My setup](#my-setup), the PlutoSDR receives 20 MHz at the maximum, and 3.8 GHz at the highest. The hops of a wider sweep are not simultaneous, thus a burst in another hop is lost.
-- The receiver is zero-IF. The high pass that removes its artifact at 0 Hz also removes a carrier that sits exactly on the tuned frequency.
-- The classifier knows your classes only. An unknown transmitter becomes `Unknown Device`, or the class that it most resembles.
-- Every class of this project left the same transmitter, and the program does not keep the phase. Thus, it names the type of the drone, and not one individual unit.
-- The votes of the segments separate two transmitters in time only. Two signals in one segment stay together.
+- Without the modification of [My setup](#my-setup), the PlutoSDR reaches 3.8 GHz and 20 MHz.
+- The sweep hops. Thus, a burst in another hop is lost.
+- The receiver is zero-IF. A carrier exactly on the tuned frequency goes away with the DC spike.
+- The classifier knows your classes only. Another transmitter reads as `Unknown Device`, or as the class that it most resembles.
 - A signal below 18 dB of signal-to-noise ratio does not cause a lock.
-- The monitor is a graphical program. There is no command-line interface for it.
+- The search spends one dwell on each signal louder than the drone. Thus, a busy room is a slow search.
+- Every class of this project left the same transmitter. Thus, the model names the type of the drone, and not one unit.
+- The weak-signal accuracy is simulated, because every recording holds the same transmit gain.
+- The monitor is a graphical program. There is no command line for it.
 
 ## License
 
