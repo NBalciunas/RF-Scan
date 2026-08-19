@@ -81,7 +81,7 @@ python tools/dataset_info.py
 
 The tool counts each class and each session, and it gives a warning for each condition that makes a training run useless: a class with one session, no `noise` class, mixed RX gains, a capture with no `.json` file, or one device class only.
 
-The drone classes of this project come from the [RFUAV](https://github.com/kitoweeknd/RFUAV) dataset, which a USRP B210 replays and the PlutoSDR receives. Give each clip to `transmitting/prepare_clip.py` first, because a file source in GNU Radio sends a clip of 100 Msps at the rate of the sink, and nothing reports that the signal is now 10 times too slow and 10 times too narrow.
+The drone classes of this project come from the [RFUAV](https://github.com/kitoweeknd/RFUAV) dataset, which a transmitter replays over the air and the PlutoSDR receives. The [My setup](#my-setup) section gives the radios and their values. Give each clip to `transmitting/prepare_clip.py` first, because a file source in GNU Radio sends a clip of 100 Msps at the rate of the sink, and nothing reports that the signal is now 10 times too slow and 10 times too narrow.
 
 ### Training
 
@@ -153,12 +153,20 @@ A class that the model never met becomes the class that it most resembles, thus 
 Nothing there is part of the application. For your own radio: capture with a 50 ohm load, capture again with an antenna, and `pick_w.py` then gives your value of `DC_HP_WIN` for `fp_spectrogram.py`.
 The part that disappears with the load is your room, and the part that stays belongs to your radio.
 
+## My setup
+
+- Receiver: a PlutoSDR with the [AD9364 modification](https://wiki.analog.com/university/tools/pluto/users/customizing), thus it tunes to 6 GHz and not to 3.8 GHz only.
+- Transmitter: an [Ettus USRP B210](https://www.ettus.com/all-products/ub210-kit/). It replays a drone clip into the air, and the monitor never talks to it.
+- The transmit software: [GNU Radio](https://www.gnuradio.org/).
+- The signals: the [RFUAV](https://github.com/kitoweeknd/RFUAV) dataset. 2 of its 35 drone types are the classes of this project, `DJI-MINI-3` and `Radiolink-AT9S-Pro`.
+- The path: over the air, with a basic 2.4 GHz antenna at each end.
+
 ## Limitations
 
-- The PlutoSDR receives 20 MHz at the maximum, and 3.8 GHz at the highest. The hops of a wider sweep are not simultaneous, thus a burst in another hop is lost.
+- Without the modification of [My setup](#my-setup), the PlutoSDR receives 20 MHz at the maximum, and 3.8 GHz at the highest. The hops of a wider sweep are not simultaneous, thus a burst in another hop is lost.
 - The receiver is zero-IF. The high pass that removes its artifact at 0 Hz also removes a carrier that sits exactly on the tuned frequency.
 - The classifier knows your classes only. An unknown transmitter becomes `Unknown Device`, or the class that it most resembles.
-- Every class of this project left one USRP B210, and the program does not keep the phase. Thus, it names the type of the drone, and not one individual unit.
+- Every class of this project left the same transmitter, and the program does not keep the phase. Thus, it names the type of the drone, and not one individual unit.
 - The votes of the segments separate two transmitters in time only. Two signals in one segment stay together.
 - A signal below 18 dB of signal-to-noise ratio does not cause a lock.
 - The monitor is a graphical program. There is no command-line interface for it.
