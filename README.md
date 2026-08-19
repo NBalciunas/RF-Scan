@@ -91,6 +91,7 @@ python train_model.py --preset balanced --out trained_model.pt
 
 Each top-level folder in `fingerprint_data/` is one class.
 The trainer makes the spectrograms, it trains the model, and it writes the weights, a `.meta.json` with the geometry and the classes, and the metrics of the run in `results/`.
+
 The model is `SpecCNN`, in `fp_spectrogram.py`: a 2-D CNN of 4 convolution blocks and approximately 60 000 parameters. It trains from scratch, and it uses no pretrained backbone.
 
 | Preset     | Epochs | Files for each class | Segments for each file | Channels |
