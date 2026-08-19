@@ -162,7 +162,7 @@ The part that disappears with the load is your room, and the part that stays bel
 - The transmit software: [GNU Radio](https://www.gnuradio.org/).
 - The signals: the [RFUAV](https://github.com/kitoweeknd/RFUAV) dataset. 2 of its 35 drone types are the classes of this project, `DJI-MINI-3` and `Radiolink-AT9S-Pro`.
 - The path: over the air, with a basic 2.4 GHz antenna at each end.
-- The training PC: an NVIDIA RTX A2000 12GB and 32 GB of RAM. The model is `SpecCNN`, a small 2-D CNN of this project.
+- The training PC: an NVIDIA RTX A2000 12GB and 32 GB of RAM.
 
 ## Limitations
 
