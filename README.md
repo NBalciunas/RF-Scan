@@ -2,7 +2,7 @@
 
 RF Scan is a signal monitor for the PlutoSDR.
 It sweeps a radio band, it holds each signal that goes above the noise floor, and a small CNN reads the raw IQ data and gives the transmitter a name.
-The same program records the training data, thus the record path and the detect path always prepare the data in the same way
+The same program records the training data, thus the record path and the detect path always prepare the data in the same way.
 
 ## Features
 
@@ -11,7 +11,7 @@ The same program records the training data, thus the record path and the detect 
 - Record raw IQ frames. A device, the noise of the band, and the noise at the frequency of the device, each with a metadata file and a session number.
 - Train a model from those captures. One full session stays out of the training data, and the run reports a confusion matrix and a weak-signal accuracy.
 - Load a model and read the names live. The badge names the transmitter of each held signal, and another model loads without a restart of the sweep.
-- Change every value in the window: the sample rate, the bandwidth, the RX gain, the centre frequency, the span, the overlap, the dwell time, the settle time, the scale of the waterfalls, the two limits of the Auto mode, and the rate and the limit of the recorder.
+- Change every value in the window: the sample rate, the bandwidth, the RX gain, the center frequency, the span, the overlap, the dwell time, the settle time, the scale of the waterfalls, the two limits of the Auto mode, and the rate and the limit of the recorder.
 
 ## Installation
 
@@ -90,7 +90,8 @@ python train_model.py --preset balanced --out trained_model.pt
 ```
 
 Each top-level folder in `fingerprint_data/` is one class.
-The trainer makes the spectrograms, it trains `SpecCNN` (a 2-D CNN of approximately 60 000 parameters), and it writes the weights, a `.meta.json` with the geometry and the classes, and the metrics of the run in `results/`.
+The trainer makes the spectrograms, it trains the model, and it writes the weights, a `.meta.json` with the geometry and the classes, and the metrics of the run in `results/`.
+The model is `SpecCNN`, in `fp_spectrogram.py`: a 2-D CNN of 4 convolution blocks and approximately 60 000 parameters. It trains from scratch, and it uses no pretrained backbone.
 
 | Preset     | Epochs | Files for each class | Segments for each file | Channels |
 |------------|--------|----------------------|------------------------|----------|
@@ -160,6 +161,7 @@ The part that disappears with the load is your room, and the part that stays bel
 - The transmit software: [GNU Radio](https://www.gnuradio.org/).
 - The signals: the [RFUAV](https://github.com/kitoweeknd/RFUAV) dataset. 2 of its 35 drone types are the classes of this project, `DJI-MINI-3` and `Radiolink-AT9S-Pro`.
 - The path: over the air, with a basic 2.4 GHz antenna at each end.
+- The training PC: an NVIDIA RTX A2000 12GB and 32 GB of RAM. The model is `SpecCNN`, a small 2-D CNN of this project.
 
 ## Limitations
 
