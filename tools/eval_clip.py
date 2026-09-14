@@ -4,7 +4,7 @@
 that has not been on the air, thus it answers a question that no recording can answer
 without a bench session: what does the model say about a signal that nobody recorded?
 
-    python tools/eval_clip.py trained_model.pt transmitting/clips/dji_bw20_0-1s.iq \
+    python tools/eval_clip.py models/trained_model.pt transmitting/clips/dji_bw20_0-1s.iq \
         --expect DJI-MINI-3
 
 Run it from the repository root. The paths are relative to the current directory.

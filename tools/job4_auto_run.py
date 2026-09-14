@@ -18,7 +18,7 @@ import terminal as T
 from PyQt5 import QtCore
 from fp_spectrogram import FingerprintModel
 
-MODEL = sys.argv[1] if len(sys.argv) > 1 else "trained_model_wifi.pt"
+MODEL = sys.argv[1] if len(sys.argv) > 1 else "models/trained_model_wifi.pt"
 SECS  = float(sys.argv[2]) if len(sys.argv) > 2 else 120.0
 OUT   = sys.argv[3] if len(sys.argv) > 3 else "job4_events.json"
 TX_LO, TX_HI = 2_435e6, 2_445e6          # the B210 replays a 10 MHz slice at 2440

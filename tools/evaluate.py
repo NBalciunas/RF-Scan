@@ -5,9 +5,9 @@ gate. That number is correct and it is not what the program shows: the GUI reads
 whole capture and gives one badge. The defect #29 lived in that difference for as
 long as nobody measured the second one. This program measures the second one.
 
-    python tools/evaluate.py trained_model.pt
-    python tools/evaluate.py trained_model.pt --data_dir ./heldout_data
-    python tools/evaluate.py trained_model.pt --session session_3 --sweep
+    python tools/evaluate.py models/trained_model.pt
+    python tools/evaluate.py models/trained_model.pt --data_dir ./heldout_data
+    python tools/evaluate.py models/trained_model.pt --session session_3 --sweep
 
 Run it from the repository root: the model path and the data path are relative to the
 current directory and not to this file.
