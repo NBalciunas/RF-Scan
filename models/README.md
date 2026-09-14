@@ -4,12 +4,12 @@ These are the models of my own runs, and they come with the project so that you 
 Each `.pt` has a `.meta.json` beside it with the geometry, the classes and the arguments of the run.
 The two files travel together, because the program reads the geometry from the `.meta.json` and it cannot load the weights alone.
 
-| Model                        | Classes                               | Preset     | ValAcc | Weak val |
-|------------------------------|---------------------------------------|------------|--------|----------|
-| `trained_model.pt`           | DJI-MINI-3, Radiolink-AT9S-Pro, noise | `balanced` | 98.65% | 97.34%   |
-| `trained_model_wifi.pt`      | the same three, and wifi              | `balanced` | 98.68% | 97.41%   |
-| `trained_model_best.pt`      | DJI-MINI-3, Radiolink-AT9S-Pro, noise | `best`     | 99.19% | 97.66%   |
-| `trained_model_noiseval4.pt` | DJI-MINI-3, Radiolink-AT9S-Pro, noise | `balanced` | 99.24% | 96.67%   |
+| Model                        | Classes                                     | Preset     | ValAcc | Weak val |
+|------------------------------|---------------------------------------------|------------|--------|----------|
+| `trained_model.pt`           | DJI-MINI-3, Radiolink-AT9S-Pro, noise       | `balanced` | 98.65% | 97.34%   |
+| `trained_model_wifi.pt`      | DJI-MINI-3, Radiolink-AT9S-Pro, noise, WiFi | `balanced` | 98.68% | 97.41%   |
+| `trained_model_best.pt`      | DJI-MINI-3, Radiolink-AT9S-Pro, noise       | `best`     | 99.19% | 97.66%   |
+| `trained_model_noiseval4.pt` | DJI-MINI-3, Radiolink-AT9S-Pro, noise       | `balanced` | 99.24% | 96.67%   |
 
 ### Which one to use
 
