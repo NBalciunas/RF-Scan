@@ -80,6 +80,10 @@ WF_SCALE_MAX_DB  = 10.0
 
 _SCRIPT_DIR        = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_MODEL_PATH = os.path.join(_SCRIPT_DIR, "trained_model.pt")
+if not os.path.exists(DEFAULT_MODEL_PATH):
+    # Then the model that comes with the project. The trainer writes to the directory
+    # of the project, thus a model of your own wins over the one in models/.
+    DEFAULT_MODEL_PATH = os.path.join(_SCRIPT_DIR, "models", "trained_model.pt")
 
 # ── The parameters of the lock. Adjust them against a live signal. ────────────
 FP_PEAK_THRESH_DB    = 18.0      # dB of true SNR for a peak to cause a lock. The floor is

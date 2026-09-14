@@ -9,6 +9,8 @@ transmitting/clips/
 
 *.pt
 *.meta.json
+!models/*.pt
+!models/*.meta.json
 
 NOTES.md
 .claude/settings.local.json

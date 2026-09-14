@@ -109,9 +109,11 @@ Read the weak-signal val value and not ValAcc, because ValAcc covers the strong 
 
 ### The model in the program
 
-The interface loads `trained_model.pt` and its `.meta.json` at the start.
+The interface loads `trained_model.pt` and its `.meta.json` at the start, from the directory of the project or from `models/`.
 Click **Browse…** and **Load / Reload Model** for another model, with no restart.
 **ML Inference: ON** sets the classifier to off.
+
+I provide my own trained models in [`models/`](models/), and [`models/README.md`](models/README.md) gives the accuracy of each one, the held-out result, and what they expect of your radio.
 
 | Badge                          | Meaning                                                                                                                     |
 |--------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
@@ -137,7 +139,7 @@ It builds a dataset of two synthetic drones, it starts the real trainer, and it 
 The trainer counts segments and the program shows one badge for a whole capture, thus measure the model at the level that the user sees.
 
 ```bash
-python tools/evaluate.py trained_model.pt
+python tools/evaluate.py models/trained_model.pt
 ```
 
 The tool calls `badge_for` from `terminal.py` and holds no second copy of the rule, thus the report and the program cannot disagree. `tools/eval_clip.py` asks the model about a prepared clip that was never on the air, at a stated signal-to-noise ratio.
