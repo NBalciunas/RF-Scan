@@ -1,0 +1,1673 @@
+[
+ {
+  "t": 2.95,
+  "kind": "sweep",
+  "floor_db": -29.2,
+  "peak_db": 16.8,
+  "peak_mhz": 5901.8,
+  "tx_band_db": 16.3,
+  "caught": 0
+ },
+ {
+  "t": 2.95,
+  "kind": "status",
+  "msg": "Scan: 2934 ms  |  18 hops"
+ },
+ {
+  "t": 5.85,
+  "kind": "sweep",
+  "floor_db": -29.0,
+  "peak_db": 15.8,
+  "peak_mhz": 5885.0,
+  "tx_band_db": 15.7,
+  "caught": 0
+ },
+ {
+  "t": 5.85,
+  "kind": "status",
+  "msg": "Scan: 2898 ms  |  18 hops"
+ },
+ {
+  "t": 8.67,
+  "kind": "sweep",
+  "floor_db": -29.0,
+  "peak_db": 16.5,
+  "peak_mhz": 5907.42,
+  "tx_band_db": 16.1,
+  "caught": 0
+ },
+ {
+  "t": 8.67,
+  "kind": "status",
+  "msg": "Scan: 2823 ms  |  18 hops"
+ },
+ {
+  "t": 11.51,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.8,
+  "peak_mhz": 5879.4,
+  "tx_band_db": 16.7,
+  "caught": 0
+ },
+ {
+  "t": 11.51,
+  "kind": "status",
+  "msg": "Scan: 2844 ms  |  18 hops"
+ },
+ {
+  "t": 14.38,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.1,
+  "peak_mhz": 5834.62,
+  "tx_band_db": 15.8,
+  "caught": 0
+ },
+ {
+  "t": 14.38,
+  "kind": "status",
+  "msg": "Scan: 2866 ms  |  18 hops"
+ },
+ {
+  "t": 17.23,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.5,
+  "peak_mhz": 5890.6,
+  "tx_band_db": 16.8,
+  "caught": 0
+ },
+ {
+  "t": 17.23,
+  "kind": "status",
+  "msg": "Scan: 2849 ms  |  18 hops"
+ },
+ {
+  "t": 20.08,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.6,
+  "peak_mhz": 5829.02,
+  "tx_band_db": 16.1,
+  "caught": 0
+ },
+ {
+  "t": 20.08,
+  "kind": "status",
+  "msg": "Scan: 2861 ms  |  18 hops"
+ },
+ {
+  "t": 22.93,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.1,
+  "peak_mhz": 5829.0,
+  "tx_band_db": 16.7,
+  "caught": 0
+ },
+ {
+  "t": 22.93,
+  "kind": "status",
+  "msg": "Scan: 2831 ms  |  18 hops"
+ },
+ {
+  "t": 25.85,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 15.9,
+  "peak_mhz": 5834.6,
+  "tx_band_db": 15.6,
+  "caught": 0
+ },
+ {
+  "t": 25.85,
+  "kind": "status",
+  "msg": "Scan: 2926 ms  |  18 hops"
+ },
+ {
+  "t": 28.78,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.6,
+  "peak_mhz": 5857.0,
+  "tx_band_db": 17.6,
+  "caught": 0
+ },
+ {
+  "t": 28.78,
+  "kind": "status",
+  "msg": "Scan: 2932 ms  |  18 hops"
+ },
+ {
+  "t": 31.76,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.3,
+  "peak_mhz": 5829.02,
+  "tx_band_db": 15.6,
+  "caught": 0
+ },
+ {
+  "t": 31.76,
+  "kind": "status",
+  "msg": "Scan: 2974 ms  |  18 hops"
+ },
+ {
+  "t": 34.75,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.1,
+  "peak_mhz": 5857.029,
+  "tx_band_db": 17.1,
+  "caught": 0
+ },
+ {
+  "t": 34.75,
+  "kind": "status",
+  "msg": "Scan: 2987 ms  |  18 hops"
+ },
+ {
+  "t": 37.68,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.7,
+  "peak_mhz": 5901.8,
+  "tx_band_db": 16.6,
+  "caught": 0
+ },
+ {
+  "t": 37.68,
+  "kind": "status",
+  "msg": "Scan: 2943 ms  |  18 hops"
+ },
+ {
+  "t": 40.6,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.2,
+  "peak_mhz": 5851.4,
+  "tx_band_db": 15.7,
+  "caught": 0
+ },
+ {
+  "t": 40.6,
+  "kind": "status",
+  "msg": "Scan: 2907 ms  |  18 hops"
+ },
+ {
+  "t": 43.53,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.4,
+  "peak_mhz": 5851.42,
+  "tx_band_db": 15.5,
+  "caught": 0
+ },
+ {
+  "t": 43.53,
+  "kind": "status",
+  "msg": "Scan: 2928 ms  |  18 hops"
+ },
+ {
+  "t": 46.41,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.8,
+  "peak_mhz": 5823.429,
+  "tx_band_db": 15.6,
+  "caught": 0
+ },
+ {
+  "t": 46.41,
+  "kind": "status",
+  "msg": "Scan: 2894 ms  |  18 hops"
+ },
+ {
+  "t": 49.26,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.6,
+  "peak_mhz": 5896.22,
+  "tx_band_db": 15.5,
+  "caught": 0
+ },
+ {
+  "t": 49.26,
+  "kind": "status",
+  "msg": "Scan: 2847 ms  |  18 hops"
+ },
+ {
+  "t": 52.18,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.6,
+  "peak_mhz": 5896.22,
+  "tx_band_db": 15.8,
+  "caught": 0
+ },
+ {
+  "t": 52.18,
+  "kind": "status",
+  "msg": "Scan: 2907 ms  |  18 hops"
+ },
+ {
+  "t": 55.03,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.1,
+  "peak_mhz": 5829.02,
+  "tx_band_db": 15.7,
+  "caught": 0
+ },
+ {
+  "t": 55.03,
+  "kind": "status",
+  "msg": "Scan: 2864 ms  |  18 hops"
+ },
+ {
+  "t": 57.91,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.7,
+  "peak_mhz": 5862.6,
+  "tx_band_db": 16.7,
+  "caught": 0
+ },
+ {
+  "t": 57.91,
+  "kind": "status",
+  "msg": "Scan: 2867 ms  |  18 hops"
+ },
+ {
+  "t": 60.8,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.1,
+  "peak_mhz": 5885.02,
+  "tx_band_db": 16.2,
+  "caught": 0
+ },
+ {
+  "t": 60.8,
+  "kind": "status",
+  "msg": "Scan: 2892 ms  |  18 hops"
+ },
+ {
+  "t": 63.67,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.6,
+  "peak_mhz": 5862.62,
+  "tx_band_db": 16.6,
+  "caught": 0
+ },
+ {
+  "t": 63.67,
+  "kind": "status",
+  "msg": "Scan: 2871 ms  |  18 hops"
+ },
+ {
+  "t": 66.53,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.8,
+  "peak_mhz": 5901.829,
+  "tx_band_db": 15.6,
+  "caught": 0
+ },
+ {
+  "t": 66.53,
+  "kind": "status",
+  "msg": "Scan: 2861 ms  |  18 hops"
+ },
+ {
+  "t": 69.41,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.1,
+  "peak_mhz": 5851.4,
+  "tx_band_db": 16.1,
+  "caught": 0
+ },
+ {
+  "t": 69.41,
+  "kind": "status",
+  "msg": "Scan: 2881 ms  |  18 hops"
+ },
+ {
+  "t": 72.28,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.0,
+  "peak_mhz": 5829.02,
+  "tx_band_db": 15.4,
+  "caught": 0
+ },
+ {
+  "t": 72.28,
+  "kind": "status",
+  "msg": "Scan: 2867 ms  |  18 hops"
+ },
+ {
+  "t": 75.16,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.7,
+  "peak_mhz": 5913.02,
+  "tx_band_db": 16.4,
+  "caught": 0
+ },
+ {
+  "t": 75.16,
+  "kind": "status",
+  "msg": "Scan: 2878 ms  |  18 hops"
+ },
+ {
+  "t": 78.03,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.1,
+  "peak_mhz": 5873.8,
+  "tx_band_db": 17.1,
+  "caught": 0
+ },
+ {
+  "t": 78.03,
+  "kind": "status",
+  "msg": "Scan: 2870 ms  |  18 hops"
+ },
+ {
+  "t": 80.92,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.4,
+  "peak_mhz": 5868.22,
+  "tx_band_db": 16.4,
+  "caught": 0
+ },
+ {
+  "t": 80.92,
+  "kind": "status",
+  "msg": "Scan: 2888 ms  |  18 hops"
+ },
+ {
+  "t": 83.9,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.8,
+  "peak_mhz": 5851.42,
+  "tx_band_db": 15.6,
+  "caught": 0
+ },
+ {
+  "t": 83.9,
+  "kind": "status",
+  "msg": "Scan: 2973 ms  |  18 hops"
+ },
+ {
+  "t": 86.8,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.7,
+  "peak_mhz": 5851.4,
+  "tx_band_db": 15.7,
+  "caught": 0
+ },
+ {
+  "t": 86.8,
+  "kind": "status",
+  "msg": "Scan: 2908 ms  |  18 hops"
+ },
+ {
+  "t": 89.69,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.3,
+  "peak_mhz": 5868.2,
+  "tx_band_db": 16.3,
+  "caught": 0
+ },
+ {
+  "t": 89.69,
+  "kind": "status",
+  "msg": "Scan: 2890 ms  |  18 hops"
+ },
+ {
+  "t": 92.53,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.9,
+  "peak_mhz": 5840.19,
+  "tx_band_db": 15.2,
+  "caught": 0
+ },
+ {
+  "t": 92.53,
+  "kind": "status",
+  "msg": "Scan: 2843 ms  |  18 hops"
+ },
+ {
+  "t": 95.41,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.1,
+  "peak_mhz": 5834.6,
+  "tx_band_db": 15.4,
+  "caught": 0
+ },
+ {
+  "t": 95.41,
+  "kind": "status",
+  "msg": "Scan: 2873 ms  |  18 hops"
+ },
+ {
+  "t": 98.26,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.6,
+  "peak_mhz": 5862.62,
+  "tx_band_db": 16.6,
+  "caught": 0
+ },
+ {
+  "t": 98.26,
+  "kind": "status",
+  "msg": "Scan: 2850 ms  |  18 hops"
+ },
+ {
+  "t": 101.13,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.3,
+  "peak_mhz": 5862.6,
+  "tx_band_db": 17.3,
+  "caught": 0
+ },
+ {
+  "t": 101.13,
+  "kind": "status",
+  "msg": "Scan: 2861 ms  |  18 hops"
+ },
+ {
+  "t": 104.0,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.3,
+  "peak_mhz": 5879.429,
+  "tx_band_db": 16.0,
+  "caught": 0
+ },
+ {
+  "t": 104.0,
+  "kind": "status",
+  "msg": "Scan: 2880 ms  |  18 hops"
+ },
+ {
+  "t": 106.88,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.2,
+  "peak_mhz": 5868.229,
+  "tx_band_db": 17.2,
+  "caught": 0
+ },
+ {
+  "t": 106.88,
+  "kind": "status",
+  "msg": "Scan: 2879 ms  |  18 hops"
+ },
+ {
+  "t": 109.74,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.3,
+  "peak_mhz": 5840.2,
+  "tx_band_db": 15.8,
+  "caught": 0
+ },
+ {
+  "t": 109.74,
+  "kind": "status",
+  "msg": "Scan: 2866 ms  |  18 hops"
+ },
+ {
+  "t": 112.63,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.2,
+  "peak_mhz": 5851.4,
+  "tx_band_db": 16.1,
+  "caught": 0
+ },
+ {
+  "t": 112.63,
+  "kind": "status",
+  "msg": "Scan: 2871 ms  |  18 hops"
+ },
+ {
+  "t": 115.51,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.0,
+  "peak_mhz": 5828.99,
+  "tx_band_db": 15.8,
+  "caught": 0
+ },
+ {
+  "t": 115.51,
+  "kind": "status",
+  "msg": "Scan: 2897 ms  |  18 hops"
+ },
+ {
+  "t": 118.43,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 18.2,
+  "peak_mhz": 5896.2,
+  "tx_band_db": 16.0,
+  "caught": 0
+ },
+ {
+  "t": 118.43,
+  "kind": "status",
+  "msg": "Scan: 2916 ms  |  18 hops"
+ },
+ {
+  "t": 121.34,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.3,
+  "peak_mhz": 5896.229,
+  "tx_band_db": 15.7,
+  "caught": 0
+ },
+ {
+  "t": 121.34,
+  "kind": "status",
+  "msg": "Scan: 2906 ms  |  18 hops"
+ },
+ {
+  "t": 121.53,
+  "kind": "status",
+  "msg": "Locked +18 dB @ 5896.231 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 121.7,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.3,
+  "peak_mhz": 5890.59,
+  "tx_band_db": 15.7,
+  "caught": 0
+ },
+ {
+  "t": 121.78,
+  "kind": "classify",
+  "badge": "Clear (96% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.96,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 121.78,
+  "kind": "status",
+  "msg": "Locked @ 5896.231 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 121.96,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.3,
+  "peak_mhz": 5890.59,
+  "tx_band_db": 15.7,
+  "caught": 0
+ },
+ {
+  "t": 121.96,
+  "kind": "status",
+  "msg": "Locked @ 5896.231 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 122.13,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.2,
+  "peak_mhz": 5896.229,
+  "tx_band_db": 15.7,
+  "caught": 0
+ },
+ {
+  "t": 122.13,
+  "kind": "status",
+  "msg": "Locked @ 5896.231 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 122.3,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.2,
+  "peak_mhz": 5890.59,
+  "tx_band_db": 15.7,
+  "caught": 0
+ },
+ {
+  "t": 122.3,
+  "kind": "status",
+  "msg": "Locked @ 5896.231 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 122.48,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.3,
+  "peak_mhz": 5890.59,
+  "tx_band_db": 15.7,
+  "caught": 0
+ },
+ {
+  "t": 122.55,
+  "kind": "classify",
+  "badge": "Clear (96% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.958,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 122.55,
+  "kind": "status",
+  "msg": "Locked @ 5896.231 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 122.73,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.3,
+  "peak_mhz": 5890.59,
+  "tx_band_db": 15.7,
+  "caught": 0
+ },
+ {
+  "t": 122.73,
+  "kind": "status",
+  "msg": "Locked @ 5896.231 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 122.89,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.2,
+  "peak_mhz": 5890.59,
+  "tx_band_db": 15.7,
+  "caught": 0
+ },
+ {
+  "t": 122.89,
+  "kind": "status",
+  "msg": "Locked @ 5896.231 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 123.07,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.3,
+  "peak_mhz": 5890.59,
+  "tx_band_db": 15.7,
+  "caught": 0
+ },
+ {
+  "t": 123.07,
+  "kind": "status",
+  "msg": "Locked @ 5896.231 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 123.25,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.3,
+  "peak_mhz": 5890.59,
+  "tx_band_db": 15.7,
+  "caught": 0
+ },
+ {
+  "t": 123.31,
+  "kind": "classify",
+  "badge": "Clear (96% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.959,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 123.31,
+  "kind": "status",
+  "msg": "Locked @ 5896.231 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 123.49,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.3,
+  "peak_mhz": 5890.59,
+  "tx_band_db": 15.7,
+  "caught": 0
+ },
+ {
+  "t": 123.49,
+  "kind": "status",
+  "msg": "Locked @ 5896.231 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 123.66,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.2,
+  "peak_mhz": 5890.59,
+  "tx_band_db": 15.7,
+  "caught": 0
+ },
+ {
+  "t": 123.67,
+  "kind": "status",
+  "msg": "Locked @ 5896.231 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 123.84,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.3,
+  "peak_mhz": 5890.59,
+  "tx_band_db": 15.7,
+  "caught": 0
+ },
+ {
+  "t": 123.84,
+  "kind": "status",
+  "msg": "Locked @ 5896.231 MHz \u2014 Skip to advance"
+ },
+ {
+  "t": 124.01,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.3,
+  "peak_mhz": 5890.59,
+  "tx_band_db": 15.7,
+  "caught": 0
+ },
+ {
+  "t": 124.08,
+  "kind": "classify",
+  "badge": "Clear (96% Background)",
+  "style": "none",
+  "plan": "-",
+  "ambient": 0.959,
+  "dev_share": 0.0,
+  "votes": [],
+  "second": null
+ },
+ {
+  "t": 124.08,
+  "kind": "caught",
+  "freqs_mhz": [
+   5896.231
+  ]
+ },
+ {
+  "t": 124.08,
+  "kind": "status",
+  "msg": "Signal gone \u2014 moving on"
+ },
+ {
+  "t": 127.01,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.7,
+  "peak_mhz": 5840.19,
+  "tx_band_db": 16.0,
+  "caught": 1
+ },
+ {
+  "t": 127.01,
+  "kind": "status",
+  "msg": "Scan: 2925 ms  |  18 hops"
+ },
+ {
+  "t": 127.01,
+  "kind": "caught",
+  "freqs_mhz": []
+ },
+ {
+  "t": 129.94,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.3,
+  "peak_mhz": 5817.8,
+  "tx_band_db": 15.7,
+  "caught": 0
+ },
+ {
+  "t": 129.94,
+  "kind": "status",
+  "msg": "Scan: 2930 ms  |  18 hops"
+ },
+ {
+  "t": 132.86,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.9,
+  "peak_mhz": 5851.42,
+  "tx_band_db": 15.7,
+  "caught": 0
+ },
+ {
+  "t": 132.86,
+  "kind": "status",
+  "msg": "Scan: 2917 ms  |  18 hops"
+ },
+ {
+  "t": 135.8,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.7,
+  "peak_mhz": 5828.99,
+  "tx_band_db": 15.3,
+  "caught": 0
+ },
+ {
+  "t": 135.8,
+  "kind": "status",
+  "msg": "Scan: 2932 ms  |  18 hops"
+ },
+ {
+  "t": 138.63,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.3,
+  "peak_mhz": 5823.4,
+  "tx_band_db": 15.9,
+  "caught": 0
+ },
+ {
+  "t": 138.63,
+  "kind": "status",
+  "msg": "Scan: 2832 ms  |  18 hops"
+ },
+ {
+  "t": 141.48,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.9,
+  "peak_mhz": 5823.4,
+  "tx_band_db": 15.8,
+  "caught": 0
+ },
+ {
+  "t": 141.48,
+  "kind": "status",
+  "msg": "Scan: 2853 ms  |  18 hops"
+ },
+ {
+  "t": 144.38,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.0,
+  "peak_mhz": 5890.62,
+  "tx_band_db": 16.5,
+  "caught": 0
+ },
+ {
+  "t": 144.38,
+  "kind": "status",
+  "msg": "Scan: 2904 ms  |  18 hops"
+ },
+ {
+  "t": 147.23,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.2,
+  "peak_mhz": 5890.59,
+  "tx_band_db": 16.2,
+  "caught": 0
+ },
+ {
+  "t": 147.23,
+  "kind": "status",
+  "msg": "Scan: 2857 ms  |  18 hops"
+ },
+ {
+  "t": 150.09,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.4,
+  "peak_mhz": 5890.62,
+  "tx_band_db": 16.0,
+  "caught": 0
+ },
+ {
+  "t": 150.09,
+  "kind": "status",
+  "msg": "Scan: 2847 ms  |  18 hops"
+ },
+ {
+  "t": 152.94,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.8,
+  "peak_mhz": 5907.42,
+  "tx_band_db": 15.5,
+  "caught": 0
+ },
+ {
+  "t": 152.94,
+  "kind": "status",
+  "msg": "Scan: 2855 ms  |  18 hops"
+ },
+ {
+  "t": 155.81,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.7,
+  "peak_mhz": 5913.0,
+  "tx_band_db": 16.0,
+  "caught": 0
+ },
+ {
+  "t": 155.81,
+  "kind": "status",
+  "msg": "Scan: 2867 ms  |  18 hops"
+ },
+ {
+  "t": 158.66,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.5,
+  "peak_mhz": 5879.4,
+  "tx_band_db": 16.3,
+  "caught": 0
+ },
+ {
+  "t": 158.66,
+  "kind": "status",
+  "msg": "Scan: 2848 ms  |  18 hops"
+ },
+ {
+  "t": 161.53,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.8,
+  "peak_mhz": 5873.829,
+  "tx_band_db": 16.8,
+  "caught": 0
+ },
+ {
+  "t": 161.53,
+  "kind": "status",
+  "msg": "Scan: 2875 ms  |  18 hops"
+ },
+ {
+  "t": 164.38,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.6,
+  "peak_mhz": 5885.0,
+  "tx_band_db": 15.7,
+  "caught": 0
+ },
+ {
+  "t": 164.38,
+  "kind": "status",
+  "msg": "Scan: 2851 ms  |  18 hops"
+ },
+ {
+  "t": 167.29,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.9,
+  "peak_mhz": 5890.59,
+  "tx_band_db": 15.2,
+  "caught": 0
+ },
+ {
+  "t": 167.29,
+  "kind": "status",
+  "msg": "Scan: 2915 ms  |  18 hops"
+ },
+ {
+  "t": 170.19,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.4,
+  "peak_mhz": 5896.2,
+  "tx_band_db": 16.2,
+  "caught": 0
+ },
+ {
+  "t": 170.19,
+  "kind": "status",
+  "msg": "Scan: 2896 ms  |  18 hops"
+ },
+ {
+  "t": 173.09,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 18.7,
+  "peak_mhz": 5901.79,
+  "tx_band_db": 15.6,
+  "caught": 0
+ },
+ {
+  "t": 173.09,
+  "kind": "status",
+  "msg": "Scan: 2904 ms  |  18 hops"
+ },
+ {
+  "t": 176.01,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.1,
+  "peak_mhz": 5851.4,
+  "tx_band_db": 15.5,
+  "caught": 0
+ },
+ {
+  "t": 176.01,
+  "kind": "status",
+  "msg": "Scan: 2907 ms  |  18 hops"
+ },
+ {
+  "t": 178.84,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.3,
+  "peak_mhz": 5901.8,
+  "tx_band_db": 15.9,
+  "caught": 0
+ },
+ {
+  "t": 178.84,
+  "kind": "status",
+  "msg": "Scan: 2835 ms  |  18 hops"
+ },
+ {
+  "t": 181.72,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.7,
+  "peak_mhz": 5834.629,
+  "tx_band_db": 16.6,
+  "caught": 0
+ },
+ {
+  "t": 181.72,
+  "kind": "status",
+  "msg": "Scan: 2887 ms  |  18 hops"
+ },
+ {
+  "t": 184.66,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.8,
+  "peak_mhz": 5856.99,
+  "tx_band_db": 17.8,
+  "caught": 0
+ },
+ {
+  "t": 184.66,
+  "kind": "status",
+  "msg": "Scan: 2920 ms  |  18 hops"
+ },
+ {
+  "t": 187.49,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.7,
+  "peak_mhz": 5828.99,
+  "tx_band_db": 15.6,
+  "caught": 0
+ },
+ {
+  "t": 187.49,
+  "kind": "status",
+  "msg": "Scan: 2837 ms  |  18 hops"
+ },
+ {
+  "t": 190.37,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.7,
+  "peak_mhz": 5879.4,
+  "tx_band_db": 16.1,
+  "caught": 0
+ },
+ {
+  "t": 190.37,
+  "kind": "status",
+  "msg": "Scan: 2886 ms  |  18 hops"
+ },
+ {
+  "t": 193.28,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.8,
+  "peak_mhz": 5885.029,
+  "tx_band_db": 16.4,
+  "caught": 0
+ },
+ {
+  "t": 193.28,
+  "kind": "status",
+  "msg": "Scan: 2900 ms  |  18 hops"
+ },
+ {
+  "t": 196.14,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.6,
+  "peak_mhz": 5817.82,
+  "tx_band_db": 16.5,
+  "caught": 0
+ },
+ {
+  "t": 196.14,
+  "kind": "status",
+  "msg": "Scan: 2864 ms  |  18 hops"
+ },
+ {
+  "t": 198.99,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.9,
+  "peak_mhz": 5879.4,
+  "tx_band_db": 16.7,
+  "caught": 0
+ },
+ {
+  "t": 198.99,
+  "kind": "status",
+  "msg": "Scan: 2844 ms  |  18 hops"
+ },
+ {
+  "t": 201.84,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.4,
+  "peak_mhz": 5896.229,
+  "tx_band_db": 16.1,
+  "caught": 0
+ },
+ {
+  "t": 201.84,
+  "kind": "status",
+  "msg": "Scan: 2850 ms  |  18 hops"
+ },
+ {
+  "t": 204.67,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.8,
+  "peak_mhz": 5851.4,
+  "tx_band_db": 16.2,
+  "caught": 0
+ },
+ {
+  "t": 204.67,
+  "kind": "status",
+  "msg": "Scan: 2830 ms  |  18 hops"
+ },
+ {
+  "t": 207.56,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 18.1,
+  "peak_mhz": 5885.0,
+  "tx_band_db": 16.6,
+  "caught": 0
+ },
+ {
+  "t": 207.56,
+  "kind": "status",
+  "msg": "Scan: 2897 ms  |  18 hops"
+ },
+ {
+  "t": 210.51,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.4,
+  "peak_mhz": 5862.59,
+  "tx_band_db": 17.4,
+  "caught": 0
+ },
+ {
+  "t": 210.51,
+  "kind": "status",
+  "msg": "Scan: 2942 ms  |  18 hops"
+ },
+ {
+  "t": 213.46,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.4,
+  "peak_mhz": 5823.4,
+  "tx_band_db": 16.1,
+  "caught": 0
+ },
+ {
+  "t": 213.46,
+  "kind": "status",
+  "msg": "Scan: 2944 ms  |  18 hops"
+ },
+ {
+  "t": 216.38,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.3,
+  "peak_mhz": 5851.4,
+  "tx_band_db": 15.9,
+  "caught": 0
+ },
+ {
+  "t": 216.38,
+  "kind": "status",
+  "msg": "Scan: 2916 ms  |  18 hops"
+ },
+ {
+  "t": 219.29,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.2,
+  "peak_mhz": 5851.42,
+  "tx_band_db": 16.1,
+  "caught": 0
+ },
+ {
+  "t": 219.29,
+  "kind": "status",
+  "msg": "Scan: 2919 ms  |  18 hops"
+ },
+ {
+  "t": 222.22,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.5,
+  "peak_mhz": 5901.8,
+  "tx_band_db": 16.2,
+  "caught": 0
+ },
+ {
+  "t": 222.22,
+  "kind": "status",
+  "msg": "Scan: 2933 ms  |  18 hops"
+ },
+ {
+  "t": 225.13,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.3,
+  "peak_mhz": 5851.4,
+  "tx_band_db": 15.9,
+  "caught": 0
+ },
+ {
+  "t": 225.13,
+  "kind": "status",
+  "msg": "Scan: 2917 ms  |  18 hops"
+ },
+ {
+  "t": 228.04,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.6,
+  "peak_mhz": 5817.829,
+  "tx_band_db": 15.3,
+  "caught": 0
+ },
+ {
+  "t": 228.04,
+  "kind": "status",
+  "msg": "Scan: 2900 ms  |  18 hops"
+ },
+ {
+  "t": 230.92,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 15.9,
+  "peak_mhz": 5896.229,
+  "tx_band_db": 15.8,
+  "caught": 0
+ },
+ {
+  "t": 230.92,
+  "kind": "status",
+  "msg": "Scan: 2881 ms  |  18 hops"
+ },
+ {
+  "t": 233.77,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.4,
+  "peak_mhz": 5823.42,
+  "tx_band_db": 15.9,
+  "caught": 0
+ },
+ {
+  "t": 233.77,
+  "kind": "status",
+  "msg": "Scan: 2847 ms  |  18 hops"
+ },
+ {
+  "t": 236.61,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.6,
+  "peak_mhz": 5885.02,
+  "tx_band_db": 15.3,
+  "caught": 0
+ },
+ {
+  "t": 236.61,
+  "kind": "status",
+  "msg": "Scan: 2837 ms  |  18 hops"
+ },
+ {
+  "t": 239.49,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.1,
+  "peak_mhz": 5857.0,
+  "tx_band_db": 16.1,
+  "caught": 0
+ },
+ {
+  "t": 239.49,
+  "kind": "status",
+  "msg": "Scan: 2874 ms  |  18 hops"
+ },
+ {
+  "t": 242.41,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 18.3,
+  "peak_mhz": 5829.02,
+  "tx_band_db": 16.3,
+  "caught": 0
+ },
+ {
+  "t": 242.41,
+  "kind": "status",
+  "msg": "Scan: 2922 ms  |  18 hops"
+ },
+ {
+  "t": 245.27,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.9,
+  "peak_mhz": 5907.4,
+  "tx_band_db": 15.6,
+  "caught": 0
+ },
+ {
+  "t": 245.27,
+  "kind": "status",
+  "msg": "Scan: 2857 ms  |  18 hops"
+ },
+ {
+  "t": 248.12,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.3,
+  "peak_mhz": 5901.82,
+  "tx_band_db": 16.1,
+  "caught": 0
+ },
+ {
+  "t": 248.12,
+  "kind": "status",
+  "msg": "Scan: 2863 ms  |  18 hops"
+ },
+ {
+  "t": 251.01,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.0,
+  "peak_mhz": 5845.82,
+  "tx_band_db": 16.0,
+  "caught": 0
+ },
+ {
+  "t": 251.01,
+  "kind": "status",
+  "msg": "Scan: 2875 ms  |  18 hops"
+ },
+ {
+  "t": 253.91,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.6,
+  "peak_mhz": 5840.2,
+  "tx_band_db": 15.9,
+  "caught": 0
+ },
+ {
+  "t": 253.91,
+  "kind": "status",
+  "msg": "Scan: 2912 ms  |  18 hops"
+ },
+ {
+  "t": 256.82,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.6,
+  "peak_mhz": 5884.99,
+  "tx_band_db": 15.3,
+  "caught": 0
+ },
+ {
+  "t": 256.82,
+  "kind": "status",
+  "msg": "Scan: 2915 ms  |  18 hops"
+ },
+ {
+  "t": 259.69,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.8,
+  "peak_mhz": 5817.8,
+  "tx_band_db": 16.6,
+  "caught": 0
+ },
+ {
+  "t": 259.69,
+  "kind": "status",
+  "msg": "Scan: 2867 ms  |  18 hops"
+ },
+ {
+  "t": 262.59,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.7,
+  "peak_mhz": 5890.6,
+  "tx_band_db": 16.0,
+  "caught": 0
+ },
+ {
+  "t": 262.59,
+  "kind": "status",
+  "msg": "Scan: 2890 ms  |  18 hops"
+ },
+ {
+  "t": 265.54,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.8,
+  "peak_mhz": 5896.22,
+  "tx_band_db": 16.0,
+  "caught": 0
+ },
+ {
+  "t": 265.54,
+  "kind": "status",
+  "msg": "Scan: 2956 ms  |  18 hops"
+ },
+ {
+  "t": 268.43,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.2,
+  "peak_mhz": 5817.82,
+  "tx_band_db": 15.7,
+  "caught": 0
+ },
+ {
+  "t": 268.43,
+  "kind": "status",
+  "msg": "Scan: 2887 ms  |  18 hops"
+ },
+ {
+  "t": 271.32,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.9,
+  "peak_mhz": 5896.22,
+  "tx_band_db": 16.5,
+  "caught": 0
+ },
+ {
+  "t": 271.32,
+  "kind": "status",
+  "msg": "Scan: 2885 ms  |  18 hops"
+ },
+ {
+  "t": 274.19,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.9,
+  "peak_mhz": 5823.42,
+  "tx_band_db": 16.1,
+  "caught": 0
+ },
+ {
+  "t": 274.19,
+  "kind": "status",
+  "msg": "Scan: 2865 ms  |  18 hops"
+ },
+ {
+  "t": 277.01,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.4,
+  "peak_mhz": 5840.2,
+  "tx_band_db": 16.2,
+  "caught": 0
+ },
+ {
+  "t": 277.01,
+  "kind": "status",
+  "msg": "Scan: 2826 ms  |  18 hops"
+ },
+ {
+  "t": 279.86,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.3,
+  "peak_mhz": 5834.629,
+  "tx_band_db": 15.4,
+  "caught": 0
+ },
+ {
+  "t": 279.86,
+  "kind": "status",
+  "msg": "Scan: 2849 ms  |  18 hops"
+ },
+ {
+  "t": 282.72,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 17.2,
+  "peak_mhz": 5907.4,
+  "tx_band_db": 16.0,
+  "caught": 0
+ },
+ {
+  "t": 282.72,
+  "kind": "status",
+  "msg": "Scan: 2864 ms  |  18 hops"
+ },
+ {
+  "t": 285.56,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.5,
+  "peak_mhz": 5840.19,
+  "tx_band_db": 15.8,
+  "caught": 0
+ },
+ {
+  "t": 285.56,
+  "kind": "status",
+  "msg": "Scan: 2838 ms  |  18 hops"
+ },
+ {
+  "t": 288.46,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.9,
+  "peak_mhz": 5857.029,
+  "tx_band_db": 16.9,
+  "caught": 0
+ },
+ {
+  "t": 288.46,
+  "kind": "status",
+  "msg": "Scan: 2893 ms  |  18 hops"
+ },
+ {
+  "t": 291.33,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.5,
+  "peak_mhz": 5879.42,
+  "tx_band_db": 16.5,
+  "caught": 0
+ },
+ {
+  "t": 291.33,
+  "kind": "status",
+  "msg": "Scan: 2871 ms  |  18 hops"
+ },
+ {
+  "t": 294.2,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.3,
+  "peak_mhz": 5817.82,
+  "tx_band_db": 16.0,
+  "caught": 0
+ },
+ {
+  "t": 294.2,
+  "kind": "status",
+  "msg": "Scan: 2879 ms  |  18 hops"
+ },
+ {
+  "t": 297.08,
+  "kind": "sweep",
+  "floor_db": -28.9,
+  "peak_db": 16.2,
+  "peak_mhz": 5828.99,
+  "tx_band_db": 15.9,
+  "caught": 0
+ },
+ {
+  "t": 297.08,
+  "kind": "status",
+  "msg": "Scan: 2864 ms  |  18 hops"
+ }
+]

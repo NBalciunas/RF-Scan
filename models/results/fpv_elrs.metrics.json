@@ -1,0 +1,54 @@
+{
+  "classes": [
+    "ELRS",
+    "noise"
+  ],
+  "val_acc": 0.9731983482083388,
+  "weak_val_acc": 0.9652124322783006,
+  "weak_val_db": [
+    0.0,
+    10.0
+  ],
+  "confusion": [
+    [
+      17237,
+      298
+    ],
+    [
+      708,
+      19292
+    ]
+  ],
+  "confusion_rows": "true",
+  "confusion_cols": "pred",
+  "per_class": {
+    "ELRS": {
+      "precision": 0.9605461131234327,
+      "recall": 0.9830054177359566,
+      "f1": 0.9716459977452085,
+      "support": 17535,
+      "predicted": 17945
+    },
+    "noise": {
+      "precision": 0.984788157223073,
+      "recall": 0.9646,
+      "f1": 0.9745895428138419,
+      "support": 20000,
+      "predicted": 19590
+    }
+  },
+  "weak_per_class": {
+    "ELRS": {
+      "accuracy": 0.9652124322783006,
+      "support": 17535
+    }
+  },
+  "n_train": 40000,
+  "n_val": 37535,
+  "n_weak": 17535,
+  "epochs": 8,
+  "preset": "balanced",
+  "git_commit": "e389da6",
+  "trained_at": "2026-09-26T19:39:46",
+  "train_minutes": 43.97799842755
+}

@@ -1,0 +1,54 @@
+{
+  "classes": [
+    "VTX",
+    "noise"
+  ],
+  "val_acc": 1.0,
+  "weak_val_acc": 1.0,
+  "weak_val_db": [
+    0.0,
+    10.0
+  ],
+  "confusion": [
+    [
+      20000,
+      0
+    ],
+    [
+      0,
+      20000
+    ]
+  ],
+  "confusion_rows": "true",
+  "confusion_cols": "pred",
+  "per_class": {
+    "VTX": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 20000,
+      "predicted": 20000
+    },
+    "noise": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 20000,
+      "predicted": 20000
+    }
+  },
+  "weak_per_class": {
+    "VTX": {
+      "accuracy": 1.0,
+      "support": 20000
+    }
+  },
+  "n_train": 40000,
+  "n_val": 40000,
+  "n_weak": 20000,
+  "epochs": 8,
+  "preset": "balanced",
+  "git_commit": "e389da6",
+  "trained_at": "2026-09-27T14:46:55",
+  "train_minutes": 45.44895636240641
+}

@@ -1,0 +1,49 @@
+{
+  "model": "models/fpv_elrs.pt",
+  "data_dir": "D:\\RF-Scan-data\\heldout_data",
+  "session": null,
+  "classes": [
+    "ELRS",
+    "noise"
+  ],
+  "rule": {
+    "vote_thresh": 0.5,
+    "min_share": 0.1,
+    "unknown_thresh": 0.8
+  },
+  "gate_db": 6.492724289528141,
+  "per_class": {
+    "ELRS": {
+      "n": 500,
+      "named_right": 401,
+      "clear": 99,
+      "named_wrong": 0,
+      "holds_signal": 500,
+      "right_of_those": 0.802
+    },
+    "noise": {
+      "n": 1000,
+      "named_right": 0,
+      "clear": 938,
+      "named_wrong": 62,
+      "holds_signal": 428,
+      "right_of_those": null
+    }
+  },
+  "confusion": {
+    "ELRS": {
+      "ELRS": 401,
+      "unknown": 0,
+      "clear": 99
+    },
+    "noise": {
+      "ELRS": 62,
+      "unknown": 0,
+      "clear": 938
+    }
+  },
+  "confusion_rows": "true",
+  "confusion_cols": "badge",
+  "git_commit": "e389da6",
+  "evaluated_at": "2026-09-26T19:42:58"
+}
